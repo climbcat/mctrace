@@ -134,15 +134,13 @@ void Init_PSI_DMC(PSI_DMC *spec) {
 
 void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     s32 index = 0;
-
     Component *source_arm = CreateComponent(a_dest, CT_Progress_bar, index++, "source_arm");
-
     Progress_bar *source_arm_comp = (Progress_bar*) source_arm->comp;
     Init_Progress_bar(source_arm_comp, instr);
+    // ABSOLUTE
     // AT:  (0, 0, 0)
 
     Component *source = CreateComponent(a_dest, CT_Source_Maxwell_3, index++, "source");
-
     Source_Maxwell_3 *source_comp = (Source_Maxwell_3*) source->comp;
     source_comp->yheight = 0.156;
     source_comp->xwidth = 0.126;
@@ -156,11 +154,11 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     source_comp->T2 = 40.68;
     source_comp->I2 = 5.2E11;
     Init_Source_Maxwell_3(source_comp, instr);
+    // RELATIVE source_arm
     // AT:  (0, 0, 0)
     // ROT: (0, 0, 0)
 
     Component *PSDbefore_guides = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDbefore_guides");
-
     PSD_monitor *PSDbefore_guides_comp = (PSD_monitor*) PSDbefore_guides->comp;
     PSDbefore_guides_comp->nx = 128;
     PSDbefore_guides_comp->ny = 128;
@@ -168,10 +166,10 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     PSDbefore_guides_comp->xwidth = 0.02;
     PSDbefore_guides_comp->yheight = 0.12;
     Init_PSD_monitor(PSDbefore_guides_comp, instr);
+    // RELATIVE source_arm
     // AT:  (0, 0, 1.49999)
 
     Component *l_mon_source = CreateComponent(a_dest, CT_L_monitor, index++, "l_mon_source");
-
     L_monitor *l_mon_source_comp = (L_monitor*) l_mon_source->comp;
     l_mon_source_comp->nL = 101;
     l_mon_source_comp->filename = (char*) "lmonsource.dat";
@@ -180,10 +178,10 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     l_mon_source_comp->Lmin = 0;
     l_mon_source_comp->Lmax = 20;
     Init_L_monitor(l_mon_source_comp, instr);
+    // RELATIVE PREVIOUS
     // AT:  (0, 0, 1e-9)
 
     Component *guide1 = CreateComponent(a_dest, CT_Guide, index++, "guide1");
-
     Guide *guide1_comp = (Guide*) guide1->comp;
     guide1_comp->w1 = 0.02;
     guide1_comp->h1 = 0.12;
@@ -196,11 +194,11 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     guide1_comp->m = 1.8;
     guide1_comp->W = spec->W;
     Init_Guide(guide1_comp, instr);
+    // RELATIVE source_arm
     // AT:  (0, 0, 1.50)
     // ROT: (0, 0, 0)
 
     Component *PSDbefore_curve = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDbefore_curve");
-
     PSD_monitor *PSDbefore_curve_comp = (PSD_monitor*) PSDbefore_curve->comp;
     PSDbefore_curve_comp->nx = 128;
     PSDbefore_curve_comp->ny = 128;
@@ -208,10 +206,10 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     PSDbefore_curve_comp->xwidth = 0.02;
     PSDbefore_curve_comp->yheight = 0.12;
     Init_PSD_monitor(PSDbefore_curve_comp, instr);
+    // RELATIVE guide1
     // AT:  (0, 0, 4.664)
 
     Component *guide2 = CreateComponent(a_dest, CT_Bender, index++, "guide2");
-
     Bender *guide2_comp = (Bender*) guide2->comp;
     guide2_comp->w = 0.02;
     guide2_comp->h = 0.12;
@@ -233,10 +231,10 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     guide2_comp->Ws = spec->W_curve;
     guide2_comp->l = 20;
     Init_Bender(guide2_comp, instr);
+    // RELATIVE guide1
     // AT:  (0, 0, 4.69)
 
     Component *PSDafter_curve = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDafter_curve");
-
     PSD_monitor *PSDafter_curve_comp = (PSD_monitor*) PSDafter_curve->comp;
     PSDafter_curve_comp->nx = 128;
     PSDafter_curve_comp->ny = 128;
@@ -244,10 +242,10 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     PSDafter_curve_comp->xwidth = 0.02;
     PSDafter_curve_comp->yheight = 0.12;
     Init_PSD_monitor(PSDafter_curve_comp, instr);
+    // RELATIVE guide2
     // AT:  (0, 0, 20.0001)
 
     Component *bunker = CreateComponent(a_dest, CT_Guide, index++, "bunker");
-
     Guide *bunker_comp = (Guide*) bunker->comp;
     bunker_comp->w1 = 0.02;
     bunker_comp->h1 = .12;
@@ -260,11 +258,11 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     bunker_comp->m = 1.6;
     bunker_comp->W = spec->W;
     Init_Guide(bunker_comp, instr);
+    // RELATIVE guide2
     // AT:  (0, 0, 20.1502)
     // ROT: (0, 0, 0)
 
     Component *guide3 = CreateComponent(a_dest, CT_Guide, index++, "guide3");
-
     Guide *guide3_comp = (Guide*) guide3->comp;
     guide3_comp->w1 = 0.02;
     guide3_comp->h1 = .12;
@@ -277,11 +275,11 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     guide3_comp->m = 1.6;
     guide3_comp->W = spec->W;
     Init_Guide(guide3_comp, instr);
+    // RELATIVE bunker
     // AT:  (0, 0, 3.56)
     // ROT: (0, 0, 0)
 
     Component *guide4 = CreateComponent(a_dest, CT_Guide, index++, "guide4");
-
     Guide *guide4_comp = (Guide*) guide4->comp;
     guide4_comp->w1 = 0.02;
     guide4_comp->h1 = .12;
@@ -294,29 +292,29 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     guide4_comp->m = 1.6;
     guide4_comp->W = spec->W;
     Init_Guide(guide4_comp, instr);
+    // RELATIVE bunker
     // AT:  (0, 0, 15.8555)
     // ROT: (0, 0, 0)
 
     Component *window1 = CreateComponent(a_dest, CT_Al_window, index++, "window1");
-
     Al_window *window1_comp = (Al_window*) window1->comp;
     window1_comp->thickness = 0.002;
     Init_Al_window(window1_comp, instr);
+    // RELATIVE PREVIOUS
     // AT:  (0, 0, 5.66+1e-9)
 
     Component *ydist_fluxpos = CreateComponent(a_dest, CT_PSDlin_monitor, index++, "ydist_fluxpos");
-
     PSDlin_monitor *ydist_fluxpos_comp = (PSDlin_monitor*) ydist_fluxpos->comp;
     ydist_fluxpos_comp->nbins = 11;
     ydist_fluxpos_comp->filename = (char*) "ydist_fluxpos.dat";
     ydist_fluxpos_comp->xwidth = 0.120;
     ydist_fluxpos_comp->yheight = 0.02;
     Init_PSDlin_monitor(ydist_fluxpos_comp, instr);
+    // RELATIVE guide4
     // AT:  (0, 0, 5.66+1e-8+0.01)
     // ROT: (0, 0, 90)
 
     Component *PSD_fluxpos = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_fluxpos");
-
     PSD_monitor *PSD_fluxpos_comp = (PSD_monitor*) PSD_fluxpos->comp;
     PSD_fluxpos_comp->nx = 100;
     PSD_fluxpos_comp->ny = 100;
@@ -324,20 +322,20 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     PSD_fluxpos_comp->xwidth = 0.02;
     PSD_fluxpos_comp->yheight = 0.12;
     Init_PSD_monitor(PSD_fluxpos_comp, instr);
+    // RELATIVE guide4
     // AT:  (0, 0, 5.66+1e-7+0.01)
 
     Component *xdist_flux_pos = CreateComponent(a_dest, CT_PSDlin_monitor, index++, "xdist_flux_pos");
-
     PSDlin_monitor *xdist_flux_pos_comp = (PSDlin_monitor*) xdist_flux_pos->comp;
     xdist_flux_pos_comp->nbins = 11;
     xdist_flux_pos_comp->filename = (char*) "xdist_fluxpos.dat";
     xdist_flux_pos_comp->xwidth = 0.020;
     xdist_flux_pos_comp->yheight = 0.12;
     Init_PSDlin_monitor(xdist_flux_pos_comp, instr);
+    // RELATIVE PREVIOUS
     // AT:  (0, 0, 1e-9)
 
     Component *PSD_fluxposB = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_fluxposB");
-
     PSD_monitor *PSD_fluxposB_comp = (PSD_monitor*) PSD_fluxposB->comp;
     PSD_fluxposB_comp->nx = 100;
     PSD_fluxposB_comp->ny = 100;
@@ -345,27 +343,27 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     PSD_fluxposB_comp->xwidth = 0.02;
     PSD_fluxposB_comp->yheight = 0.12;
     Init_PSD_monitor(PSD_fluxposB_comp, instr);
+    // RELATIVE guide4
     // AT:  (0, 0, 6.24-1e-7-0.01)
 
     Component *window2 = CreateComponent(a_dest, CT_Al_window, index++, "window2");
-
     Al_window *window2_comp = (Al_window*) window2->comp;
     window2_comp->thickness = 0.002;
     Init_Al_window(window2_comp, instr);
+    // RELATIVE PREVIOUS
     // AT:  (0, 0, 1e-9)
 
     Component *in_slit = CreateComponent(a_dest, CT_Slit, index++, "in_slit");
-
     Slit *in_slit_comp = (Slit*) in_slit->comp;
     in_slit_comp->xmin = -0.01;
     in_slit_comp->xmax = 0.01 ;
     in_slit_comp->ymin = -0.06;
     in_slit_comp->ymax = 0.06;
     Init_Slit(in_slit_comp, instr);
+    // RELATIVE PREVIOUS
     // AT:  (0, 0, 0.0021)
 
     Component *lambda_in = CreateComponent(a_dest, CT_L_monitor, index++, "lambda_in");
-
     L_monitor *lambda_in_comp = (L_monitor*) lambda_in->comp;
     lambda_in_comp->xmin = -0.011;
     lambda_in_comp->xmax = 0.011;
@@ -376,17 +374,17 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     lambda_in_comp->nL = 128;
     lambda_in_comp->filename = (char*) "L_in.dat";
     Init_L_monitor(lambda_in_comp, instr);
+    // RELATIVE in_slit
     // AT:  (0, 0, 0.001)
 
     Component *sma = CreateComponent(a_dest, CT_Arm, index++, "sma");
-
     Arm *sma_comp = (Arm*) sma->comp;
     Init_Arm(sma_comp, instr);
+    // RELATIVE in_slit
     // AT:  (0, 0, 0.65)
     // ROT: (0, OMA, 0)
 
     Component *foc_mono = CreateComponent(a_dest, CT_Monochromator_2foc, index++, "foc_mono");
-
     Monochromator_2foc *foc_mono_comp = (Monochromator_2foc*) foc_mono->comp;
     foc_mono_comp->zwidth = 0.05;
     foc_mono_comp->yheight = 0.025;
@@ -400,61 +398,61 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     foc_mono_comp->RV = spec->RV;
     foc_mono_comp->RH = 0;
     Init_Monochromator_2foc(foc_mono_comp, instr);
+    // RELATIVE sma
     // AT:  (0, 0, 0)
 
     Component *msa = CreateComponent(a_dest, CT_Arm, index++, "msa");
-
     Arm *msa_comp = (Arm*) msa->comp;
     Init_Arm(msa_comp, instr);
+    // RELATIVE sma
     // AT:  (0, 0, 0)
     // ROT: (0, TTM, 0)
 
     Component *out1_slit = CreateComponent(a_dest, CT_Slit, index++, "out1_slit");
-
     Slit *out1_slit_comp = (Slit*) out1_slit->comp;
     out1_slit_comp->xmin = -0.01;
     out1_slit_comp->xmax = 0.01;
     out1_slit_comp->ymin = -0.06;
     out1_slit_comp->ymax = 0.06;
     Init_Slit(out1_slit_comp, instr);
+    // RELATIVE msa
     // AT:  (0, 0, 0.2)
     // ROT: (0, 0, 0)
 
     Component *Amoin_slit = CreateComponent(a_dest, CT_Slit, index++, "Amoin_slit");
-
     Slit *Amoin_slit_comp = (Slit*) Amoin_slit->comp;
     Amoin_slit_comp->xmin = -0.01;
     Amoin_slit_comp->xmax = 0.01;
     Amoin_slit_comp->ymin = -0.06;
     Amoin_slit_comp->ymax = 0.06;
     Init_Slit(Amoin_slit_comp, instr);
+    // RELATIVE msa
     // AT:  (0, 0, 0.325)
     // ROT: (0, 0, 0)
 
     Component *Bmoin_slit = CreateComponent(a_dest, CT_Slit, index++, "Bmoin_slit");
-
     Slit *Bmoin_slit_comp = (Slit*) Bmoin_slit->comp;
     Bmoin_slit_comp->xmin = -0.01;
     Bmoin_slit_comp->xmax = 0.01;
     Bmoin_slit_comp->ymin = -0.06;
     Bmoin_slit_comp->ymax = 0.06;
     Init_Slit(Bmoin_slit_comp, instr);
+    // RELATIVE msa
     // AT:  (0, 0, 0.525)
     // ROT: (0, 0, 0)
 
     Component *out2_slit = CreateComponent(a_dest, CT_Slit, index++, "out2_slit");
-
     Slit *out2_slit_comp = (Slit*) out2_slit->comp;
     out2_slit_comp->xmin = -0.01;
     out2_slit_comp->xmax = 0.01;
     out2_slit_comp->ymin = -0.06;
     out2_slit_comp->ymax = 0.06;
     Init_Slit(out2_slit_comp, instr);
+    // RELATIVE msa
     // AT:  (0, 0, 0.65)
     // ROT: (0, 0, 0)
 
     Component *PSD_sample = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_sample");
-
     PSD_monitor *PSD_sample_comp = (PSD_monitor*) PSD_sample->comp;
     PSD_sample_comp->xmin = -0.05;
     PSD_sample_comp->xmax = 0.05;
@@ -464,10 +462,10 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     PSD_sample_comp->ny = 80;
     PSD_sample_comp->filename = (char*) "PSD_sample.dat";
     Init_PSD_monitor(PSD_sample_comp, instr);
+    // RELATIVE msa
     // AT:  (0, 0, 2.77)
 
     Component *lambda_sample = CreateComponent(a_dest, CT_L_monitor, index++, "lambda_sample");
-
     L_monitor *lambda_sample_comp = (L_monitor*) lambda_sample->comp;
     lambda_sample_comp->xmin = -spec->sample_radius;
     lambda_sample_comp->xmax = spec->sample_radius;
@@ -478,17 +476,17 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     lambda_sample_comp->nL = 128;
     lambda_sample_comp->filename = (char*) "L_sample.dat";
     Init_L_monitor(lambda_sample_comp, instr);
+    // RELATIVE msa
     // AT:  (0, 0, 2.81)
 
     Component *sa_arm = CreateComponent(a_dest, CT_Arm, index++, "sa_arm");
-
     Arm *sa_arm_comp = (Arm*) sa_arm->comp;
     Init_Arm(sa_arm_comp, instr);
+    // RELATIVE msa
     // AT:  (0, 0, 2.82)
     // ROT: (0, 0, 0)
 
     Component *sample = CreateComponent(a_dest, CT_PowderN, index++, "sample");
-
     PowderN *sample_comp = (PowderN*) sample->comp;
     sample_comp->d_phi = spec->D_PHI;
     sample_comp->radius = spec->sample_radius;
@@ -500,18 +498,18 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     sample_comp->p_transmit = 0;
     sample_comp->p_inc = 0;
     Init_PowderN(sample_comp, instr);
+    // RELATIVE sa_arm
     // AT:  (0, 0, 0)
 
     Component *STOP = CreateComponent(a_dest, CT_Beamstop, index++, "STOP");
-
     Beamstop *STOP_comp = (Beamstop*) STOP->comp;
     STOP_comp->radius = 0.3;
     Init_Beamstop(STOP_comp, instr);
+    // RELATIVE sa_arm
     // AT:  (0, 0, 1.4)
     // ROT: (0, 0, 0)
 
     Component *Detector = CreateComponent(a_dest, CT_Monitor_nD, index++, "Detector");
-
     Monitor_nD *Detector_comp = (Monitor_nD*) Detector->comp;
     Detector_comp->xwidth = 3.0;
     Detector_comp->yheight = 0.09;
@@ -521,8 +519,10 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     Detector_comp->bins = 400;
     Detector_comp->options = (char*) "banana, theta";
     Init_Monitor_nD(Detector_comp, instr);
+    // RELATIVE sa_arm
     // AT:  (0, 0, 0)
     // ROT: (0, 0, 180)
+
 }
 
 #endif // PSI_DMC
