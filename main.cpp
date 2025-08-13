@@ -3,14 +3,16 @@
 #include <cstring>
 #include <cstdio>
 #include <cstddef>
+
 #include "lib/jg_baselayer.h"
 //#include "lib/jg_cbui.h"
 #include "../cbui/cbui_includes.h"
 #include "simcore/simcore.h"
 #include "simcore/simlib.h"
 
-#include "src/meta_comps.h"
-#include "src/PSI_DMC.h"
+#include "src/comps_meta.h"
+//#include "src/PSI_DMC.h"
+#include "src/PSI_DMC_config.h"
 
 
 HashMap CreateComponentExamples(MArena *a_dest) {
@@ -18,7 +20,7 @@ HashMap CreateComponentExamples(MArena *a_dest) {
     HashMap map = InitMap(a_dest, count * 2);
     for (s32 i = 1; i < CT_CNT; ++i) {
         CompType ct = (CompType) i;
-        CompMeta *cm = CreateComponent(a_dest, ct, i-1);
+        Component *cm = CreateComponent(a_dest, ct, i-1, "default_name");
         MapPut(&map, ct, cm);
     }
 
@@ -38,6 +40,8 @@ void InitSimcore() {
 void RunProgram() {
     TimeFunction;
 
+    MContext *ctx = InitBaselayer();
+
     // init
     InitSimcore();
     Instrument instr = {};
@@ -45,7 +49,7 @@ void RunProgram() {
     // config for the particular instrument, PSI_DMC
     PSI_DMC spec = {};
     Init_PSI_DMC(&spec);
-    Config_PSI_DMC(&spec, &instr);
+    Config_PSI_DMC(ctx->a_life, &spec, &instr);
 }
 
 
@@ -57,7 +61,7 @@ void Test() {
 
     printf("Installed components:\n");
     MapIter iter = {};
-    while (CompMeta *comp = (CompMeta*) MapNextVal(&comps, &iter)) {
+    while (Component *comp = (Component*) MapNextVal(&comps, &iter)) {
         printf("%d", comp->type);        
         
         if (comp->type_name.len) {

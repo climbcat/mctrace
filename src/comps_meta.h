@@ -40,7 +40,7 @@ enum CompType {
 };
 
 
-struct CompMeta {
+struct Component {
     CompType type;
     void *comp;
 
@@ -52,105 +52,105 @@ struct CompMeta {
 };
 
 
-CompMeta *CreateComponent(MArena *a_dest, CompType type, s32 index) {
-    CompMeta *comp = (CompMeta*) ArenaAlloc(a_dest, sizeof(CompMeta));
+Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char *name) {
+    Component *comp = (Component*) ArenaAlloc(a_dest, sizeof(Component));
     comp->t = Matrix4f_Identity();
     comp->type = type;
 
     switch (type) {
         case CT_Slit: {
-            Slit comp_spec = Create_Slit(index, (char*) "Slit_default");
+            Slit comp_spec = Create_Slit(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Slit));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_L_monitor: {
-            L_monitor comp_spec = Create_L_monitor(index, (char*) "L_monitor_default");
+            L_monitor comp_spec = Create_L_monitor(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(L_monitor));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Bender: {
-            Bender comp_spec = Create_Bender(index, (char*) "Bender_default");
+            Bender comp_spec = Create_Bender(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Bender));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Progress_bar: {
-            Progress_bar comp_spec = Create_Progress_bar(index, (char*) "Progress_bar_default");
+            Progress_bar comp_spec = Create_Progress_bar(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Progress_bar));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_PSD_monitor: {
-            PSD_monitor comp_spec = Create_PSD_monitor(index, (char*) "PSD_monitor_default");
+            PSD_monitor comp_spec = Create_PSD_monitor(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PSD_monitor));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Arm: {
-            Arm comp_spec = Create_Arm(index, (char*) "Arm_default");
+            Arm comp_spec = Create_Arm(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Arm));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Al_window: {
-            Al_window comp_spec = Create_Al_window(index, (char*) "Al_window_default");
+            Al_window comp_spec = Create_Al_window(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Al_window));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_PSDlin_monitor: {
-            PSDlin_monitor comp_spec = Create_PSDlin_monitor(index, (char*) "PSDlin_monitor_default");
+            PSDlin_monitor comp_spec = Create_PSDlin_monitor(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PSDlin_monitor));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Guide: {
-            Guide comp_spec = Create_Guide(index, (char*) "Guide_default");
+            Guide comp_spec = Create_Guide(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Guide));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Source_Maxwell_3: {
-            Source_Maxwell_3 comp_spec = Create_Source_Maxwell_3(index, (char*) "Source_Maxwell_3_default");
+            Source_Maxwell_3 comp_spec = Create_Source_Maxwell_3(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Source_Maxwell_3));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Beamstop: {
-            Beamstop comp_spec = Create_Beamstop(index, (char*) "Beamstop_default");
+            Beamstop comp_spec = Create_Beamstop(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Beamstop));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Monochromator_2foc: {
-            Monochromator_2foc comp_spec = Create_Monochromator_2foc(index, (char*) "Monochromator_2foc_default");
+            Monochromator_2foc comp_spec = Create_Monochromator_2foc(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Monochromator_2foc));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Monitor_nD: {
-            Monitor_nD comp_spec = Create_Monitor_nD(index, (char*) "Monitor_nD_default");
+            Monitor_nD comp_spec = Create_Monitor_nD(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Monitor_nD));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_PowderN: {
-            PowderN comp_spec = Create_PowderN(index, (char*) "PowderN_default");
+            PowderN comp_spec = Create_PowderN(index, (char*) "name");
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PowderN));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
@@ -163,7 +163,7 @@ CompMeta *CreateComponent(MArena *a_dest, CompType type, s32 index) {
 }
 
 
-void InitComponent(CompMeta *comp, Instrument *instr = NULL) {
+void InitComponent(Component *comp, Instrument *instr = NULL) {
     switch (comp->type) {
         case CT_Slit: { Init_Slit((Slit*) comp->comp, instr); } break;
         case CT_L_monitor: { Init_L_monitor((L_monitor*) comp->comp, instr); } break;
@@ -185,7 +185,7 @@ void InitComponent(CompMeta *comp, Instrument *instr = NULL) {
 }
 
 
-void TraceComponent(CompMeta *comp, Neutron *particle, Instrument *instr = NULL) {
+void TraceComponent(Component *comp, Neutron *particle, Instrument *instr = NULL) {
     switch (comp->type) {
         case CT_Slit: { Trace_Slit((Slit*) comp->comp, particle, instr); } break;
         case CT_L_monitor: { Trace_L_monitor((L_monitor*) comp->comp, particle, instr); } break;
@@ -207,7 +207,7 @@ void TraceComponent(CompMeta *comp, Neutron *particle, Instrument *instr = NULL)
 }
 
 
-void DisplayComponent(CompMeta *comp) {
+void DisplayComponent(Component *comp) {
     switch (comp->type) {
         case CT_Slit: { Display_Slit((Slit*) comp->comp); } break;
         case CT_L_monitor: { Display_L_monitor((L_monitor*) comp->comp); } break;
@@ -229,7 +229,7 @@ void DisplayComponent(CompMeta *comp) {
 }
 
 
-void FinallyComponent(CompMeta *comp) {
+void FinallyComponent(Component *comp) {
     switch (comp->type) {
         case CT_Slit: { Display_Slit((Slit*) comp->comp); } break;
         case CT_L_monitor: { Display_L_monitor((L_monitor*) comp->comp); } break;
