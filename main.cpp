@@ -1,5 +1,16 @@
-#include "meta_comps.h"
-#include "PSI_DMC.h"
+
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
+#include <cstddef>
+#include "lib/jg_baselayer.h"
+//#include "lib/jg_cbui.h"
+#include "../cbui/cbui_includes.h"
+#include "simcore/simcore.h"
+#include "simcore/simlib.h"
+
+#include "src/meta_comps.h"
+#include "src/PSI_DMC.h"
 
 
 HashMap CreateComponentExamples(MArena *a_dest) {
@@ -16,6 +27,8 @@ HashMap CreateComponentExamples(MArena *a_dest) {
 
 
 void InitSimcore() {
+    // TODO: we can eliminate this function, now that the defaults are at the source
+
     strcpy(&instrument_name[0], (char*) "default_instr_name");
     strcpy(&instrument_source[0], (char*) "default_instr_name");
     instrument_exe = (char*) "default_instr_exe";
