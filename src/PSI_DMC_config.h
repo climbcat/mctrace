@@ -523,9 +523,9 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     at_x = 0;
     at_y = 0;
     at_z = 0.65;
-    // ROT: (0, OMA, 0)
+    // ROT: (0, spec->OMA, 0)
     phi_x = 0;
-    phi_y = OMA;
+    phi_y = spec->OMA;
     phi_z = 0;
     sma->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
@@ -562,9 +562,9 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     at_x = 0;
     at_y = 0;
     at_z = 0;
-    // ROT: (0, TTM, 0)
+    // ROT: (0, spec->TTM, 0)
     phi_x = 0;
-    phi_y = TTM;
+    phi_y = spec->TTM;
     phi_z = 0;
     msa->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
