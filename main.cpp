@@ -15,35 +15,12 @@
 #include "src/PSI_DMC_config.h"
 
 
-HashMap CreateComponentExamples(MArena *a_dest) {
-    s32 count = 100;
-    HashMap map = InitMap(a_dest, count * 2);
-    for (s32 i = 1; i < CT_CNT; ++i) {
-        CompType ct = (CompType) i;
-        Component *cm = CreateComponent(a_dest, ct, i-1, "default_name");
-        MapPut(&map, ct, cm);
-    }
-
-    return map;
-}
-
-
-void InitSimcore() {
-    // TODO: we can eliminate this function, now that the defaults are at the source
-
-    strcpy(&instrument_name[0], (char*) "default_instr_name");
-    strcpy(&instrument_source[0], (char*) "default_instr_name");
-    instrument_exe = (char*) "default_instr_exe";
-}
-
-
 void RunProgram() {
     TimeFunction;
 
     MContext *ctx = InitBaselayer();
 
     // init
-    InitSimcore();
     Instrument instr = {};
 
     // config for the particular instrument, PSI_DMC
@@ -56,8 +33,17 @@ void RunProgram() {
 void Test() {
     TimeFunction;
 
-    MArena *a = GetContext()->a_life;
-    HashMap comps = CreateComponentExamples(a);
+    //  This test just creates every component, it doens't even init them:
+    //  For that we need 
+
+    MArena *a_life = GetContext()->a_life;
+    s32 count = 100;
+    HashMap comps = InitMap(a_life, count * 2);
+    for (s32 i = 1; i < CT_CNT; ++i) {
+        CompType ct = (CompType) i;
+        Component *cm = CreateComponent(a_life, ct, i-1, "default_name");
+        MapPut(&comps, ct, cm);
+    }
 
     printf("Installed components:\n");
     MapIter iter = {};
@@ -75,8 +61,8 @@ void Test() {
 
 int main (int argc, char **argv) {
     TimeProgram;
-    BaselayerAssertVersion(0, 2, 1);
-    CbuiAssertVersion(0, 1, 0);
+    BaselayerAssertVersion(0, 2, 4);
+    CbuiAssertVersion(0, 2, 2);
 
     if (CLAContainsArg("--help", argc, argv) || CLAContainsArg("-h", argc, argv)) {
         printf("--help:          display help (this text)\n");

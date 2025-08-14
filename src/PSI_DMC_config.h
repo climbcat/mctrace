@@ -8,7 +8,7 @@ struct PSI_DMC {
     double lambda = 2.5666;
     double R = 0.87;
     double R_curve = 0.87;
-    char *filename = (char*) "Na2Ca3Al2F14.laz";
+    char *filename = (char*) "data/Na2Ca3Al2F14.laz";
     double D_PHI = 6;
     double SHIFT = 0;
     double PACK = 0.7;

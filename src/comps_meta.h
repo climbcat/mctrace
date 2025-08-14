@@ -40,21 +40,24 @@ enum CompType {
 };
 
 
-struct Component {
-    CompType type;
-    void *comp;
+// NOTE: Although not thrilled about having Component reside in generated code,
+//      it is just simpler to have it here. The way to move it out, would be to
+//      Have a s32 type instead of the enum type here.
 
+
+struct Component {
+    Transform *t;
+
+    CompType type;
     Str type_name;
     Str name;
 
-    Matrix4f t;
-    Matrix4f *parent;
+    void *comp;
 };
 
 
 Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char *name) {
     Component *comp = (Component*) ArenaAlloc(a_dest, sizeof(Component));
-    comp->t = Matrix4f_Identity();
     comp->type = type;
 
     switch (type) {

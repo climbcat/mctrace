@@ -62,7 +62,7 @@ int  defaultmain = 1;
 int  traceenabled = 0;
 char instrument_name[200] = "default_instr_name";
 char instrument_source[200] = "default_instr_source";
-char *instrument_exe = (const char*) "default_instr_exe";
+char *instrument_exe = (char*) "default_instr_exe";
 int  numipar = 0;
 FILE *siminfo_file = NULL;
 
