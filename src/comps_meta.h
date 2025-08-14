@@ -46,7 +46,7 @@ enum CompType {
 
 
 struct Component {
-    Transform *t;
+    Transform *transform;
 
     CompType type;
     Str type_name;
