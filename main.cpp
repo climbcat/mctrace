@@ -19,6 +19,7 @@ void RunProgram() {
     TimeFunction;
 
     MContext *ctx = InitBaselayer();
+    SceneGraphInit();
 
     // init
     Instrument instr = {};
@@ -27,6 +28,8 @@ void RunProgram() {
     PSI_DMC spec = {};
     Init_PSI_DMC(&spec);
     Config_PSI_DMC(ctx->a_life, &spec, &instr);
+
+    
 }
 
 
@@ -61,6 +64,7 @@ void Test() {
 
 int main (int argc, char **argv) {
     TimeProgram;
+
     BaselayerAssertVersion(0, 2, 4);
     CbuiAssertVersion(0, 2, 2);
 

@@ -132,15 +132,26 @@ void Init_PSI_DMC(PSI_DMC *spec) {
 
 }
 
-void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
+Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
+    Array<Component*> comp_sequence = InitArray<Component*>(a_dest, 100 /* hard-code the length of our comp array */);
+    f32 at_x, at_y, at_z;
+    f32 phi_x, phi_y, phi_z;
+
     s32 index = 0;
     Component *source_arm = CreateComponent(a_dest, CT_Progress_bar, index++, "source_arm");
+    comp_sequence.Add(source_arm);
     Progress_bar *source_arm_comp = (Progress_bar*) source_arm->comp;
     Init_Progress_bar(source_arm_comp, instr);
     // ABSOLUTE
+    source_arm->transform = SceneGraphAlloc();
     // AT:  (0, 0, 0)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0;
+    source_arm->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *source = CreateComponent(a_dest, CT_Source_Maxwell_3, index++, "source");
+    comp_sequence.Add(source_arm);
     Source_Maxwell_3 *source_comp = (Source_Maxwell_3*) source->comp;
     source_comp->yheight = 0.156;
     source_comp->xwidth = 0.126;
@@ -155,10 +166,19 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     source_comp->I2 = 5.2E11;
     Init_Source_Maxwell_3(source_comp, instr);
     // RELATIVE source_arm
+    source->transform = SceneGraphAlloc(source_arm->transform);
     // AT:  (0, 0, 0)
     // ROT: (0, 0, 0)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0;
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 0;
+    source->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *PSDbefore_guides = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDbefore_guides");
+    comp_sequence.Add(source_arm);
     PSD_monitor *PSDbefore_guides_comp = (PSD_monitor*) PSDbefore_guides->comp;
     PSDbefore_guides_comp->nx = 128;
     PSDbefore_guides_comp->ny = 128;
@@ -167,7 +187,16 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     PSDbefore_guides_comp->yheight = 0.12;
     Init_PSD_monitor(PSDbefore_guides_comp, instr);
     // RELATIVE source_arm
+    PSDbefore_guides->transform = SceneGraphAlloc(source_arm->transform);
     // AT:  (0, 0, 1.49999)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0;
+    PSDbefore_guides->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
+
+    //
+    // etc.
+    //
 
     Component *l_mon_source = CreateComponent(a_dest, CT_L_monitor, index++, "l_mon_source");
     L_monitor *l_mon_source_comp = (L_monitor*) l_mon_source->comp;
@@ -523,6 +552,9 @@ void Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
     // AT:  (0, 0, 0)
     // ROT: (0, 0, 180)
 
+
+    assert(comp_sequence.len = comp_sequence.max);
+    return comp_sequence;
 }
 
 #endif // PSI_DMC
