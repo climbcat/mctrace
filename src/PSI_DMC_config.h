@@ -133,11 +133,11 @@ void Init_PSI_DMC(PSI_DMC *spec) {
 }
 
 Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
-    Array<Component*> comp_sequence = InitArray<Component*>(a_dest, 100 /* hard-code the length of our comp array */);
+    Array<Component*> comp_sequence = InitArray<Component*>(a_dest, 32);
     f32 at_x, at_y, at_z;
     f32 phi_x, phi_y, phi_z;
-
     s32 index = 0;
+
     Component *source_arm = CreateComponent(a_dest, CT_Progress_bar, index++, "source_arm");
     comp_sequence.Add(source_arm);
     Progress_bar *source_arm_comp = (Progress_bar*) source_arm->comp;
@@ -151,7 +151,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     source_arm->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *source = CreateComponent(a_dest, CT_Source_Maxwell_3, index++, "source");
-    comp_sequence.Add(source_arm);
+    comp_sequence.Add(source);
     Source_Maxwell_3 *source_comp = (Source_Maxwell_3*) source->comp;
     source_comp->yheight = 0.156;
     source_comp->xwidth = 0.126;
@@ -168,17 +168,17 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     // RELATIVE source_arm
     source->transform = SceneGraphAlloc(source_arm->transform);
     // AT:  (0, 0, 0)
-    // ROT: (0, 0, 0)
     at_x = 0;
     at_y = 0;
     at_z = 0;
+    // ROT: (0, 0, 0)
     phi_x = 0;
     phi_y = 0;
     phi_z = 0;
     source->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *PSDbefore_guides = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDbefore_guides");
-    comp_sequence.Add(source_arm);
+    comp_sequence.Add(PSDbefore_guides);
     PSD_monitor *PSDbefore_guides_comp = (PSD_monitor*) PSDbefore_guides->comp;
     PSDbefore_guides_comp->nx = 128;
     PSDbefore_guides_comp->ny = 128;
@@ -191,14 +191,11 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     // AT:  (0, 0, 1.49999)
     at_x = 0;
     at_y = 0;
-    at_z = 0;
+    at_z = 1.49999;
     PSDbefore_guides->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
-    //
-    // etc.
-    //
-
     Component *l_mon_source = CreateComponent(a_dest, CT_L_monitor, index++, "l_mon_source");
+    comp_sequence.Add(l_mon_source);
     L_monitor *l_mon_source_comp = (L_monitor*) l_mon_source->comp;
     l_mon_source_comp->nL = 101;
     l_mon_source_comp->filename = (char*) "lmonsource.dat";
@@ -208,9 +205,15 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     l_mon_source_comp->Lmax = 20;
     Init_L_monitor(l_mon_source_comp, instr);
     // RELATIVE PREVIOUS
+    l_mon_source->transform = SceneGraphAlloc(PSDbefore_guides->transform);
     // AT:  (0, 0, 1e-9)
+    at_x = 0;
+    at_y = 0;
+    at_z = 1e-9;
+    l_mon_source->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *guide1 = CreateComponent(a_dest, CT_Guide, index++, "guide1");
+    comp_sequence.Add(guide1);
     Guide *guide1_comp = (Guide*) guide1->comp;
     guide1_comp->w1 = 0.02;
     guide1_comp->h1 = 0.12;
@@ -224,10 +227,19 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     guide1_comp->W = spec->W;
     Init_Guide(guide1_comp, instr);
     // RELATIVE source_arm
+    guide1->transform = SceneGraphAlloc(source_arm->transform);
     // AT:  (0, 0, 1.50)
+    at_x = 0;
+    at_y = 0;
+    at_z = 1.50;
     // ROT: (0, 0, 0)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 0;
+    guide1->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *PSDbefore_curve = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDbefore_curve");
+    comp_sequence.Add(PSDbefore_curve);
     PSD_monitor *PSDbefore_curve_comp = (PSD_monitor*) PSDbefore_curve->comp;
     PSDbefore_curve_comp->nx = 128;
     PSDbefore_curve_comp->ny = 128;
@@ -236,9 +248,15 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     PSDbefore_curve_comp->yheight = 0.12;
     Init_PSD_monitor(PSDbefore_curve_comp, instr);
     // RELATIVE guide1
+    PSDbefore_curve->transform = SceneGraphAlloc(guide1->transform);
     // AT:  (0, 0, 4.664)
+    at_x = 0;
+    at_y = 0;
+    at_z = 4.664;
+    PSDbefore_curve->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *guide2 = CreateComponent(a_dest, CT_Bender, index++, "guide2");
+    comp_sequence.Add(guide2);
     Bender *guide2_comp = (Bender*) guide2->comp;
     guide2_comp->w = 0.02;
     guide2_comp->h = 0.12;
@@ -261,9 +279,15 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     guide2_comp->l = 20;
     Init_Bender(guide2_comp, instr);
     // RELATIVE guide1
+    guide2->transform = SceneGraphAlloc(guide1->transform);
     // AT:  (0, 0, 4.69)
+    at_x = 0;
+    at_y = 0;
+    at_z = 4.69;
+    guide2->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *PSDafter_curve = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDafter_curve");
+    comp_sequence.Add(PSDafter_curve);
     PSD_monitor *PSDafter_curve_comp = (PSD_monitor*) PSDafter_curve->comp;
     PSDafter_curve_comp->nx = 128;
     PSDafter_curve_comp->ny = 128;
@@ -272,9 +296,15 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     PSDafter_curve_comp->yheight = 0.12;
     Init_PSD_monitor(PSDafter_curve_comp, instr);
     // RELATIVE guide2
+    PSDafter_curve->transform = SceneGraphAlloc(guide2->transform);
     // AT:  (0, 0, 20.0001)
+    at_x = 0;
+    at_y = 0;
+    at_z = 20.0001;
+    PSDafter_curve->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *bunker = CreateComponent(a_dest, CT_Guide, index++, "bunker");
+    comp_sequence.Add(bunker);
     Guide *bunker_comp = (Guide*) bunker->comp;
     bunker_comp->w1 = 0.02;
     bunker_comp->h1 = .12;
@@ -288,10 +318,19 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     bunker_comp->W = spec->W;
     Init_Guide(bunker_comp, instr);
     // RELATIVE guide2
+    bunker->transform = SceneGraphAlloc(guide2->transform);
     // AT:  (0, 0, 20.1502)
+    at_x = 0;
+    at_y = 0;
+    at_z = 20.1502;
     // ROT: (0, 0, 0)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 0;
+    bunker->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *guide3 = CreateComponent(a_dest, CT_Guide, index++, "guide3");
+    comp_sequence.Add(guide3);
     Guide *guide3_comp = (Guide*) guide3->comp;
     guide3_comp->w1 = 0.02;
     guide3_comp->h1 = .12;
@@ -305,10 +344,19 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     guide3_comp->W = spec->W;
     Init_Guide(guide3_comp, instr);
     // RELATIVE bunker
+    guide3->transform = SceneGraphAlloc(bunker->transform);
     // AT:  (0, 0, 3.56)
+    at_x = 0;
+    at_y = 0;
+    at_z = 3.56;
     // ROT: (0, 0, 0)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 0;
+    guide3->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *guide4 = CreateComponent(a_dest, CT_Guide, index++, "guide4");
+    comp_sequence.Add(guide4);
     Guide *guide4_comp = (Guide*) guide4->comp;
     guide4_comp->w1 = 0.02;
     guide4_comp->h1 = .12;
@@ -322,17 +370,32 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     guide4_comp->W = spec->W;
     Init_Guide(guide4_comp, instr);
     // RELATIVE bunker
+    guide4->transform = SceneGraphAlloc(bunker->transform);
     // AT:  (0, 0, 15.8555)
+    at_x = 0;
+    at_y = 0;
+    at_z = 15.8555;
     // ROT: (0, 0, 0)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 0;
+    guide4->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *window1 = CreateComponent(a_dest, CT_Al_window, index++, "window1");
+    comp_sequence.Add(window1);
     Al_window *window1_comp = (Al_window*) window1->comp;
     window1_comp->thickness = 0.002;
     Init_Al_window(window1_comp, instr);
     // RELATIVE PREVIOUS
+    window1->transform = SceneGraphAlloc(guide4->transform);
     // AT:  (0, 0, 5.66+1e-9)
+    at_x = 0;
+    at_y = 0;
+    at_z = 5.66+1e-9;
+    window1->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *ydist_fluxpos = CreateComponent(a_dest, CT_PSDlin_monitor, index++, "ydist_fluxpos");
+    comp_sequence.Add(ydist_fluxpos);
     PSDlin_monitor *ydist_fluxpos_comp = (PSDlin_monitor*) ydist_fluxpos->comp;
     ydist_fluxpos_comp->nbins = 11;
     ydist_fluxpos_comp->filename = (char*) "ydist_fluxpos.dat";
@@ -340,10 +403,19 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     ydist_fluxpos_comp->yheight = 0.02;
     Init_PSDlin_monitor(ydist_fluxpos_comp, instr);
     // RELATIVE guide4
+    ydist_fluxpos->transform = SceneGraphAlloc(guide4->transform);
     // AT:  (0, 0, 5.66+1e-8+0.01)
+    at_x = 0;
+    at_y = 0;
+    at_z = 5.66+1e-8+0.01;
     // ROT: (0, 0, 90)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 90;
+    ydist_fluxpos->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *PSD_fluxpos = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_fluxpos");
+    comp_sequence.Add(PSD_fluxpos);
     PSD_monitor *PSD_fluxpos_comp = (PSD_monitor*) PSD_fluxpos->comp;
     PSD_fluxpos_comp->nx = 100;
     PSD_fluxpos_comp->ny = 100;
@@ -352,9 +424,15 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     PSD_fluxpos_comp->yheight = 0.12;
     Init_PSD_monitor(PSD_fluxpos_comp, instr);
     // RELATIVE guide4
+    PSD_fluxpos->transform = SceneGraphAlloc(guide4->transform);
     // AT:  (0, 0, 5.66+1e-7+0.01)
+    at_x = 0;
+    at_y = 0;
+    at_z = 5.66+1e-7+0.01;
+    PSD_fluxpos->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *xdist_flux_pos = CreateComponent(a_dest, CT_PSDlin_monitor, index++, "xdist_flux_pos");
+    comp_sequence.Add(xdist_flux_pos);
     PSDlin_monitor *xdist_flux_pos_comp = (PSDlin_monitor*) xdist_flux_pos->comp;
     xdist_flux_pos_comp->nbins = 11;
     xdist_flux_pos_comp->filename = (char*) "xdist_fluxpos.dat";
@@ -362,9 +440,15 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     xdist_flux_pos_comp->yheight = 0.12;
     Init_PSDlin_monitor(xdist_flux_pos_comp, instr);
     // RELATIVE PREVIOUS
+    xdist_flux_pos->transform = SceneGraphAlloc(PSD_fluxpos->transform);
     // AT:  (0, 0, 1e-9)
+    at_x = 0;
+    at_y = 0;
+    at_z = 1e-9;
+    xdist_flux_pos->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *PSD_fluxposB = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_fluxposB");
+    comp_sequence.Add(PSD_fluxposB);
     PSD_monitor *PSD_fluxposB_comp = (PSD_monitor*) PSD_fluxposB->comp;
     PSD_fluxposB_comp->nx = 100;
     PSD_fluxposB_comp->ny = 100;
@@ -373,16 +457,28 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     PSD_fluxposB_comp->yheight = 0.12;
     Init_PSD_monitor(PSD_fluxposB_comp, instr);
     // RELATIVE guide4
+    PSD_fluxposB->transform = SceneGraphAlloc(guide4->transform);
     // AT:  (0, 0, 6.24-1e-7-0.01)
+    at_x = 0;
+    at_y = 0;
+    at_z = 6.24-1e-7-0.01;
+    PSD_fluxposB->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *window2 = CreateComponent(a_dest, CT_Al_window, index++, "window2");
+    comp_sequence.Add(window2);
     Al_window *window2_comp = (Al_window*) window2->comp;
     window2_comp->thickness = 0.002;
     Init_Al_window(window2_comp, instr);
     // RELATIVE PREVIOUS
+    window2->transform = SceneGraphAlloc(PSD_fluxposB->transform);
     // AT:  (0, 0, 1e-9)
+    at_x = 0;
+    at_y = 0;
+    at_z = 1e-9;
+    window2->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *in_slit = CreateComponent(a_dest, CT_Slit, index++, "in_slit");
+    comp_sequence.Add(in_slit);
     Slit *in_slit_comp = (Slit*) in_slit->comp;
     in_slit_comp->xmin = -0.01;
     in_slit_comp->xmax = 0.01 ;
@@ -390,9 +486,15 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     in_slit_comp->ymax = 0.06;
     Init_Slit(in_slit_comp, instr);
     // RELATIVE PREVIOUS
+    in_slit->transform = SceneGraphAlloc(window2->transform);
     // AT:  (0, 0, 0.0021)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0.0021;
+    in_slit->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *lambda_in = CreateComponent(a_dest, CT_L_monitor, index++, "lambda_in");
+    comp_sequence.Add(lambda_in);
     L_monitor *lambda_in_comp = (L_monitor*) lambda_in->comp;
     lambda_in_comp->xmin = -0.011;
     lambda_in_comp->xmax = 0.011;
@@ -404,16 +506,31 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     lambda_in_comp->filename = (char*) "L_in.dat";
     Init_L_monitor(lambda_in_comp, instr);
     // RELATIVE in_slit
+    lambda_in->transform = SceneGraphAlloc(in_slit->transform);
     // AT:  (0, 0, 0.001)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0.001;
+    lambda_in->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *sma = CreateComponent(a_dest, CT_Arm, index++, "sma");
+    comp_sequence.Add(sma);
     Arm *sma_comp = (Arm*) sma->comp;
     Init_Arm(sma_comp, instr);
     // RELATIVE in_slit
+    sma->transform = SceneGraphAlloc(in_slit->transform);
     // AT:  (0, 0, 0.65)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0.65;
     // ROT: (0, OMA, 0)
+    phi_x = 0;
+    phi_y = OMA;
+    phi_z = 0;
+    sma->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *foc_mono = CreateComponent(a_dest, CT_Monochromator_2foc, index++, "foc_mono");
+    comp_sequence.Add(foc_mono);
     Monochromator_2foc *foc_mono_comp = (Monochromator_2foc*) foc_mono->comp;
     foc_mono_comp->zwidth = 0.05;
     foc_mono_comp->yheight = 0.025;
@@ -428,16 +545,31 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     foc_mono_comp->RH = 0;
     Init_Monochromator_2foc(foc_mono_comp, instr);
     // RELATIVE sma
+    foc_mono->transform = SceneGraphAlloc(sma->transform);
     // AT:  (0, 0, 0)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0;
+    foc_mono->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *msa = CreateComponent(a_dest, CT_Arm, index++, "msa");
+    comp_sequence.Add(msa);
     Arm *msa_comp = (Arm*) msa->comp;
     Init_Arm(msa_comp, instr);
     // RELATIVE sma
+    msa->transform = SceneGraphAlloc(sma->transform);
     // AT:  (0, 0, 0)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0;
     // ROT: (0, TTM, 0)
+    phi_x = 0;
+    phi_y = TTM;
+    phi_z = 0;
+    msa->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *out1_slit = CreateComponent(a_dest, CT_Slit, index++, "out1_slit");
+    comp_sequence.Add(out1_slit);
     Slit *out1_slit_comp = (Slit*) out1_slit->comp;
     out1_slit_comp->xmin = -0.01;
     out1_slit_comp->xmax = 0.01;
@@ -445,10 +577,19 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     out1_slit_comp->ymax = 0.06;
     Init_Slit(out1_slit_comp, instr);
     // RELATIVE msa
+    out1_slit->transform = SceneGraphAlloc(msa->transform);
     // AT:  (0, 0, 0.2)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0.2;
     // ROT: (0, 0, 0)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 0;
+    out1_slit->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *Amoin_slit = CreateComponent(a_dest, CT_Slit, index++, "Amoin_slit");
+    comp_sequence.Add(Amoin_slit);
     Slit *Amoin_slit_comp = (Slit*) Amoin_slit->comp;
     Amoin_slit_comp->xmin = -0.01;
     Amoin_slit_comp->xmax = 0.01;
@@ -456,10 +597,19 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     Amoin_slit_comp->ymax = 0.06;
     Init_Slit(Amoin_slit_comp, instr);
     // RELATIVE msa
+    Amoin_slit->transform = SceneGraphAlloc(msa->transform);
     // AT:  (0, 0, 0.325)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0.325;
     // ROT: (0, 0, 0)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 0;
+    Amoin_slit->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *Bmoin_slit = CreateComponent(a_dest, CT_Slit, index++, "Bmoin_slit");
+    comp_sequence.Add(Bmoin_slit);
     Slit *Bmoin_slit_comp = (Slit*) Bmoin_slit->comp;
     Bmoin_slit_comp->xmin = -0.01;
     Bmoin_slit_comp->xmax = 0.01;
@@ -467,10 +617,19 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     Bmoin_slit_comp->ymax = 0.06;
     Init_Slit(Bmoin_slit_comp, instr);
     // RELATIVE msa
+    Bmoin_slit->transform = SceneGraphAlloc(msa->transform);
     // AT:  (0, 0, 0.525)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0.525;
     // ROT: (0, 0, 0)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 0;
+    Bmoin_slit->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *out2_slit = CreateComponent(a_dest, CT_Slit, index++, "out2_slit");
+    comp_sequence.Add(out2_slit);
     Slit *out2_slit_comp = (Slit*) out2_slit->comp;
     out2_slit_comp->xmin = -0.01;
     out2_slit_comp->xmax = 0.01;
@@ -478,10 +637,19 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     out2_slit_comp->ymax = 0.06;
     Init_Slit(out2_slit_comp, instr);
     // RELATIVE msa
+    out2_slit->transform = SceneGraphAlloc(msa->transform);
     // AT:  (0, 0, 0.65)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0.65;
     // ROT: (0, 0, 0)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 0;
+    out2_slit->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *PSD_sample = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_sample");
+    comp_sequence.Add(PSD_sample);
     PSD_monitor *PSD_sample_comp = (PSD_monitor*) PSD_sample->comp;
     PSD_sample_comp->xmin = -0.05;
     PSD_sample_comp->xmax = 0.05;
@@ -492,9 +660,15 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     PSD_sample_comp->filename = (char*) "PSD_sample.dat";
     Init_PSD_monitor(PSD_sample_comp, instr);
     // RELATIVE msa
+    PSD_sample->transform = SceneGraphAlloc(msa->transform);
     // AT:  (0, 0, 2.77)
+    at_x = 0;
+    at_y = 0;
+    at_z = 2.77;
+    PSD_sample->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *lambda_sample = CreateComponent(a_dest, CT_L_monitor, index++, "lambda_sample");
+    comp_sequence.Add(lambda_sample);
     L_monitor *lambda_sample_comp = (L_monitor*) lambda_sample->comp;
     lambda_sample_comp->xmin = -spec->sample_radius;
     lambda_sample_comp->xmax = spec->sample_radius;
@@ -506,16 +680,31 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     lambda_sample_comp->filename = (char*) "L_sample.dat";
     Init_L_monitor(lambda_sample_comp, instr);
     // RELATIVE msa
+    lambda_sample->transform = SceneGraphAlloc(msa->transform);
     // AT:  (0, 0, 2.81)
+    at_x = 0;
+    at_y = 0;
+    at_z = 2.81;
+    lambda_sample->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *sa_arm = CreateComponent(a_dest, CT_Arm, index++, "sa_arm");
+    comp_sequence.Add(sa_arm);
     Arm *sa_arm_comp = (Arm*) sa_arm->comp;
     Init_Arm(sa_arm_comp, instr);
     // RELATIVE msa
+    sa_arm->transform = SceneGraphAlloc(msa->transform);
     // AT:  (0, 0, 2.82)
+    at_x = 0;
+    at_y = 0;
+    at_z = 2.82;
     // ROT: (0, 0, 0)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 0;
+    sa_arm->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *sample = CreateComponent(a_dest, CT_PowderN, index++, "sample");
+    comp_sequence.Add(sample);
     PowderN *sample_comp = (PowderN*) sample->comp;
     sample_comp->d_phi = spec->D_PHI;
     sample_comp->radius = spec->sample_radius;
@@ -528,17 +717,32 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     sample_comp->p_inc = 0;
     Init_PowderN(sample_comp, instr);
     // RELATIVE sa_arm
+    sample->transform = SceneGraphAlloc(sa_arm->transform);
     // AT:  (0, 0, 0)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0;
+    sample->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *STOP = CreateComponent(a_dest, CT_Beamstop, index++, "STOP");
+    comp_sequence.Add(STOP);
     Beamstop *STOP_comp = (Beamstop*) STOP->comp;
     STOP_comp->radius = 0.3;
     Init_Beamstop(STOP_comp, instr);
     // RELATIVE sa_arm
+    STOP->transform = SceneGraphAlloc(sa_arm->transform);
     // AT:  (0, 0, 1.4)
+    at_x = 0;
+    at_y = 0;
+    at_z = 1.4;
     // ROT: (0, 0, 0)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 0;
+    STOP->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *Detector = CreateComponent(a_dest, CT_Monitor_nD, index++, "Detector");
+    comp_sequence.Add(Detector);
     Monitor_nD *Detector_comp = (Monitor_nD*) Detector->comp;
     Detector_comp->xwidth = 3.0;
     Detector_comp->yheight = 0.09;
@@ -549,12 +753,17 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     Detector_comp->options = (char*) "banana, theta";
     Init_Monitor_nD(Detector_comp, instr);
     // RELATIVE sa_arm
+    Detector->transform = SceneGraphAlloc(sa_arm->transform);
     // AT:  (0, 0, 0)
+    at_x = 0;
+    at_y = 0;
+    at_z = 0;
     // ROT: (0, 0, 180)
+    phi_x = 0;
+    phi_y = 0;
+    phi_z = 180;
+    Detector->transform->t_loc = TransformBuildRotateX( phi_z * deg2rad ) * TransformBuildRotateX( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
 
-
-    assert(comp_sequence.len = comp_sequence.max);
-    return comp_sequence;
 }
 
 #endif // PSI_DMC
