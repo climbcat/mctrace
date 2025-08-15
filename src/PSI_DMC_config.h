@@ -380,7 +380,39 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_z = 0;
     guide4->transform = SceneGraphAlloc(bunker->transform);
     // TODO: fix
-    guide4->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    //guide4->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+
+
+    // NOTE: the goal is to find our local matrix w.r.t. the at-parent.
+    //      Thus the the next time we call SceneGraphUpdate() to update world matrices,
+    //      the current local matrix will re-generate the correct world matrix
+
+    // step 1: use the AT-rel parent to define a transformation for us, which will have identity rot
+    guide4->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
+
+    // step 2: update the transform system to create all the world matrices, which we will need
+    SceneGraphUpdate(); // now all world matrices are valid
+
+    // our world translation matrix
+    Matrix4f our_w_trans = guide4->transform->t_world;
+
+    // our local rotation matrix
+    Matrix4f our_l_rot = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
+
+    // the parent's world rotation matrix: This is its world matrix with translation removed
+    Matrix4f rotparent_w_rot = guide3->transform->t_world;
+    TransformSetTranslation(rotparent_w_rot, {0, 0, 0} );
+
+    // our world rotation matrix
+    Matrix4f our_w_rot = rotparent_w_rot * our_l_rot;
+
+    // we can now set our world matrix, by combining our trans and rot matrices: 
+    Matrix4f our_w = our_w_trans * our_w_rot;
+
+    // now, recover our local matrix wrt. the shared parent (our customary AT-rel parent)
+    Matrix4f w_to_atparent = TransformGetInverse( bunker->transform->t_world );
+    guide4->transform->t_loc = w_to_atparent * guide4->transform->t_world;
+
 
     Component *window1 = CreateComponent(a_dest, CT_Al_window, index++, "window1");
     comp_sequence.Add(window1);
