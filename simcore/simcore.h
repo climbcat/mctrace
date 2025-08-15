@@ -940,7 +940,7 @@ void mcdis_dashed_line(double x1, double y1, double z1, double x2, double y2, do
         mcdis_line(x1 + 2*i*dx, y1 + 2*i*dy, z1 + 2*i*dz, x1 + (2*i+1)*dx, y1 + (2*i+1)*dy, z1 + (2*i+1)*dz);
     }
 
-    void mcdis_multiline(int count, ...){
+void mcdis_multiline(int count, ...) {
     va_list ap;
     double x,y,z;
 
