@@ -165,7 +165,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     source_comp->T2 = 40.68;
     source_comp->I2 = 5.2E11;
     Init_Source_Maxwell_3(source_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 0) RELATIVE source_arm
     // ROT: (0, 0, 0) RELATIVE source_arm
     at_x = 0;
@@ -175,7 +175,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 0;
     source->transform = SceneGraphAlloc(source_arm->transform);
-    source->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    source->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *PSDbefore_guides = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDbefore_guides");
     comp_sequence.Add(PSDbefore_guides);
@@ -226,7 +226,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     guide1_comp->m = 1.8;
     guide1_comp->W = spec->W;
     Init_Guide(guide1_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 1.50) RELATIVE source_arm
     // ROT: (0, 0, 0) RELATIVE source_arm
     at_x = 0;
@@ -236,7 +236,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 0;
     guide1->transform = SceneGraphAlloc(source_arm->transform);
-    guide1->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    guide1->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *PSDbefore_curve = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDbefore_curve");
     comp_sequence.Add(PSDbefore_curve);
@@ -317,7 +317,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     bunker_comp->m = 1.6;
     bunker_comp->W = spec->W;
     Init_Guide(bunker_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 20.1502) RELATIVE guide2
     // ROT: (0, 0, 0) RELATIVE guide2
     at_x = 0;
@@ -327,7 +327,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 0;
     bunker->transform = SceneGraphAlloc(guide2->transform);
-    bunker->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    bunker->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *guide3 = CreateComponent(a_dest, CT_Guide, index++, "guide3");
     comp_sequence.Add(guide3);
@@ -343,7 +343,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     guide3_comp->m = 1.6;
     guide3_comp->W = spec->W;
     Init_Guide(guide3_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 3.56) RELATIVE bunker
     // ROT: (0, 0, 0) RELATIVE bunker
     at_x = 0;
@@ -353,7 +353,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 0;
     guide3->transform = SceneGraphAlloc(bunker->transform);
-    guide3->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    guide3->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *guide4 = CreateComponent(a_dest, CT_Guide, index++, "guide4");
     comp_sequence.Add(guide4);
@@ -369,7 +369,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     guide4_comp->m = 1.6;
     guide4_comp->W = spec->W;
     Init_Guide(guide4_comp, instr);
-    // case #3:      AT and ROT are defined RELATIVE to different parents
+    // case #3:      AT and ROT are defined RELATIVE to different parents (SceneGraphAlloc defines the AT-parent, SceneGraphSetRotParent defines the ROT-parent)
     // AT:  (0, 0, 15.8555) RELATIVE bunker
     // ROT: (0, 0, 0) RELATIVE guide3
     at_x = 0;
@@ -379,40 +379,8 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 0;
     guide4->transform = SceneGraphAlloc(bunker->transform);
-    // TODO: fix
-    //guide4->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
-
-
-    // NOTE: the goal is to find our local matrix w.r.t. the at-parent.
-    //      Thus the the next time we call SceneGraphUpdate() to update world matrices,
-    //      the current local matrix will re-generate the correct world matrix
-
-    // step 1: use the AT-rel parent to define a transformation for us, which will have identity rot
-    guide4->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
-
-    // step 2: update the transform system to create all the world matrices, which we will need
-    SceneGraphUpdate(); // now all world matrices are valid
-
-    // our world translation matrix
-    Matrix4f our_w_trans = guide4->transform->t_world;
-
-    // our local rotation matrix
-    Matrix4f our_l_rot = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
-
-    // the parent's world rotation matrix: This is its world matrix with translation removed
-    Matrix4f rotparent_w_rot = guide3->transform->t_world;
-    TransformSetTranslation(rotparent_w_rot, {0, 0, 0} );
-
-    // our world rotation matrix
-    Matrix4f our_w_rot = rotparent_w_rot * our_l_rot;
-
-    // we can now set our world matrix, by combining our trans and rot matrices: 
-    Matrix4f our_w = our_w_trans * our_w_rot;
-
-    // now, recover our local matrix wrt. the shared parent (our customary AT-rel parent)
-    Matrix4f w_to_atparent = TransformGetInverse( bunker->transform->t_world );
-    guide4->transform->t_loc = w_to_atparent * guide4->transform->t_world;
-
+    guide4->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
+    SceneGraphSetRotParent( guide4->transform, guide3->transform );
 
     Component *window1 = CreateComponent(a_dest, CT_Al_window, index++, "window1");
     comp_sequence.Add(window1);
@@ -435,7 +403,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     ydist_fluxpos_comp->xwidth = 0.120;
     ydist_fluxpos_comp->yheight = 0.02;
     Init_PSDlin_monitor(ydist_fluxpos_comp, instr);
-    // case #3:      AT and ROT are defined RELATIVE to different parents
+    // case #3:      AT and ROT are defined RELATIVE to different parents (SceneGraphAlloc defines the AT-parent, SceneGraphSetRotParent defines the ROT-parent)
     // AT:  (0, 0, 5.66+1e-8+0.01) RELATIVE guide4
     // ROT: (0, 0, 90) RELATIVE window1
     at_x = 0;
@@ -445,8 +413,8 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 90;
     ydist_fluxpos->transform = SceneGraphAlloc(guide4->transform);
-    // TODO: fix
-    ydist_fluxpos->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    ydist_fluxpos->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
+    SceneGraphSetRotParent( ydist_fluxpos->transform, window1->transform );
 
     Component *PSD_fluxpos = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_fluxpos");
     comp_sequence.Add(PSD_fluxpos);
@@ -551,7 +519,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     comp_sequence.Add(sma);
     Arm *sma_comp = (Arm*) sma->comp;
     Init_Arm(sma_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 0.65) RELATIVE in_slit
     // ROT: (0, spec->OMA, 0) RELATIVE in_slit
     at_x = 0;
@@ -561,7 +529,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = spec->OMA;
     phi_z = 0;
     sma->transform = SceneGraphAlloc(in_slit->transform);
-    sma->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    sma->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *foc_mono = CreateComponent(a_dest, CT_Monochromator_2foc, index++, "foc_mono");
     comp_sequence.Add(foc_mono);
@@ -590,7 +558,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     comp_sequence.Add(msa);
     Arm *msa_comp = (Arm*) msa->comp;
     Init_Arm(msa_comp, instr);
-    // case #3:      AT and ROT are defined RELATIVE to different parents
+    // case #3:      AT and ROT are defined RELATIVE to different parents (SceneGraphAlloc defines the AT-parent, SceneGraphSetRotParent defines the ROT-parent)
     // AT:  (0, 0, 0) RELATIVE sma
     // ROT: (0, spec->TTM, 0) RELATIVE in_slit
     at_x = 0;
@@ -600,8 +568,8 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = spec->TTM;
     phi_z = 0;
     msa->transform = SceneGraphAlloc(sma->transform);
-    // TODO: fix
-    msa->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    msa->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
+    SceneGraphSetRotParent( msa->transform, in_slit->transform );
 
     Component *out1_slit = CreateComponent(a_dest, CT_Slit, index++, "out1_slit");
     comp_sequence.Add(out1_slit);
@@ -611,7 +579,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     out1_slit_comp->ymin = -0.06;
     out1_slit_comp->ymax = 0.06;
     Init_Slit(out1_slit_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 0.2) RELATIVE msa
     // ROT: (0, 0, 0) RELATIVE msa
     at_x = 0;
@@ -621,7 +589,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 0;
     out1_slit->transform = SceneGraphAlloc(msa->transform);
-    out1_slit->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    out1_slit->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *Amoin_slit = CreateComponent(a_dest, CT_Slit, index++, "Amoin_slit");
     comp_sequence.Add(Amoin_slit);
@@ -631,7 +599,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     Amoin_slit_comp->ymin = -0.06;
     Amoin_slit_comp->ymax = 0.06;
     Init_Slit(Amoin_slit_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 0.325) RELATIVE msa
     // ROT: (0, 0, 0) RELATIVE msa
     at_x = 0;
@@ -641,7 +609,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 0;
     Amoin_slit->transform = SceneGraphAlloc(msa->transform);
-    Amoin_slit->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    Amoin_slit->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *Bmoin_slit = CreateComponent(a_dest, CT_Slit, index++, "Bmoin_slit");
     comp_sequence.Add(Bmoin_slit);
@@ -651,7 +619,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     Bmoin_slit_comp->ymin = -0.06;
     Bmoin_slit_comp->ymax = 0.06;
     Init_Slit(Bmoin_slit_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 0.525) RELATIVE msa
     // ROT: (0, 0, 0) RELATIVE msa
     at_x = 0;
@@ -661,7 +629,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 0;
     Bmoin_slit->transform = SceneGraphAlloc(msa->transform);
-    Bmoin_slit->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    Bmoin_slit->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *out2_slit = CreateComponent(a_dest, CT_Slit, index++, "out2_slit");
     comp_sequence.Add(out2_slit);
@@ -671,7 +639,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     out2_slit_comp->ymin = -0.06;
     out2_slit_comp->ymax = 0.06;
     Init_Slit(out2_slit_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 0.65) RELATIVE msa
     // ROT: (0, 0, 0) RELATIVE msa
     at_x = 0;
@@ -681,7 +649,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 0;
     out2_slit->transform = SceneGraphAlloc(msa->transform);
-    out2_slit->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    out2_slit->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *PSD_sample = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_sample");
     comp_sequence.Add(PSD_sample);
@@ -726,7 +694,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     comp_sequence.Add(sa_arm);
     Arm *sa_arm_comp = (Arm*) sa_arm->comp;
     Init_Arm(sa_arm_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 2.82) RELATIVE msa
     // ROT: (0, 0, 0) RELATIVE msa
     at_x = 0;
@@ -736,7 +704,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 0;
     sa_arm->transform = SceneGraphAlloc(msa->transform);
-    sa_arm->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    sa_arm->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *sample = CreateComponent(a_dest, CT_PowderN, index++, "sample");
     comp_sequence.Add(sample);
@@ -764,7 +732,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     Beamstop *STOP_comp = (Beamstop*) STOP->comp;
     STOP_comp->radius = 0.3;
     Init_Beamstop(STOP_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 1.4) RELATIVE sa_arm
     // ROT: (0, 0, 0) RELATIVE sa_arm
     at_x = 0;
@@ -774,7 +742,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 0;
     STOP->transform = SceneGraphAlloc(sa_arm->transform);
-    STOP->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    STOP->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *Detector = CreateComponent(a_dest, CT_Monitor_nD, index++, "Detector");
     comp_sequence.Add(Detector);
@@ -787,7 +755,7 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     Detector_comp->bins = 400;
     Detector_comp->options = (char*) "banana, theta";
     Init_Monitor_nD(Detector_comp, instr);
-    // case #2:      AT and ROT are defined RELATIVE to the same parent
+    // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 0) RELATIVE sa_arm
     // ROT: (0, 0, 180) RELATIVE sa_arm
     at_x = 0;
@@ -797,8 +765,10 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     phi_y = 0;
     phi_z = 180;
     Detector->transform = SceneGraphAlloc(sa_arm->transform);
-    Detector->transform->t_loc = TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad ) * TransformBuildTranslation( { at_x, at_y, at_z } );
+    Detector->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
+
+    return comp_sequence;
 }
 
 #endif // PSI_DMC
