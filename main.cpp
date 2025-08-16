@@ -8,9 +8,9 @@
 //#include "lib/jg_cbui.h"
 #include "../cbui/cbui_includes.h"
 
+#include "src/mcdis.h" // <- this is our "core amendment" code lives
 #include "simcore/simcore.h"
 #include "simcore/simlib.h"
-#include "src/mcdis.h" // <- this is our "core amendment" code lives
 
 #include "src/comps_meta.h"
 #include "src/PSI_DMC_config.h"

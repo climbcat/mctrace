@@ -2,7 +2,12 @@
 #define __MCDIS_H__
 
 
-void mcdis_multiline_reimpl_2025(int count, ...) {
+Array<Vector3f> g_mcdis_anchors;
+
+void mcdis_multiline_hook25(int count, ...) {
+    // The 2025 mcdis "hook" version.
+    printf("HOOK25\n");
+
     // TODO: re-implement
 
     va_list ap;
@@ -20,7 +25,10 @@ void mcdis_multiline_reimpl_2025(int count, ...) {
     printf(")\n");
 }
 
-void mcdis_line_reimpl_2025(double x1, double y1, double z1, double x2, double y2, double z2){
+void mcdis_line_hook25(double x1, double y1, double z1, double x2, double y2, double z2){
+    // The 2025 mcdis "hook" version.
+    printf("HOOK25\n");
+
     // TODO: re-implement
 
     printf("MCDISPLAY: multiline(2,%g,%g,%g,%g,%g,%g)\n", x1,y1,z1,x2,y2,z2);

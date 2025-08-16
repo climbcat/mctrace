@@ -922,23 +922,22 @@ static void mcsetseed(char *arg)
 *******************************************************************************/
 
 
+// TODO: does anyone, anywhere call mcdis_magnify?
+
 void mcdis_magnify(char *what){
     // Do nothing here, better use interactive zoom from the tools
 }
 
+
+// TODO: have a define to switch these versions on/off
+
+#define mcdis_line mcdis_line_hook25
+#define mcdis_multiline mcdis_multiline_hook25
+
+/*
 void mcdis_line(double x1, double y1, double z1, double x2, double y2, double z2){
     printf("MCDISPLAY: multiline(2,%g,%g,%g,%g,%g,%g)\n", x1,y1,z1,x2,y2,z2);
 }
-
-void mcdis_dashed_line(double x1, double y1, double z1, double x2, double y2, double z2, int n){
-    int i;
-    const double dx = (x2-x1)/(2*n+1);
-    const double dy = (y2-y1)/(2*n+1);
-    const double dz = (z2-z1)/(2*n+1);
-
-    for(i = 0; i < n+1; i++)
-        mcdis_line(x1 + 2*i*dx, y1 + 2*i*dy, z1 + 2*i*dz, x1 + (2*i+1)*dx, y1 + (2*i+1)*dy, z1 + (2*i+1)*dz);
-    }
 
 void mcdis_multiline(int count, ...) {
     va_list ap;
@@ -954,6 +953,19 @@ void mcdis_multiline(int count, ...) {
     }
     va_end(ap);
     printf(")\n");
+}
+*/
+
+
+void mcdis_dashed_line(double x1, double y1, double z1, double x2, double y2, double z2, int n) {
+    int i;
+    const double dx = (x2-x1)/(2*n+1);
+    const double dy = (y2-y1)/(2*n+1);
+    const double dz = (z2-z1)/(2*n+1);
+
+    for(i = 0; i < n+1; i++) {
+        mcdis_line(x1 + 2*i*dx, y1 + 2*i*dy, z1 + 2*i*dz, x1 + (2*i+1)*dx, y1 + (2*i+1)*dy, z1 + (2*i+1)*dz);
+    }
 }
 
 void mcdis_rectangle(char* plane, double x, double y, double z, double width, double height){
