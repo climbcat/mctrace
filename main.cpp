@@ -8,7 +8,7 @@
 //#include "lib/jg_cbui.h"
 #include "../cbui/cbui_includes.h"
 
-#include "src/mcdis.h" // <- this is our "core amendment" code lives
+#include "src/mcdis.h"  // <- this is where our "core amendment" code lives
 #include "simcore/simcore.h"
 #include "simcore/simlib.h"
 
@@ -16,6 +16,7 @@
 #include "src/PSI_DMC_config.h"
 
 
+/*
 void RunDisplayLoop(Array<Component*> comps) {
 
     CbuiInit("mctrace", false);
@@ -57,6 +58,61 @@ void RunDisplayLoop(Array<Component*> comps) {
     }
     CbuiExit();
 }
+*/
+
+
+void RunDisplayLoop( /* Array<Component*> comps, */ Array<Vector3f> mcdisplay_segments) {
+
+    CbuiInit("mctrace", false);
+
+    Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
+    OrbitCamera cam = OrbitCameraInit(persp.aspect);
+    
+    Array<Wireframe> objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
+    Wireframe plane = CreatePlane(10);
+    plane.transform = TransformBuildTranslation( { 0, -0.5f, 5.0f } );
+    objs.Add(plane);
+
+    /*
+    Wireframe box = CreateAABox(0.2f, 0.2f, 0.2f);
+    */
+
+    while (cbui.running) {
+        CbuiFrameStart();
+        OrbitCameraUpdate(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
+        OrbitCameraPan(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
+        // start
+
+        objs.len = 1;
+        /*
+
+        // (re-) generate the world matrices
+        SceneGraphUpdate();
+
+        for (s32 i = 0; i < comps.len; ++i) {
+            Component *comp = comps.arr[i];
+
+            Wireframe marker = box;
+            marker.color = COLOR_BLUE;
+            marker.transform = comp->transform->t_world;
+            objs.Add(marker);
+        }
+        */
+
+        // end 
+        Array<Vector3f> segments = WireframeLineSegments(cbui.ctx->a_tmp, objs);
+        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs, segments);
+
+        for (s32 i = 0; i < mcdisplay_segments.len / 2; ++i) {
+            Vector3f a1 = mcdisplay_segments.arr[2 * i];
+            Vector3f a2 = mcdisplay_segments.arr[2 * i + 1];
+            RenderLineSegment(cbui.image_buffer, cam.view, persp.proj, a1, a2, cbui.plf.width, cbui.plf.height, COLOR_BLUE);
+        }
+
+        CbuiFrameEnd();
+    }
+    CbuiExit();
+}
 
 
 void RunProgram() {
@@ -74,12 +130,17 @@ void RunProgram() {
     Array<Component*> comps = Config_PSI_DMC(ctx->a_life, &spec, &instr);
     SceneGraphUpdate();
 
+    DisplayCaptureInit(ctx->a_life);
 
-    for (s32 i = 0; i < comps.len; ++i) {
+    //for (s32 i = 0; i < comps.len; ++i) {
+    for (s32 i = 0; i < 2; ++i) {
         Component *comp = comps.arr[i];
+        g_mcdis_t_world = comp->transform->t_world;
 
         DisplayComponent(comp);
     }
+
+    RunDisplayLoop(g_mcdis_anchors);
 }
 
 

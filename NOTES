@@ -8,7 +8,6 @@ data into an array of line segment pairs. (Arguably, multiple arrays
 depending on type, but for now.)
 
 The current "component" API and corresponding library functions:
-
                                                 NOTE:
     #define magnify     mcdis_magnify           does nothing
     #define line        mcdis_line              very useful, produces the segment (anchor) pair
@@ -34,5 +33,11 @@ Thus we need to replace the intrinsic ones to produce line-segment anchor pairs,
     mcdis_line
     mcdis_multiline
 
-That's all! Seems easy.
+In addition, the use of mcdis_circle, and perhaps a few others (not used 
+in PSI_DMC, apparantly), should be transitioned to mcdis_Circle (capital C).
+The latter generates lines, while the former prints a "circle" call,
+effectively delegating implementation to the external tool. But this API
+is bad and also redundant.
+We can re-implement these calls to forward to the more complete mcdis_ calls.
+
 
