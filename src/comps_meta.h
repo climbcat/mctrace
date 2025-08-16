@@ -62,98 +62,98 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
 
     switch (type) {
         case CT_Slit: {
-            Slit comp_spec = Create_Slit(index, (char*) "name");
+            Slit comp_spec = Create_Slit(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Slit));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_L_monitor: {
-            L_monitor comp_spec = Create_L_monitor(index, (char*) "name");
+            L_monitor comp_spec = Create_L_monitor(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(L_monitor));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Bender: {
-            Bender comp_spec = Create_Bender(index, (char*) "name");
+            Bender comp_spec = Create_Bender(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Bender));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Progress_bar: {
-            Progress_bar comp_spec = Create_Progress_bar(index, (char*) "name");
+            Progress_bar comp_spec = Create_Progress_bar(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Progress_bar));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_PSD_monitor: {
-            PSD_monitor comp_spec = Create_PSD_monitor(index, (char*) "name");
+            PSD_monitor comp_spec = Create_PSD_monitor(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PSD_monitor));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Arm: {
-            Arm comp_spec = Create_Arm(index, (char*) "name");
+            Arm comp_spec = Create_Arm(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Arm));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Al_window: {
-            Al_window comp_spec = Create_Al_window(index, (char*) "name");
+            Al_window comp_spec = Create_Al_window(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Al_window));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_PSDlin_monitor: {
-            PSDlin_monitor comp_spec = Create_PSDlin_monitor(index, (char*) "name");
+            PSDlin_monitor comp_spec = Create_PSDlin_monitor(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PSDlin_monitor));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Guide: {
-            Guide comp_spec = Create_Guide(index, (char*) "name");
+            Guide comp_spec = Create_Guide(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Guide));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Source_Maxwell_3: {
-            Source_Maxwell_3 comp_spec = Create_Source_Maxwell_3(index, (char*) "name");
+            Source_Maxwell_3 comp_spec = Create_Source_Maxwell_3(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Source_Maxwell_3));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Beamstop: {
-            Beamstop comp_spec = Create_Beamstop(index, (char*) "name");
+            Beamstop comp_spec = Create_Beamstop(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Beamstop));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Monochromator_2foc: {
-            Monochromator_2foc comp_spec = Create_Monochromator_2foc(index, (char*) "name");
+            Monochromator_2foc comp_spec = Create_Monochromator_2foc(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Monochromator_2foc));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_Monitor_nD: {
-            Monitor_nD comp_spec = Create_Monitor_nD(index, (char*) "name");
+            Monitor_nD comp_spec = Create_Monitor_nD(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Monitor_nD));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
         } break;
 
         case CT_PowderN: {
-            PowderN comp_spec = Create_PowderN(index, (char*) "name");
+            PowderN comp_spec = Create_PowderN(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PowderN));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);

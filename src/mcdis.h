@@ -4,6 +4,7 @@
 
 static Array<Vector3f> g_mcdis_anchors;
 static Matrix4f g_mcdis_t_world;
+static bool g_mcdis_dbg;
 
 void DisplayCaptureInit(MArena *a_dest, u32 max_lines_count = 2048) {
     assert(g_mcdis_anchors.arr == NULL);
@@ -33,17 +34,15 @@ void mcdis_multiline_hook25(int count, ...) {
         y = va_arg(ap, double);
         z = va_arg(ap, double);
 
-        if (iter == count) {
+        if (iter == count - 1) {
             // set the first anchor
 
-            prev = { (f32) x, (f32) y, (f32) z };
-            prev = TransformPoint(g_mcdis_t_world, prev);
+            prev = TransformPoint(g_mcdis_t_world, { (f32) x, (f32) y, (f32) z });
         }
         else {
             // iterate "inner" anchor point
-
-            current = { (f32) x, (f32) y, (f32) z};
-            current = TransformPoint(g_mcdis_t_world, current);
+            current = TransformPoint(g_mcdis_t_world, { (f32) x, (f32) y, (f32) z});
+            if (g_mcdis_dbg) { printf(" (%f %f %f) -> (%f %f %f) \n", prev.x, prev.y, prev.z, current.x, current.y, current.z); }
 
             g_mcdis_anchors.Add(prev);
             g_mcdis_anchors.Add(current);
@@ -59,6 +58,8 @@ void mcdis_line_hook25(double x1, double y1, double z1, double x2, double y2, do
 
     Vector3f a1 = TransformPoint(g_mcdis_t_world, { (f32) x1, (f32) y1, (f32) z1 });
     Vector3f a2 = TransformPoint(g_mcdis_t_world,{ (f32) x2, (f32) y2, (f32) z2 });
+
+    if (g_mcdis_dbg) { printf("l : (%f %f %f) -> (%f %f %f) \n", a1.x, a1.y, a1.z, a2.x, a2.y, a2.z); }
 
     g_mcdis_anchors.Add(a1);
     g_mcdis_anchors.Add(a2);

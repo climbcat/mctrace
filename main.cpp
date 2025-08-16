@@ -61,7 +61,35 @@ void RunDisplayLoop(Array<Component*> comps) {
 */
 
 
-void RunDisplayLoop( /* Array<Component*> comps, */ Array<Vector3f> mcdisplay_segments) {
+void RunProgram() {
+    TimeFunction;
+
+    MContext *ctx = InitBaselayer();
+    SceneGraphInit();
+
+    // init
+    Instrument instr = {};
+
+    // config for the particular instrument, PSI_DMC
+    PSI_DMC spec = {};
+    Init_PSI_DMC(&spec);
+    Array<Component*> comps = Config_PSI_DMC(ctx->a_life, &spec, &instr);
+    SceneGraphUpdate();
+
+    DisplayCaptureInit(ctx->a_life);
+
+    for (s32 i = 0; i < comps.len; ++i) {
+    //for (s32 i = 4; i < 5; ++i) {
+        Component *comp = comps.arr[i];
+        g_mcdis_t_world = comp->transform->t_world;
+
+        printf("%.*s\n", comp->name.len, comp->name.str);
+        PrintTransform(g_mcdis_t_world);
+
+        DisplayComponent(comp);
+    }
+    Array<Vector3f> mcdisplay_segments = g_mcdis_anchors;
+
 
     CbuiInit("mctrace", false);
 
@@ -112,35 +140,6 @@ void RunDisplayLoop( /* Array<Component*> comps, */ Array<Vector3f> mcdisplay_se
         CbuiFrameEnd();
     }
     CbuiExit();
-}
-
-
-void RunProgram() {
-    TimeFunction;
-
-    MContext *ctx = InitBaselayer();
-    SceneGraphInit();
-
-    // init
-    Instrument instr = {};
-
-    // config for the particular instrument, PSI_DMC
-    PSI_DMC spec = {};
-    Init_PSI_DMC(&spec);
-    Array<Component*> comps = Config_PSI_DMC(ctx->a_life, &spec, &instr);
-    SceneGraphUpdate();
-
-    DisplayCaptureInit(ctx->a_life);
-
-    //for (s32 i = 0; i < comps.len; ++i) {
-    for (s32 i = 0; i < 2; ++i) {
-        Component *comp = comps.arr[i];
-        g_mcdis_t_world = comp->transform->t_world;
-
-        DisplayComponent(comp);
-    }
-
-    RunDisplayLoop(g_mcdis_anchors);
 }
 
 
