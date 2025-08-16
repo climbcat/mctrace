@@ -1,0 +1,38 @@
+
+
+250816:
+
+It is possible to call the "mcdisplay functions", and they do seem to work
+correctly. The result is printing to the console, and we want to capture that
+data into an array of line segment pairs. (Arguably, multiple arrays
+depending on type, but for now.)
+
+The current "component" API and corresponding library functions:
+
+                                                NOTE:
+    #define magnify     mcdis_magnify           does nothing
+    #define line        mcdis_line              very useful, produces the segment (anchor) pair
+    #define dashed_line mcdis_dashed_line       falls back to mcdis_line
+    #define multiline   mcdis_multiline         pruduces a sequence of anchors (...)
+    #define rectangle   mcdis_rectangle         falls back to mcdis_multiline
+    #define box         mcdis_box               falls back to mcdis_rectangle and mcdis_multiline
+    #define circle      mcdis_circle            outputs an abstract code to the terminal
+    #define Circle      mcdis_Circle            falls back to mcdis_line
+    #define cylinder    mcdis_cylinder          falls back to mcdis_Circle, mcdis_line
+    #define cone        mcdis_cone              falls back to mcdis_Circle, mcdis_line
+    #define sphere      mcdis_sphere            falls back to mcdis_Circle, mcdis_line
+
+Typical signatures would be: 
+
+    void mcdis_line(double x1, double y1, double z1, double x2, double y2, double z2);
+    void mcdis_circle(char *plane, double x, double y, double z, double r);
+    void mcdis_multiline(int count, ...);
+    void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz);
+
+Thus we need to replace the intrinsic ones to produce line-segment anchor pairs, specifically:
+
+    mcdis_line
+    mcdis_multiline
+
+That's all! Seems easy.
+
