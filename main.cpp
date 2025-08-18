@@ -110,68 +110,84 @@ void RunProgram() {
 }
 
 
-void TestInstrConfig() {
+void TestComponentFuncitonsRun() {
     TimeFunction;
+    printf("TestComponentFuncitonsRun\n\n");
 
-    printf("Testing PSI_DMC_config\n\n");
 
     // init
     MContext *ctx = InitBaselayer();
     SceneGraphInit();
     Instrument instr = {};
 
-    // run the create, init and configure for each component as defined by PSI_DMC
+
+    // create, configure & init
+    // (using the PSI_DMC example)
     PSI_DMC spec = {};
     Init_PSI_DMC(&spec);
     Array<Component*> comps = Config_PSI_DMC(ctx->a_life, &spec, &instr);
     SceneGraphUpdate();
 
-    // rn the vanilla mcdisplay functions
+
+    // display
     for (s32 i = 0; i < comps.len; ++i) {
         Component *comp = comps.arr[i];
+        McDisplayNext(ctx->a_pers, comp->transform->t_world);
 
         DisplayComponent(comp);
     }
 
-    // display the transformed registered by the init/config run, onscreen as boxes
-    CbuiInit("mctrace", false);
 
-    Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
-    OrbitCamera cam = OrbitCameraInit(persp.aspect);
-    Array<Wireframe> objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
+    // trace
+    Neutron particle = {};
+    Vector3f n_pos = {};
+    Vector3f n_vel = {};
+    Matrix4f w2l = {};
+    Matrix4f l2w = {};
+    for (s32 i = 0; i < comps.len; ++i) {
+        Component *comp = comps.arr[i];
 
-    Wireframe box = CreateAABox(0.2f, 0.2f, 0.2f);
+        // transform particle into local component coords
+        w2l = TransformGetInverse(comp->transform->t_world);
 
-    Wireframe plane = CreatePlane(10);
-    objs.Add(plane);
+        n_pos = { (f32) particle.x, (f32) particle.y, (f32) particle.z };
+        n_pos = TransformPoint(w2l, n_pos);
+        particle.x = n_pos.x;
+        particle.y = n_pos.y;
+        particle.z = n_pos.z;
+        n_vel = { (f32) particle.vx, (f32) particle.vy, (f32) particle.vz };
+        n_vel = TransformDirection(w2l, n_vel);
+        particle.vx = n_vel.x;
+        particle.vy = n_vel.y;
+        particle.vz = n_vel.z;
+        // TODO: the same should be done for s
 
-    while (cbui.running) {
-        CbuiFrameStart();
-        OrbitCameraUpdate(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
-        OrbitCameraPan(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
-        // start
+        // run trace code
+        TraceComponent(comp, &particle, &instr);
 
-        objs.len = 1;
+        // transform particle back into world coords
+        l2w = comp->transform->t_world;
 
-        // (re-) generate the world matrices
-        SceneGraphUpdate();
-
-        for (s32 i = 0; i < comps.len; ++i) {
-            Component *comp = comps.arr[i];
-
-            Wireframe marker = box;
-            marker.color = COLOR_BLUE;
-            marker.transform = comp->transform->t_world;
-            objs.Add(marker);
-        }
-
-        // end 
-        Array<Vector3f> segments = WireframeLineSegments(cbui.ctx->a_tmp, objs);
-        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs);
-
-        CbuiFrameEnd();
+        n_pos = { (f32) particle.x, (f32) particle.y, (f32) particle.z };
+        n_pos = TransformPoint(w2l, n_pos);
+        particle.x = n_pos.x;
+        particle.y = n_pos.y;
+        particle.z = n_pos.z;
+        n_vel = { (f32) particle.vx, (f32) particle.vy, (f32) particle.vz };
+        n_vel = TransformDirection(w2l, n_vel);
+        particle.vx = n_vel.x;
+        particle.vy = n_vel.y;
+        particle.vz = n_vel.z;
+        // TODO: the same should be done for s
     }
-    CbuiExit();
+
+
+    // finally
+    for (s32 i = 0; i < comps.len; ++i) {
+        Component *comp = comps.arr[i];
+
+        FinallyComponent(comp);
+    }
 }
 
 
@@ -187,10 +203,9 @@ int main (int argc, char **argv) {
         exit(0);
     }
     else if (CLAContainsArg("--test", argc, argv)) {
-        TestInstrConfig();
+        TestComponentFuncitonsRun();
     }
     else {
-        InitBaselayer();
         RunProgram();
     }
 }
