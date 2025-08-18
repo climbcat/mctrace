@@ -18,14 +18,12 @@
 
 Color ComponentCatToColor(CompCategory cat) {
     switch (cat) {
-        case CCAT_SOURCE: return COLOR_RED;
-        case CCAT_SAMPLE: return COLOR_RED;
-        case CCAT_OPTICS: return COLOR_BLUE;
-        case CCAT_MISC: return COLOR_BLACK;
-        case CCAT_MONITOR: return COLOR_GREEN_50;
-        case CCAT_CONTRIB: return COLOR_YELLOW2;
-        case CCAT_UNION: return COLOR_GRAY_60;
-        case CCAT_SASNODEL: return COLOR_YELLOW;
+        case CCAT_sources: return COLOR_RED;
+        case CCAT_monitors: return COLOR_GREEN_50;
+        case CCAT_contrib: return COLOR_GRAY_50;
+        case CCAT_misc: return COLOR_BLACK;
+        case CCAT_optics: return COLOR_BLUE;
+        case CCAT_samples: return COLOR_RED;
     }
 
     return COLOR_BLACK;
@@ -94,22 +92,21 @@ void RunProgram() {
 
         RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs);
 
-        /*
-        Array<Vector3f> segments = WireframeLineSegments(cbui.ctx->a_tmp, objs);
-        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs, segments);
-
-        for (s32 i = 0; i < mcdisplay_segments.len / 2; ++i) {
-            Vector3f a1 = mcdisplay_segments.arr[2 * i];
-            Vector3f a2 = mcdisplay_segments.arr[2 * i + 1];
-            RenderLineSegment(cbui.image_buffer, cam.view, persp.proj, a1, a2, cbui.plf.width, cbui.plf.height, COLOR_BLUE);
-        }
-        */
-
 
         // end 
         CbuiFrameEnd();
     }
     CbuiExit();
+
+
+    // try running Finally
+    for (s32 i = 0; i < comps.len; ++i) {
+        // component as component
+        Component *comp = comps.arr[i];
+
+        printf("%.*s\n", comp->name.len, comp->name.str);
+        FinallyComponent(comp);        
+    }
 }
 
 
