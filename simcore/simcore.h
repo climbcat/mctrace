@@ -931,8 +931,11 @@ void mcdis_magnify(char *what){
 
 // TODO: have a define to switch these versions on/off
 
+
 #define mcdis_line mcdis_line_hook25
 #define mcdis_multiline mcdis_multiline_hook25
+#define mcdis_circle mcdis_circle_hook25
+
 
 /*
 void mcdis_line(double x1, double y1, double z1, double x2, double y2, double z2){
@@ -953,6 +956,10 @@ void mcdis_multiline(int count, ...) {
     }
     va_end(ap);
     printf(")\n");
+}
+
+void mcdis_circle(char *plane, double x, double y, double z, double r){
+    printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
 }
 */
 
@@ -1002,9 +1009,6 @@ void mcdis_rectangle(char* plane, double x, double y, double z, double width, do
     }
 }
 
-void mcdis_circle(char *plane, double x, double y, double z, double r){
-    printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
-}
 
 void mcdis_new_circle(double x, double y, double z, double r, double nx, double ny, double nz){
     printf("MCDISPLAY: new_circle(%g,%g,%g,%g,%g,%g,%g)\n", x, y, z, r, nx, ny, nz);

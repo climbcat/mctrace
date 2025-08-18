@@ -6,13 +6,13 @@ static Array<Vector3f> g_mcdis_anchors;
 static Matrix4f g_mcdis_t_world;
 static bool g_mcdis_dbg;
 
-void DisplayCaptureInit(MArena *a_dest, u32 max_lines_count = 2048) {
+void McDisplayInit(MArena *a_dest, u32 max_lines_count = 2048) {
     assert(g_mcdis_anchors.arr == NULL);
 
     g_mcdis_anchors = InitArray<Vector3f>(a_dest, max_lines_count * 2);
 }
 
-void DisplaySetCurrentComponentWorldTransform(Matrix4f t_world) {
+void McDisplaySetCurrentComponentWorldTransform(Matrix4f t_world) {
     g_mcdis_t_world = t_world;
 }
 
@@ -63,6 +63,31 @@ void mcdis_line_hook25(double x1, double y1, double z1, double x2, double y2, do
 
     g_mcdis_anchors.Add(a1);
     g_mcdis_anchors.Add(a2);
+}
+
+// mcdis_Circle is implemented alongside the other line-generating mcdis_* functions, in simcore.h
+void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz);
+
+void mcdis_circle_hook25(char *plane, double x, double y, double z, double r) {
+
+    if ( !strcmp(plane, "xy") ) {
+        printf("mcdis_circle_hook25: xy\n");
+
+        mcdis_Circle(x, y, z, r, 0, 0, 1);
+    }
+    else if ( !strcmp(plane, "xz") ) {
+        printf("mcdis_circle_hook25: xz\n");
+
+        mcdis_Circle(x, y, z, r, 0, 1, 0);
+    }
+    else if ( !strcmp(plane, "yz") ) {
+        printf("mcdis_circle_hook25: yz\n");
+
+        mcdis_Circle(x, y, z, r, 1, 0, 0);
+    }
+    else {
+        printf("mcdis_circle_hook25: %s (WARN: unregistered branch)\n", plane);
+    }
 }
 
 
