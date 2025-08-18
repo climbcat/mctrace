@@ -16,92 +16,73 @@
 #include "src/PSI_DMC_config.h"
 
 
-void TestDisplayBoxes(Array<Component*> comps) {
-    printf("TestDisplayBoxes\n");
-
-
-    CbuiInit("mctrace", false);
-
-    Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
-    OrbitCamera cam = OrbitCameraInit(persp.aspect);
-    Array<Wireframe> objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
-
-    Wireframe box = CreateAABox(0.2f, 0.2f, 0.2f);
-
-    Wireframe plane = CreatePlane(10);
-    objs.Add(plane);
-
-    while (cbui.running) {
-        CbuiFrameStart();
-        OrbitCameraUpdate(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
-        OrbitCameraPan(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
-        // start
-
-        objs.len = 1;
-
-        // (re-) generate the world matrices
-        SceneGraphUpdate();
-
-        for (s32 i = 0; i < comps.len; ++i) {
-            Component *comp = comps.arr[i];
-
-            Wireframe marker = box;
-            marker.color = COLOR_BLUE;
-            marker.transform = comp->transform->t_world;
-            objs.Add(marker);
-        }
-
-        // end 
-        Array<Vector3f> segments = WireframeLineSegments(cbui.ctx->a_tmp, objs);
-        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs, segments);
-
-        CbuiFrameEnd();
+Color ComponentCatToColor(CompCategory cat) {
+    switch (cat) {
+        case CCAT_SOURCE: return COLOR_RED;
+        case CCAT_SAMPLE: return COLOR_RED;
+        case CCAT_OPTICS: return COLOR_BLUE;
+        case CCAT_MISC: return COLOR_BLACK;
+        case CCAT_MONITOR: return COLOR_GREEN_50;
+        case CCAT_CONTRIB: return COLOR_YELLOW2;
+        case CCAT_UNION: return COLOR_GRAY_60;
+        case CCAT_SASNODEL: return COLOR_YELLOW;
     }
-    CbuiExit();
+
+    return COLOR_BLACK;
 }
 
 
 void RunProgram() {
     TimeFunction;
 
-    MContext *ctx = InitBaselayer();
+    CbuiInit("mctrace", false);
     SceneGraphInit();
 
     // config for the particular instrument, PSI_DMC
     Instrument instr = {};
     PSI_DMC spec = {};
     Init_PSI_DMC(&spec);
-    Array<Component*> comps = Config_PSI_DMC(ctx->a_life, &spec, &instr);
-
-    // DBG: displace the whole thing into the minus z: (admittedly, a temp hack)
+    Array<Component*> comps = Config_PSI_DMC(cbui.ctx->a_life, &spec, &instr);
+    // DBG: displace everything into the minus z: (admittedly, a temp hack)
     Component *first = comps.arr[0];
     first->transform->t_loc = TransformBuildTranslation( { 0, 0, -51 } ) * first->transform->t_loc;
+
+    // consolidate component world matrices
     SceneGraphUpdate();
 
-    McDisplayInit(ctx->a_life);
+    // storge for the graphical objects
+    Array<Wireframe> objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
+    Wireframe plane = CreatePlane(10, cbui.ctx->a_pers);
+    plane.transform = TransformBuildTranslation( { 0, -0.5f, 0 } );
+    objs.Add(plane);
+
 
     for (s32 i = 0; i < comps.len; ++i) {
+        // component as component
         Component *comp = comps.arr[i];
-        g_mcdis_t_world = comp->transform->t_world;
-
         printf("%.*s\n", comp->name.len, comp->name.str);
         PrintTransform(g_mcdis_t_world);
 
-        DisplayComponent(comp);
+        McDisplayNext(cbui.ctx->a_pers, comp->transform->t_world);
+        DisplayComponent(comp);        
+
+        // component as wireframe
+        // TODO: we could just set the component transform here, and not worry about doing anything to the 
+        //      mcdis_* points.:
+        Wireframe wf_comp = {};
+        wf_comp.transform = Matrix4f_Identity();
+        wf_comp.color = ComponentCatToColor(comp->cat);
+        wf_comp.segments.arr = g_mcdis_anchors.lst;
+        wf_comp.segments.len = g_mcdis_anchors.len;
+        wf_comp.segments.max = g_mcdis_anchors.len;
+        objs.Add(wf_comp);
     }
-    Array<Vector3f> mcdisplay_segments = g_mcdis_anchors;
 
 
     // UI
-    CbuiInit("mctrace", false);
-
     Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
     OrbitCamera cam = OrbitCameraInit(persp.aspect);
     
-    Array<Wireframe> objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
-    Wireframe plane = CreatePlane(10);
-    plane.transform = TransformBuildTranslation( { 0, -0.5f, 0 } );
-    objs.Add(plane);
 
 
     while (cbui.running) {
@@ -111,8 +92,9 @@ void RunProgram() {
         // start
 
 
-        objs.len = 1;
+        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs);
 
+        /*
         Array<Vector3f> segments = WireframeLineSegments(cbui.ctx->a_tmp, objs);
         RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs, segments);
 
@@ -121,6 +103,7 @@ void RunProgram() {
             Vector3f a2 = mcdisplay_segments.arr[2 * i + 1];
             RenderLineSegment(cbui.image_buffer, cam.view, persp.proj, a1, a2, cbui.plf.width, cbui.plf.height, COLOR_BLUE);
         }
+        */
 
 
         // end 
@@ -149,6 +132,7 @@ void TestInstrConfig() {
     // rn the vanilla mcdisplay functions
     for (s32 i = 0; i < comps.len; ++i) {
         Component *comp = comps.arr[i];
+
         DisplayComponent(comp);
     }
 
@@ -186,7 +170,7 @@ void TestInstrConfig() {
 
         // end 
         Array<Vector3f> segments = WireframeLineSegments(cbui.ctx->a_tmp, objs);
-        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs, segments);
+        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs);
 
         CbuiFrameEnd();
     }

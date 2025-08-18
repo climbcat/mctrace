@@ -40,6 +40,23 @@ enum CompType {
 };
 
 
+// TODO: port into the code generator
+enum CompCategory {
+    CCAT_UNDEF,
+
+    CCAT_SOURCE,
+    CCAT_OPTICS,
+    CCAT_SAMPLE,
+    CCAT_MONITOR,
+    CCAT_MISC,
+    CCAT_CONTRIB,
+    CCAT_UNION,
+    CCAT_SASNODEL,
+
+    CCAT_CNT
+};
+
+
 // NOTE: Although not thrilled about having Component reside in generated code,
 //      it is just simpler to have it here. The way to move it out, would be to
 //      Have a s32 type instead of the enum type here.
@@ -49,12 +66,15 @@ struct Component {
     Transform *transform;
 
     CompType type;
+    CompCategory cat;
     Str type_name;
     Str name;
 
     void *comp;
 };
 
+
+// TODO: havea a category argument along with the type arg (& port to cogen ofc)
 
 Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char *name) {
     Component *comp = (Component*) ArenaAlloc(a_dest, sizeof(Component));
@@ -66,6 +86,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Slit));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_OPTICS;
         } break;
 
         case CT_L_monitor: {
@@ -73,6 +94,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(L_monitor));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_MONITOR;
         } break;
 
         case CT_Bender: {
@@ -80,6 +102,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Bender));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_OPTICS;
         } break;
 
         case CT_Progress_bar: {
@@ -87,6 +110,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Progress_bar));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_MISC;
         } break;
 
         case CT_PSD_monitor: {
@@ -94,6 +118,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PSD_monitor));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_MONITOR;
         } break;
 
         case CT_Arm: {
@@ -101,6 +126,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Arm));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_MISC;
         } break;
 
         case CT_Al_window: {
@@ -108,6 +134,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Al_window));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_OPTICS;
         } break;
 
         case CT_PSDlin_monitor: {
@@ -115,6 +142,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PSDlin_monitor));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_MONITOR;
         } break;
 
         case CT_Guide: {
@@ -122,6 +150,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Guide));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_OPTICS;
         } break;
 
         case CT_Source_Maxwell_3: {
@@ -129,6 +158,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Source_Maxwell_3));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_SOURCE;
         } break;
 
         case CT_Beamstop: {
@@ -136,6 +166,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Beamstop));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_OPTICS;
         } break;
 
         case CT_Monochromator_2foc: {
@@ -143,6 +174,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Monochromator_2foc));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_OPTICS;
         } break;
 
         case CT_Monitor_nD: {
@@ -150,6 +182,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Monitor_nD));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_MONITOR;
         } break;
 
         case CT_PowderN: {
@@ -157,6 +190,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PowderN));
             comp->type_name = StrL(comp_spec.type);
             comp->name = StrL(comp_spec.name);
+            comp->cat = CCAT_SAMPLE;
         } break;
 
         default: { } break;

@@ -2,17 +2,17 @@
 #define __MCDIS_H__
 
 
-static Array<Vector3f> g_mcdis_anchors;
+static List<Vector3f> g_mcdis_anchors;
+static MArena *g_mcdis_a_dest;
 static Matrix4f g_mcdis_t_world;
 static bool g_mcdis_dbg;
 
-void McDisplayInit(MArena *a_dest, u32 max_lines_count = 2048) {
-    assert(g_mcdis_anchors.arr == NULL);
 
-    g_mcdis_anchors = InitArray<Vector3f>(a_dest, max_lines_count * 2);
-}
+void McDisplayNext(MArena *a_dest, Matrix4f t_world) {
+    g_mcdis_a_dest = a_dest;
+    g_mcdis_anchors = InitList<Vector3f>(a_dest, 0);
 
-void McDisplaySetCurrentComponentWorldTransform(Matrix4f t_world) {
+    // TODO: phase out
     g_mcdis_t_world = t_world;
 }
 
@@ -29,6 +29,7 @@ void mcdis_multiline_hook25(int count, ...) {
     va_start(ap, count);
     int iter = count;
 
+    // TODO: re-write it as a for-loop
     while(iter--) {
         x = va_arg(ap, double);
         y = va_arg(ap, double);
@@ -44,6 +45,7 @@ void mcdis_multiline_hook25(int count, ...) {
             current = TransformPoint(g_mcdis_t_world, { (f32) x, (f32) y, (f32) z});
             if (g_mcdis_dbg) { printf(" (%f %f %f) -> (%f %f %f) \n", prev.x, prev.y, prev.z, current.x, current.y, current.z); }
 
+            ArenaAlloc(g_mcdis_a_dest, 2 * sizeof(Vector3f));
             g_mcdis_anchors.Add(prev);
             g_mcdis_anchors.Add(current);
             prev = current;
@@ -61,6 +63,7 @@ void mcdis_line_hook25(double x1, double y1, double z1, double x2, double y2, do
 
     if (g_mcdis_dbg) { printf("l : (%f %f %f) -> (%f %f %f) \n", a1.x, a1.y, a1.z, a2.x, a2.y, a2.z); }
 
+    ArenaAlloc(g_mcdis_a_dest, 2 * sizeof(Vector3f));
     g_mcdis_anchors.Add(a1);
     g_mcdis_anchors.Add(a2);
 }
@@ -69,20 +72,16 @@ void mcdis_line_hook25(double x1, double y1, double z1, double x2, double y2, do
 void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz);
 
 void mcdis_circle_hook25(char *plane, double x, double y, double z, double r) {
-
     if ( !strcmp(plane, "xy") ) {
-        printf("mcdis_circle_hook25: xy\n");
-
+        if (g_mcdis_dbg) { printf("mcdis_circle_hook25: xy\n"); }
         mcdis_Circle(x, y, z, r, 0, 0, 1);
     }
     else if ( !strcmp(plane, "xz") ) {
-        printf("mcdis_circle_hook25: xz\n");
-
+        if (g_mcdis_dbg) { printf("mcdis_circle_hook25: xz\n"); }
         mcdis_Circle(x, y, z, r, 0, 1, 0);
     }
     else if ( !strcmp(plane, "yz") ) {
-        printf("mcdis_circle_hook25: yz\n");
-
+        if (g_mcdis_dbg) { printf("mcdis_circle_hook25: yz\n"); }
         mcdis_Circle(x, y, z, r, 1, 0, 0);
     }
     else {
