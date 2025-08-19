@@ -8,17 +8,18 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <ctype.h>
-
 #include <math.h>
 
+
 struct NeutronSmall {
-    double x,y,z; /* position [m] */
-    double vx,vy,vz; /* velocity [m/s] */
-    double sx,sy,sz; /* spin [0-1] */
+    double x,y,z;
+    double vx,vy,vz;
+    double t, p;
     float flags;
 };
 
-struct Neutron {
+
+struct NeutronBig {
     double x,y,z; /* position [m] */
     double vx,vy,vz; /* velocity [m/s] */
     double sx,sy,sz; /* spin [0-1] */
@@ -41,6 +42,12 @@ struct Neutron {
     long _restore;   /* set to true if neutron event must be restored */
     long flag_nocoordschange;   /* set to true if particle is jumping */
 };
+
+
+//#define Neutron NeutronSmall
+#define Neutron NeutronBig
+
+
 Neutron _particle_global_randnbuse_var;
 Neutron* _particle = &_particle_global_randnbuse_var;
 

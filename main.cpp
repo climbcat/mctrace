@@ -110,6 +110,29 @@ void RunProgram() {
 }
 
 
+void ParticlePrint(Neutron n) {
+    printf("(%g %g %g, %g %g %g, %g, %g)\n", n.x, n.y, n.z, n.vx, n.vy, n.vz, n.t, n.p);
+}
+
+
+inline
+void ParticleTransform(Matrix4f t, Neutron *n) {
+    Vector3f n_pos = { (f32) n->x, (f32) n->y, (f32) n->z };
+    n_pos = TransformPoint(t, n_pos);
+    n->x = n_pos.x;
+    n->y = n_pos.y;
+    n->z = n_pos.z;
+
+    Vector3f n_vel = { (f32) n->vx, (f32) n->vy, (f32) n->vz };
+    n_vel = TransformDirection(t, n_vel);
+    n->vx = n_vel.x;
+    n->vy = n_vel.y;
+    n->vz = n_vel.z;
+
+    // NOTE: figure out at what point the components start utilizing the spin // s
+}
+
+
 void TestComponentFuncitonsRun() {
     TimeFunction;
     printf("TestComponentFuncitonsRun\n\n");
@@ -122,63 +145,55 @@ void TestComponentFuncitonsRun() {
 
 
     // create, configure & init
-    // (using the PSI_DMC example)
+    // run display & calculate helper matrices
+
     PSI_DMC spec = {};
     Init_PSI_DMC(&spec);
     Array<Component*> comps = Config_PSI_DMC(ctx->a_life, &spec, &instr);
     SceneGraphUpdate();
 
-
-    // display
+    Matrix4f t_l2w_prev = Matrix4f_Identity();
     for (s32 i = 0; i < comps.len; ++i) {
         Component *comp = comps.arr[i];
         McDisplayNext(ctx->a_pers, comp->transform->t_world);
 
         DisplayComponent(comp);
+
+        Matrix4f t_l2w = comp->transform->t_world;
+        comp->t_prev2loc = TransformGetInverse(t_l2w) * t_l2w_prev;
+
+        t_l2w_prev = t_l2w;
+
+
+        // TODO:
+        //
+        //  Here we need to set the pos/rot transforms in terms of the legacy mcstas formulation: 
+        //      Coords position_absolute;
+        //      Coords position_relative;
+        //      Rotation rotation_absolute;
+        //      Rotation rotation_relative;
+        //
+        //  These are used by the following macros: 
+        //      #define POS_A_CURRENT_COMP (comp->position_absolute)
+        //      #define POS_R_CURRENT_COMP (comp->position_relative)
+        //      #define ROT_A_CURRENT_COMP (comp->rotation_absolute)
+        //      #define ROT_R_CURRENT_COMP (comp->rotation_relative)
+
     }
 
 
     // trace
     Neutron particle = {};
-    Vector3f n_pos = {};
-    Vector3f n_vel = {};
-    Matrix4f w2l = {};
-    Matrix4f l2w = {};
     for (s32 i = 0; i < comps.len; ++i) {
         Component *comp = comps.arr[i];
 
-        // transform particle into local component coords
-        w2l = TransformGetInverse(comp->transform->t_world);
+        ParticlePrint(particle);
 
-        n_pos = { (f32) particle.x, (f32) particle.y, (f32) particle.z };
-        n_pos = TransformPoint(w2l, n_pos);
-        particle.x = n_pos.x;
-        particle.y = n_pos.y;
-        particle.z = n_pos.z;
-        n_vel = { (f32) particle.vx, (f32) particle.vy, (f32) particle.vz };
-        n_vel = TransformDirection(w2l, n_vel);
-        particle.vx = n_vel.x;
-        particle.vy = n_vel.y;
-        particle.vz = n_vel.z;
-        // TODO: the same should be done for s
+        // previous local system -> current local system
+        ParticleTransform(comp->t_prev2loc, &particle);
 
         // run trace code
         TraceComponent(comp, &particle, &instr);
-
-        // transform particle back into world coords
-        l2w = comp->transform->t_world;
-
-        n_pos = { (f32) particle.x, (f32) particle.y, (f32) particle.z };
-        n_pos = TransformPoint(w2l, n_pos);
-        particle.x = n_pos.x;
-        particle.y = n_pos.y;
-        particle.z = n_pos.z;
-        n_vel = { (f32) particle.vx, (f32) particle.vy, (f32) particle.vz };
-        n_vel = TransformDirection(w2l, n_vel);
-        particle.vx = n_vel.x;
-        particle.vy = n_vel.y;
-        particle.vz = n_vel.z;
-        // TODO: the same should be done for s
     }
 
 

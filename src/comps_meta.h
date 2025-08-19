@@ -56,6 +56,8 @@ enum CompCategory {
 
 struct Component {
     Transform *transform;
+    Matrix4f t_world2loc; // the inverse matrix of transform->t_world
+    Matrix4f t_prev2loc;
 
     CompType type;
     CompCategory cat;
