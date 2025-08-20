@@ -56,8 +56,52 @@ Neutron* _particle = &_particle_global_randnbuse_var;
 
 
 typedef double MCNUM;
-typedef struct {MCNUM x, y, z;} Coords;
-typedef MCNUM Rotation[3][3];
+//typedef struct { MCNUM x, MCNUM y, MCNUM z; } Coords;
+//typedef MCNUM Rotation[3][3];
+
+struct Coords {
+    MCNUM x;
+    MCNUM y;
+    MCNUM z;
+};
+
+typedef double Rotation[3][3];
+
+
+//
+//  Generic Component struct
+
+
+struct ComponentSharedHeader {
+    int index;
+    char *name;
+    char *type;
+    Coords position_absolute;
+    Coords position_relative;
+    Rotation rotation_absolute;
+    Rotation rotation_relative;
+};
+
+
+struct Component {
+    Transform *transform;
+    Matrix4f t_world2loc; // the inverse matrix of transform->t_world
+    Matrix4f t_prev2loc;
+
+    u32 type;
+    u32 cat;
+    Str type_name;
+    Str name;
+
+    void *comp;
+
+    ComponentSharedHeader *GetHeader() {
+        return (ComponentSharedHeader*) comp;
+    }
+};
+
+
+//
 
 #define randstate_t uint64_t
 #define MC_PATHSEP_S "/"

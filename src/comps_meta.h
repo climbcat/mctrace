@@ -54,20 +54,6 @@ enum CompCategory {
 };
 
 
-struct Component {
-    Transform *transform;
-    Matrix4f t_world2loc; // the inverse matrix of transform->t_world
-    Matrix4f t_prev2loc;
-
-    CompType type;
-    CompCategory cat;
-    Str type_name;
-    Str name;
-
-    void *comp;
-};
-
-
 Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char *name) {
     Component *comp = (Component*) ArenaAlloc(a_dest, sizeof(Component));
     comp->type = type;

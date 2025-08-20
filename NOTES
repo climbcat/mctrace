@@ -1,3 +1,10 @@
+250820:
+
+Design principles:
+
+- Keeping as much code out of the code-generated sections
+- Being able to debug generated code easilly
+- Keeping the dev cycle tight and fast (build -> run -> debug)
 
 
 250816:
