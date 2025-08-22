@@ -97,20 +97,6 @@ void RunProgram() {
         CbuiFrameEnd();
     }
     CbuiExit();
-
-
-    // try running Finally
-    for (s32 i = 0; i < comps.len; ++i) {
-        // component as component
-        Component *comp = comps.arr[i];
-
-        printf("%.*s\n", comp->name.len, comp->name.str);
-        FinallyComponent(comp);        
-    }
-}
-
-void ParticlePrint(Neutron n) {
-    printf("(%g %g %g, %g %g %g, %g, %g)\n", n.x, n.y, n.z, n.vx, n.vy, n.vz, n.t, n.p);
 }
 
 inline
@@ -145,6 +131,9 @@ Neutron ParticleTransform(Matrix4f t, Neutron n) {
     r.vy = n_vel.y;
     r.vz = n_vel.z;
 
+    r.t = n.t;
+    r.p = n.p;
+
     return r;
 }
 
@@ -153,6 +142,9 @@ void ParticlePrintWorld(Matrix4f t_world, Neutron n) {
     printf("(%g %g %g, %g %g %g, %g, %g)\n", n.x, n.y, n.z, n.vx, n.vy, n.vz, n.t, n.p);
 }
 
+void ParticlePrint(Neutron n) {
+    printf("(%g %g %g, %g %g %g, %g, %g)\n", n.x, n.y, n.z, n.vx, n.vy, n.vz, n.t, n.p);
+}
 
 
 void TestComponentFuncitonsRun() {
@@ -166,14 +158,19 @@ void TestComponentFuncitonsRun() {
     Instrument instr = {};
 
 
-    // create, configure & init
-    // run display & calculate helper matrices
+    // NOTE: We must set mcncount BEFORE initialization.
+    //      This is used by API call mcget_ncount(), and called by some components during init (SourceMaxwell)
+    mcncount = 1000000;
 
+
+    // create, configure & init:
     PSI_DMC spec = {};
     Init_PSI_DMC(&spec);
     Array<Component*> comps = Config_PSI_DMC(ctx->a_life, &spec, &instr);
     SceneGraphUpdate();
 
+
+    // run display & calculate helper matrices:
     Matrix4f t_world_prev = Matrix4f_Identity();
     for (s32 i = 0; i < comps.len; ++i) {
         Component *comp = comps.arr[i];
@@ -204,7 +201,8 @@ void TestComponentFuncitonsRun() {
 
 
     // trace
-    for (u32 j = 0; j < 5; ++j) {
+    u32 DBG_break_after_ncount = 5;
+    for (u32 j = 0; j < mcncount; ++j) {
         Neutron particle = {};
 
         for (s32 i = 0; i < comps.len; ++i) {
@@ -217,6 +215,10 @@ void TestComponentFuncitonsRun() {
 
             // run trace code
             TraceComponent(comp, &particle, &instr);
+        }
+
+        if (j + 1 == DBG_break_after_ncount) {
+            break;
         }
     }
 
