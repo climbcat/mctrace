@@ -133,7 +133,6 @@ void Init_PSI_DMC(PSI_DMC *spec) {
 }
 
 Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
-    // TODO: Export this line into the cogen
     instr->name = (char*) "PSI_DMC";
 
     Array<Component*> comp_sequence = InitArray<Component*>(a_dest, 32);
@@ -770,8 +769,8 @@ Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *inst
     Detector->transform = SceneGraphAlloc(sa_arm->transform);
     Detector->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
-
     return comp_sequence;
 }
+
 
 #endif // PSI_DMC
