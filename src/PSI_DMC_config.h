@@ -133,6 +133,9 @@ void Init_PSI_DMC(PSI_DMC *spec) {
 }
 
 Array<Component*> Config_PSI_DMC(MArena *a_dest, PSI_DMC *spec, Instrument *instr) {
+    // TODO: Export this line into the cogen
+    instr->name = (char*) "PSI_DMC";
+
     Array<Component*> comp_sequence = InitArray<Component*>(a_dest, 32);
     f32 at_x, at_y, at_z;
     f32 phi_x, phi_y, phi_z;

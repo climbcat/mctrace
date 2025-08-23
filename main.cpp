@@ -6,9 +6,8 @@
 
 #include "lib/jg_baselayer.h"
 #include "lib/jg_cbui.h"
-//#include "../cbui/cbui_includes.h"
 
-#include "src/mcdis.h"  // <- this is where our "core amendment" code lives
+#include "src/mcdis.h"
 #include "simcore/simcore.h"
 #include "simcore/simlib.h"
 
@@ -29,25 +28,66 @@ Color ComponentCatToColor(u32 cat) {
     return COLOR_BLACK;
 }
 
+struct InstrumentConfig {
+    Instrument instr;
+    Array<Component*> comps;
 
-void RunProgram() {
-    TimeFunction;
+    Matrix4f box_t_worold;
+    Vector3f box_dims;
+};
 
-    CbuiInit("mctrace", false);
-    SceneGraphInit();
 
-    // config for the particular instrument, PSI_DMC
-    Instrument instr = {};
+// TODO: Should this be a code generated function?
+//      Actually, this should be compressed into a library function
+InstrumentConfig InitAndConfigure_PSI_DMC(MArena *a_dest, s32 ncount) {
+    InstrumentConfig instr_conf = {};
+
+
+    // NOTE: We must set mcncount BEFORE initialization.
+    //      This is used by API call mcget_ncount(), and called by some components during init (SourceMaxwell)
+    mcset_ncount(ncount);
+
+
+    // create, configure & init:
     PSI_DMC spec = {};
     Init_PSI_DMC(&spec);
-    Array<Component*> comps = Config_PSI_DMC(cbui.ctx->a_life, &spec, &instr);
-    // DBG: displace everything into the minus z: (admittedly, a temp hack)
-    Component *first = comps.arr[0];
-    first->transform->t_loc = TransformBuildTranslation( { 0, 0, -51 } ) * first->transform->t_loc;
-
-    // consolidate component world matrices
+    instr_conf.comps = Config_PSI_DMC(a_dest, &spec, &instr_conf.instr);
     SceneGraphUpdate();
 
+
+    // run display & calculate helper matrices:
+    Matrix4f t_world_prev = Matrix4f_Identity();
+    for (s32 i = 0; i < instr_conf.comps.len; ++i) {
+        Component *comp = instr_conf.comps.arr[i];
+        McDisplayNext(a_dest, comp->transform->t_world);
+
+        DisplayComponent(comp);
+
+        Matrix4f t_world = comp->transform->t_world;
+        comp->t_prev2loc = TransformGetInverse(t_world) * t_world_prev;
+        t_world_prev = t_world;
+
+        ComponentSharedHeader *hdr = comp->GetHeader();
+        hdr-> position_absolute.x =  comp->transform->t_world.m[0][3];
+        hdr-> position_absolute.y =  comp->transform->t_world.m[1][3];
+        hdr-> position_absolute.z =  comp->transform->t_world.m[2][3];
+        hdr-> position_relative.x =  comp->transform->t_loc.m[0][3];
+        hdr-> position_relative.y =  comp->transform->t_loc.m[1][3];
+        hdr-> position_relative.z =  comp->transform->t_loc.m[2][3];
+        for (u32 i = 0; i < 3; i++) {
+            for (u32 j = 0; j < 3; j++) {
+                // NOTE: testing will tell if we may need to mirror the rot matrix, or what
+
+                hdr->rotation_absolute[i][j] = comp->transform->t_world.m[i][j];
+                hdr->rotation_relative[i][j] = comp->transform->t_loc.m[i][j];
+            }
+        }
+    }
+
+    return instr_conf;
+}
+
+Array<Wireframe> GetDisplayWireframes(MArena *a_dest, Array<Component*> comps) {
     // storge for the graphical objects
     Array<Wireframe> objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
     Wireframe plane = CreatePlane(10, cbui.ctx->a_pers);
@@ -56,10 +96,11 @@ void RunProgram() {
 
 
     for (s32 i = 0; i < comps.len; ++i) {
-        // component as component
         Component *comp = comps.arr[i];
+
         printf("%.*s\n", comp->name.len, comp->name.str);
         PrintTransform(g_mcdis_t_world);
+
 
         McDisplayNext(cbui.ctx->a_pers, comp->transform->t_world);
         DisplayComponent(comp);        
@@ -75,6 +116,21 @@ void RunProgram() {
         wf_comp.segments.max = g_mcdis_anchors.len;
         objs.Add(wf_comp);
     }
+
+    return objs;
+}
+
+
+void RunProgram() {
+    TimeFunction;
+
+    CbuiInit("mctrace", false);
+    SceneGraphInit();
+
+
+    s32 ncount = 1000000;
+    InstrumentConfig psi_dmc = InitAndConfigure_PSI_DMC(cbui.ctx->a_pers, ncount);
+    Array<Wireframe> objs = GetDisplayWireframes(cbui.ctx->a_pers, psi_dmc.comps);
 
 
     // UI

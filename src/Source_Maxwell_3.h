@@ -183,19 +183,19 @@ void Trace_Source_Maxwell_3(Source_Maxwell_3 *comp, Neutron *particle, Instrumen
     ////////////////////////////////////////////////////////////////
 
 
-    double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus;
-    t=0;
-    z=0;
+    double v, tau_l, E, lambda, k, r, xf, yf, dx, dy, w_focus;
+    t = 0;
+    z = 0;
     x = 0.5*w_source*randpm1();
     y = 0.5*h_source*randpm1();         /* Choose initial position */
 
     randvec_target_rect_real(&xf, &yf, &r, &w_focus, 0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
 
-    dx = xf-x;
-    dy = yf-y;
-    r = sqrt(dx*dx+dy*dy+dist*dist);
+    dx = xf - x;
+    dy = yf - y;
+    r = sqrt(dx*dx + dy*dy + dist*dist);
 
-    lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
+    lambda = Lmin + l_range*rand01();    /* Choose from uniform distribution */
     k = 2*PI/lambda;
     v = K2V*k;
 
@@ -209,8 +209,8 @@ void Trace_Source_Maxwell_3(Source_Maxwell_3 *comp, Neutron *particle, Instrumen
     printf("l %g, w_focus %g \n", lambda, w_focus);
     */
 
-    p *= w_mult*w_focus;    /* Correct for target focusing etc */
-    p *= I1*SM3_Maxwell(lambda,T1)+I2*SM3_Maxwell(lambda,T2)+I3*SM3_Maxwell(lambda,T3); /* Calculate true intensity */
+    p *= w_mult * w_focus;    /* Correct for target focusing etc */
+    p *= I1 * SM3_Maxwell(lambda, T1) + I2 * SM3_Maxwell(lambda, T2) + I3 * SM3_Maxwell(lambda, T3); /* Calculate true intensity */
 
 
     ////////////////////////////////////////////////////////////////

@@ -141,7 +141,6 @@ void* particle_getvar_void(Neutron *p, char *name, int *suc) {
 
 
 struct Instrument {
-    // NOTE: required by certain macros s.a. POS_A_COMP_INDEX and more. We want to get rid of these ASAP.
     char *name; // used with: NAME_INSTRUMENT
     Coords *_position_absolute; // used with: POS_A_COMP_INDEX
     int counter_N;
