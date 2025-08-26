@@ -121,40 +121,6 @@ Array<Wireframe> GetDisplayWireframes(MArena *a_dest, Array<Component*> comps) {
 }
 
 
-void RunProgram() {
-    TimeFunction;
-
-    CbuiInit("mctrace", false);
-    SceneGraphInit();
-
-
-    s32 ncount = 1000000;
-    InstrumentConfig psi_dmc = InitAndConfigure_PSI_DMC(cbui.ctx->a_pers, ncount);
-    Array<Wireframe> objs = GetDisplayWireframes(cbui.ctx->a_pers, psi_dmc.comps);
-
-
-    // UI
-    Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
-    OrbitCamera cam = OrbitCameraInit(persp.aspect);
-    
-
-
-    while (cbui.running) {
-        CbuiFrameStart();
-        OrbitCameraUpdate(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
-        OrbitCameraPan(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
-        // start
-
-
-        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs);
-
-
-        // end 
-        CbuiFrameEnd();
-    }
-    CbuiExit();
-}
-
 inline
 void ParticleTransform(Matrix4f t, Neutron *n) {
     Vector3f n_pos = { (f32) n->x, (f32) n->y, (f32) n->z };
@@ -200,6 +166,113 @@ void ParticlePrintWorld(Matrix4f t_world, Neutron n) {
 
 void ParticlePrint(Neutron n) {
     printf("(%g %g %g, %g %g %g, %g, %g)\n", n.x, n.y, n.z, n.vx, n.vy, n.vz, n.t, n.p);
+}
+
+
+struct NeutronTrajectory {
+    NeutronTrajectory *next;
+    List<Vector3f> event_segments; // these are just pairs of vector3, but they could have been events ...
+};
+
+
+NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount) {
+    bool DBG_print_particle = true;
+    u32 DBG_break_after_ncount = 1;
+
+    NeutronTrajectory *ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
+    NeutronTrajectory *ntrace_prev = {};
+
+    for (u32 j = 0; j < ncount; ++j) {
+        Neutron n = {};
+
+        ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
+        ntrace->event_segments = InitList<Vector3f>(a_trajectories, 0);
+        if (ntrace_prev) {
+            ntrace_prev->next = ntrace;
+        }
+
+        // trace components
+        Vector3f current = {};
+        Vector3f prev = {};
+        for (s32 i = 0; i < comps.len; ++i) {
+            Component *comp = comps.arr[i];
+
+            // previous local system -> current local system
+            ParticleTransform(comp->t_prev2loc, &n);
+            if (DBG_print_particle) { ParticlePrintWorld(comp->transform->t_world, n); }
+
+
+            current = TransformPoint(comp->transform->t_world, Vector3f { (f32) n.x, (f32) n.y, (f32) n.z });
+            if (i > 2) {
+                ArenaAlloc(a_trajectories, 2 * sizeof(Vector3f));
+                ntrace->event_segments.Add( prev );
+                ntrace->event_segments.Add( current );
+            }
+            prev = current;
+
+
+            // run trace code
+            TraceComponent(comp, &n, instr);
+        }
+
+        if (j + 1 == DBG_break_after_ncount) { break; }
+    }
+
+    return ntrace;
+}
+
+
+void RunProgram() {
+    TimeFunction;
+
+    CbuiInit("mctrace", false);
+    SceneGraphInit();
+
+
+    s32 ncount = 1000000;
+    InstrumentConfig psi_dmc = InitAndConfigure_PSI_DMC(cbui.ctx->a_pers, ncount);
+    Array<Wireframe> objs = GetDisplayWireframes(cbui.ctx->a_pers, psi_dmc.comps);
+
+
+    // UI
+    Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
+    OrbitCamera cam = OrbitCameraInit(persp.aspect);
+    
+
+    // TRACE
+    NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, psi_dmc.comps, &psi_dmc.instr, ncount);
+
+
+    // DISPLAY
+    while (cbui.running) {
+        CbuiFrameStart();
+        OrbitCameraUpdate(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
+        OrbitCameraPan(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
+        // start
+
+
+        NeutronTrajectory *traces = traces_first;
+        while (traces) {
+            
+            for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
+                Vector3f a = traces->event_segments.lst[2*i];
+                Vector3f b = traces->event_segments.lst[2*i + 1];
+
+                RenderLineSegment(cbui.image_buffer, cam.view, persp.proj, a, b, cbui.plf.width, cbui.plf.height, COLOR_BLACK);
+            }
+
+            traces = traces->next;
+        }
+
+
+        // render
+        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs);
+
+
+        // end 
+        CbuiFrameEnd();
+    }
+    CbuiExit();
 }
 
 
