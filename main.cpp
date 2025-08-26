@@ -177,18 +177,22 @@ struct NeutronTrajectory {
 
 NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount) {
     bool DBG_print_particle = true;
-    u32 DBG_break_after_ncount = 1;
+    bool DBG_record_trajectories = true;
+    u32 DBG_break_after_ncount = 5;
 
-    NeutronTrajectory *ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
-    NeutronTrajectory *ntrace_prev = {};
+    NeutronTrajectory *ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));;
+    NeutronTrajectory *ntrace_prev = ntrace;
+    NeutronTrajectory *ntrace_head = ntrace;
 
     for (u32 j = 0; j < ncount; ++j) {
         Neutron n = {};
 
-        ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
-        ntrace->event_segments = InitList<Vector3f>(a_trajectories, 0);
-        if (ntrace_prev) {
+        if (DBG_record_trajectories) {
+            ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
+            ntrace->event_segments = InitList<Vector3f>(a_trajectories, 0);
+
             ntrace_prev->next = ntrace;
+            ntrace_prev = ntrace;
         }
 
         // trace components
@@ -202,13 +206,16 @@ NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comp
             if (DBG_print_particle) { ParticlePrintWorld(comp->transform->t_world, n); }
 
 
-            current = TransformPoint(comp->transform->t_world, Vector3f { (f32) n.x, (f32) n.y, (f32) n.z });
-            if (i > 2) {
-                ArenaAlloc(a_trajectories, 2 * sizeof(Vector3f));
-                ntrace->event_segments.Add( prev );
-                ntrace->event_segments.Add( current );
+            if (DBG_record_trajectories) {
+                // record the neutron event as it enters this component
+                current = TransformPoint(comp->transform->t_world, Vector3f { (f32) n.x, (f32) n.y, (f32) n.z });
+                if (i > 2) {
+                    ArenaAlloc(a_trajectories, 2 * sizeof(Vector3f));
+                    ntrace->event_segments.Add( prev );
+                    ntrace->event_segments.Add( current );
+                }
+                prev = current;
             }
-            prev = current;
 
 
             // run trace code
@@ -218,7 +225,7 @@ NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comp
         if (j + 1 == DBG_break_after_ncount) { break; }
     }
 
-    return ntrace;
+    return ntrace_head;
 }
 
 
