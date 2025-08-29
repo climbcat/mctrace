@@ -175,10 +175,9 @@ struct NeutronTrajectory {
 };
 
 
-NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount) {
+NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount,u32 DBG_break_after_ncount) {
     bool DBG_print_particle = true;
     bool DBG_record_trajectories = true;
-    u32 DBG_break_after_ncount = 5;
 
     NeutronTrajectory *ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));;
     NeutronTrajectory *ntrace_prev = ntrace;
@@ -217,6 +216,10 @@ NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comp
                 prev = current;
             }
 
+            // break iteration of absorbed particles
+            if (n._absorbed) {
+                break;
+            }
 
             // run trace code
             TraceComponent(comp, &n, instr);
@@ -247,7 +250,7 @@ void RunProgram() {
     
 
     // TRACE
-    NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, psi_dmc.comps, &psi_dmc.instr, ncount);
+    NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, psi_dmc.comps, &psi_dmc.instr, ncount, 1000);
 
 
     // DISPLAY
