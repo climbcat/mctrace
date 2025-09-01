@@ -1,21 +1,21 @@
-#ifndef __META_COMPS__
-#define __META_COMPS__
+#ifndef __COMPS_META___
+#define __COMPS_META___
 
 
-#include "Slit.h"
-#include "L_monitor.h"
-#include "Bender.h"
-#include "Progress_bar.h"
-#include "PSD_monitor.h"
-#include "Arm.h"
-#include "Al_window.h"
-#include "PSDlin_monitor.h"
-#include "Guide.h"
-#include "Source_Maxwell_3.h"
-#include "Beamstop.h"
-#include "PowderN.h"
-#include "Monitor_nD.h"
-#include "Monochromator_2foc.h"
+#include "comps/Slit.h"
+#include "comps/L_monitor.h"
+#include "comps/Bender.h"
+#include "comps/Progress_bar.h"
+#include "comps/PSD_monitor.h"
+#include "comps/Arm.h"
+#include "comps/Al_window.h"
+#include "comps/PSDlin_monitor.h"
+#include "comps/Guide.h"
+#include "comps/Source_Maxwell_3.h"
+#include "comps/Beamstop.h"
+#include "comps/PowderN.h"
+#include "comps/Monitor_nD.h"
+#include "comps/Monochromator_2foc.h"
 
 
 enum CompType {

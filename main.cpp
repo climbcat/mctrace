@@ -7,7 +7,13 @@
 #include "lib/jg_baselayer.h"
 #include "lib/jg_cbui.h"
 
-#include "src/mcdis.h"
+
+#define DEBUG_DISPLAY
+#define DEBUG_TRACE
+
+
+#include "src/display_hooks.h"
+#include "src/trace_hooks.h"
 #include "simcore/simcore.h"
 #include "simcore/simlib.h"
 
@@ -139,7 +145,7 @@ void ParticleTransform(Matrix4f t, Neutron *n) {
 }
 
 inline
-Neutron ParticleTransform(Matrix4f t, Neutron n) {
+Neutron ParticleImmutableTransform(Matrix4f t, Neutron n) {
     Neutron r = {};
     Vector3f n_pos = { (f32) n.x, (f32) n.y, (f32) n.z };
     n_pos = TransformPoint(t, n_pos);
@@ -160,7 +166,7 @@ Neutron ParticleTransform(Matrix4f t, Neutron n) {
 }
 
 void ParticlePrintWorld(Matrix4f t_world, Neutron n) {
-    n = ParticleTransform(t_world, n);
+    n = ParticleImmutableTransform(t_world, n);
     printf("(%g %g %g, %g %g %g, %g, %g)\n", n.x, n.y, n.z, n.vx, n.vy, n.vz, n.t, n.p);
 }
 
@@ -176,53 +182,48 @@ struct NeutronTrajectory {
 
 
 NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount,u32 DBG_break_after_ncount) {
-    bool DBG_print_particle = true;
-    bool DBG_record_trajectories = true;
 
     NeutronTrajectory *ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));;
     NeutronTrajectory *ntrace_prev = ntrace;
     NeutronTrajectory *ntrace_head = ntrace;
 
+
     for (u32 j = 0; j < ncount; ++j) {
         Neutron n = {};
 
-        if (DBG_record_trajectories) {
-            ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
-            ntrace->event_segments = InitList<Vector3f>(a_trajectories, 0);
+        // record trajectories 
+        ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
+        ntrace->event_segments = InitList<Vector3f>(a_trajectories, 0);
+        g_anchors_trace = &ntrace->event_segments;
+        g_a_dest_trace = a_trajectories;
 
-            ntrace_prev->next = ntrace;
-            ntrace_prev = ntrace;
-        }
+        ntrace_prev->next = ntrace;
+        ntrace_prev = ntrace;
+
+        g_trace_prev = {};
+        g_trace_current = {};
+
 
         // trace components
         Vector3f current = {};
         Vector3f prev = {};
         for (s32 i = 0; i < comps.len; ++i) {
             Component *comp = comps.arr[i];
+            g_t_world_current_comp = comp->transform->t_world;
 
             // previous local system -> current local system
             ParticleTransform(comp->t_prev2loc, &n);
-            if (DBG_print_particle) { ParticlePrintWorld(comp->transform->t_world, n); }
 
+            // run trace code
+            TraceComponent(comp, &n, instr);
 
-            if (DBG_record_trajectories) {
-                // record the neutron event as it enters this component
-                current = TransformPoint(comp->transform->t_world, Vector3f { (f32) n.x, (f32) n.y, (f32) n.z });
-                if (i > 2) {
-                    ArenaAlloc(a_trajectories, 2 * sizeof(Vector3f));
-                    ntrace->event_segments.Add( prev );
-                    ntrace->event_segments.Add( current );
-                }
-                prev = current;
-            }
+            // record the state after each comp, because there is no guarantee that the component will call SCATTER
+            trace_state_ext_hook(n.x, n.y, n.z);
 
             // break iteration of absorbed particles
             if (n._absorbed) {
                 break;
             }
-
-            // run trace code
-            TraceComponent(comp, &n, instr);
         }
 
         if (j + 1 == DBG_break_after_ncount) { break; }

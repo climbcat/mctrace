@@ -1,12 +1,11 @@
-#ifndef __MCDIS_H__
-#define __MCDIS_H__
+#ifndef __DISPLAY_HOOKS_H__
+#define __DISPLAY_HOOKS_H__
 
 
 static List<Vector3f> g_mcdis_anchors;
 static MArena *g_mcdis_a_dest;
 static Matrix4f g_mcdis_t_world;
 static bool g_mcdis_dbg;
-
 
 void McDisplayNext(MArena *a_dest, Matrix4f t_world) {
     g_mcdis_a_dest = a_dest;
@@ -17,7 +16,7 @@ void McDisplayNext(MArena *a_dest, Matrix4f t_world) {
 }
 
 
-void mcdis_multiline_hook25(int count, ...) {
+void mcdis_multiline_ext_hook(int count, ...) {
     // The 2025 mcdis_ hook implementation
 
     va_list ap;
@@ -55,7 +54,7 @@ void mcdis_multiline_hook25(int count, ...) {
     va_end(ap);
 }
 
-void mcdis_line_hook25(double x1, double y1, double z1, double x2, double y2, double z2){
+void mcdis_line_ext_hook(double x1, double y1, double z1, double x2, double y2, double z2){
     // The 2025 mcdis_ hook implementation
 
     Vector3f a1 = TransformPoint(g_mcdis_t_world, { (f32) x1, (f32) y1, (f32) z1 });
@@ -68,10 +67,10 @@ void mcdis_line_hook25(double x1, double y1, double z1, double x2, double y2, do
     g_mcdis_anchors.Add(a2);
 }
 
-// mcdis_Circle is implemented alongside the other line-generating mcdis_* functions, in simcore.h
+// NOTE: mcdis_Circle is implemented alongside the other line-generating mcdis_* functions in simcore.h
 void mcdis_Circle(double x, double y, double z, double r, double nx, double ny, double nz);
 
-void mcdis_circle_hook25(char *plane, double x, double y, double z, double r) {
+void mcdis_circle_ext_hook(char *plane, double x, double y, double z, double r) {
     if ( !strcmp(plane, "xy") ) {
         if (g_mcdis_dbg) { printf("mcdis_circle_hook25: xy\n"); }
         mcdis_Circle(x, y, z, r, 0, 0, 1);

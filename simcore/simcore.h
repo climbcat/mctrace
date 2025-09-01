@@ -972,26 +972,20 @@ static void mcsetseed(char *arg)
 *******************************************************************************/
 
 
-// TODO: does anyone, anywhere call mcdis_magnify?
-
+// TODO: does anyone, anywhere, call mcdis_magnify? Looks like dead code
 void mcdis_magnify(char *what){
     // Do nothing here, better use interactive zoom from the tools
 }
 
 
-// TODO: have a define to switch these versions on/off
-
-
-#define mcdis_line mcdis_line_hook25
-#define mcdis_multiline mcdis_multiline_hook25
-#define mcdis_circle mcdis_circle_hook25
-
-
-/*
+#ifdef DEBUG_DISPLAY
+#   define mcdis_line mcdis_line_ext_hook
+#   define mcdis_multiline mcdis_multiline_ext_hook
+#   define mcdis_circle mcdis_circle_ext_hook
+#else
 void mcdis_line(double x1, double y1, double z1, double x2, double y2, double z2){
     printf("MCDISPLAY: multiline(2,%g,%g,%g,%g,%g,%g)\n", x1,y1,z1,x2,y2,z2);
 }
-
 void mcdis_multiline(int count, ...) {
     va_list ap;
     double x,y,z;
@@ -1007,11 +1001,10 @@ void mcdis_multiline(int count, ...) {
     va_end(ap);
     printf(")\n");
 }
-
 void mcdis_circle(char *plane, double x, double y, double z, double r){
     printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
 }
-*/
+#endif
 
 
 void mcdis_dashed_line(double x1, double y1, double z1, double x2, double y2, double z2, int n) {
@@ -2410,7 +2403,7 @@ do { \
 #define PROP_MAGNET(dt) \
 do { \
 } while (0)
-    /* change coordinates from local system to magnet system */
+/* change coordinates from local system to magnet system */
 /*    Rotation rotLM, rotTemp; \
     Coords   posLM = coords_sub(POS_A_CURRENT_COMP, mcMagnetPos); \
     rot_transpose(ROT_A_CURRENT_COMP, rotTemp); \
@@ -2422,18 +2415,18 @@ do { \
 
 #define mcPROP_DT(dt) \
 do { \
-    if (mcMagnet && dt > 0) PROP_MAGNET(dt);\
+    if (mcMagnet && dt > 0) PROP_MAGNET(dt); \
     x += vx*(dt); \
     y += vy*(dt); \
     z += vz*(dt); \
     t += (dt); \
-    if (isnan(p) || isinf(p)) { ABSORB; }\
+    if (isnan(p) || isinf(p)) { ABSORB; } \
 } while(0)
 
 /* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with acceleration */
 #define PROP_GRAV_DT(dt, Ax, Ay, Az) \
 do { \
-    if(dt < 0 && mcallowbackprop == 0) { ABSORB; }\
+    if(dt < 0 && mcallowbackprop == 0) { ABSORB; } \
     if (mcMagnet) /*printf("Spin precession gravity\n")*/; \
     x  += vx*(dt) + (Ax)*(dt)*(dt)/2; \
     y  += vy*(dt) + (Ay)*(dt)*(dt)/2; \
@@ -2442,7 +2435,7 @@ do { \
     vy += (Ay)*(dt); \
     vz += (Az)*(dt); \
     t  += (dt); \
-    DISALLOW_BACKPROP;\
+    DISALLOW_BACKPROP; \
 } while(0)
 
 
@@ -2454,21 +2447,27 @@ do { \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     PROP_GRAV_DT(dt, mc_gx, mc_gy, mc_gz); } \
     else mcPROP_DT(dt); \
-    DISALLOW_BACKPROP;\
+    DISALLOW_BACKPROP; \
 } while(0)
 
 
 #define PROP_Z0 \
 do { \
-    if (mcgravitation) { Coords mcLocG; int mc_ret; \
-    double mc_dt, mc_gx, mc_gy, mc_gz; \
-    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
-    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
-    mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gz/2, -vz, -z); \
-    if (mc_ret) {PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); z=0;}\
-    else if (mcallowbackprop == 0 && mc_dt < 0) { ABSORB; }; } \
+    if (mcgravitation) { \
+        Coords mcLocG; int mc_ret; \
+        double mc_dt, mc_gx, mc_gy, mc_gz; \
+        mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
+        coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+        mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gz/2, -vz, -z); \
+        if (mc_ret) { \
+            PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); z=0; \
+        } \
+        else if (mcallowbackprop == 0 && mc_dt < 0) { \
+            ABSORB; \
+        }; \
+    } \
     else mcPROP_Z0; \
-    DISALLOW_BACKPROP;\
+    DISALLOW_BACKPROP; \
 } while(0)
 
 #define mcPROP_Z0 \
@@ -2479,20 +2478,20 @@ do { \
     if(mc_dt < 0 && mcallowbackprop == 0) { ABSORB; }; \
     mcPROP_DT(mc_dt); \
     z = 0; \
-    DISALLOW_BACKPROP;\
+    DISALLOW_BACKPROP; \
 } while(0)
 
 #define PROP_X0 \
 do { \
     if (mcgravitation) { Coords mcLocG; int mc_ret; \
-    double mc_dt, mc_gx, mc_gy, mc_gz; \
-    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
-    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
-    mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gx/2, -vx, -x); \
-    if (mc_ret) {PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); x=0;}\
+        double mc_dt, mc_gx, mc_gy, mc_gz; \
+        mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
+        coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+        mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gx/2, -vx, -x); \
+        if (mc_ret) { PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); x=0; } \
     else if (mcallowbackprop == 0 && mc_dt < 0) { ABSORB; }; } \
     else mcPROP_X0; \
-    DISALLOW_BACKPROP;\
+    DISALLOW_BACKPROP; \
 } while(0)
 
 #define mcPROP_X0 \
@@ -2503,20 +2502,20 @@ do { \
     if(mc_dt < 0 && mcallowbackprop == 0) { ABSORB; }; \
     mcPROP_DT(mc_dt); \
     x = 0; \
-    DISALLOW_BACKPROP;\
+    DISALLOW_BACKPROP; \
 } while(0)
 
 #define PROP_Y0 \
 do { \
     if (mcgravitation) { Coords mcLocG; int mc_ret; \
-    double mc_dt, mc_gx, mc_gy, mc_gz; \
-    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
-    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
-    mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gy/2, -vy, -y); \
-    if (mc_ret) {PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); y=0;}\
-    else if (mcallowbackprop == 0 && mc_dt < 0) { ABSORB; }; } \
+        double mc_dt, mc_gx, mc_gy, mc_gz; \
+        mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
+        coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+        mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gy/2, -vy, -y); \
+        if (mc_ret) { PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); y=0; } \
+        else if (mcallowbackprop == 0 && mc_dt < 0) { ABSORB; }; } \
     else mcPROP_Y0; \
-    DISALLOW_BACKPROP;\
+    DISALLOW_BACKPROP; \
 } while(0)
 
 
@@ -2532,21 +2531,20 @@ do { \
 } while(0)
 
 
+
 #ifdef DEBUG
-
-#    define DEBUG_STATE() if(!mcdotrace); else \
-        printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
-            x,y,z,vx,vy,vz,t,sx,sy,sz,p);
-#    define DEBUG_SCATTER() if(!mcdotrace); else \
-        printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
-            x,y,z,vx,vy,vz,t,sx,sy,sz,p);
-
+#    define DEBUG_STATE() if(!mcdotrace); else printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", x,y,z,vx,vy,vz,t,sx,sy,sz,p);
+#    define DEBUG_SCATTER() if(!mcdotrace); else printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", x,y,z,vx,vy,vz,t,sx,sy,sz,p);
 #else
-
-#    define DEBUG_STATE()
-#    define DEBUG_SCATTER()
-
+#   ifdef DEBUG_TRACE
+#       define DEBUG_STATE() trace_state_ext_hook(x, y, z);
+#       define DEBUG_SCATTER() trace_scatter_ext_hook(x, y, z);
+#   else
+#       define DEBUG_STATE()
+#       define DEBUG_SCATTER()
+#   endif
 #endif
+
 
 
 //
