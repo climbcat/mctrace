@@ -264,7 +264,6 @@ void RunProgram() {
 
         NeutronTrajectory *traces = traces_first;
         while (traces) {
-            
             for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
                 Vector3f a = traces->event_segments.lst[2*i];
                 Vector3f b = traces->event_segments.lst[2*i + 1];

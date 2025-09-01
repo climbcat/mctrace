@@ -1,3 +1,87 @@
+250901:
+
+Neutron "trajectories" has been implemented. This includes the use of
+DEBUG_SCATTER and DEBUG_STATE. These are only called during componen traces.
+
+However, a DEBUG_STATE call is interjected in our custom trace code, after the
+trace of each component, since not every component will call SCATTER for 
+debug purposes. (For example, our SourceMaxwell.)
+
+The trajectory tracing is actually using some global values for the capture,
+to provide som custom context for "_ext_hook" functions.
+
+McPlot: 
+
+Having fetched both display and trace output, which are both represented as
+line segments, we also need to fetch the plot data.
+
+Plot data is output in the Comp_Save sections, and uses the following API:
+
+MCDETECTOR mcdetector_out_0D
+MCDETECTOR mcdetector_out_1D
+MCDETECTOR mcdetector_out_2D
+
+We should try and map out what the parameters are, and simply re-implement
+these three functions. As we basically just need to output to our own
+screen logger, somehow. (Essentially a simplified version of the mcplot
+outputs.)
+
+The MCDETECTOR is a big catch-all struct called "mcdetector_struct".
+
+mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos, Rotation rot, int index):
+
+t: title
+p0: count data ptr
+p1: probability data ptr
+p2: probability squared data ptr
+c/pos/rot/index: compname, transform & index of the monitor component [what is this used for? Expect monitor output in local coordinates]
+
+
+mcdetector_out_1D(char *t, char *xl, char *yl, char *xvar, double x1, double x2, long n, double *p0, double *p1, double *p2, char *f,
+    char *c, Coords pos, Rotation rot, int index):
+
+t: title
+xl: x axis label
+yl: y axis label
+xvar: name of variable
+x1: xmin
+x2: xmax
+n: bin count
+p0: (see above) ptr into 1d array, e.g. [i] between 0, n
+p1: (see above)
+p2: (see above)
+f: filename
+c/pos/rot/index: see above
+
+mcdetector_out_2D(char *t, char *xl, char *yl, double x1, double x2, double y1, double y2, long m, long n, double *p0, double *p1, double *p2, char *f,
+    char *c, Coords pos, Rotation rot, int index)
+
+t: title
+xl: x axis label
+yl: y axis label
+x1: xmin
+x2: xmax
+y1: ymin
+y2: ymax
+m: bin count x-axis
+n: bin count y-axis
+p0: (see above) ptr into 2D array, e.g. used through [i][j] between [0,0] and [m,n]
+p1: (see above)
+p2: (see above)
+f: filename
+c/pos/rot/index: see above
+
+
+
+
+250901:
+
+Component "mcdisplay" calls have been impmenented. The "_ext_hook" functions 
+calls some global values behind the scenes, in order to preserve the simcore.h 
+APIs in their original state. This make the modified simcore.h more comparable
+to what exists across various mcstas files.
+
+
 250820:
 
 Design principles:

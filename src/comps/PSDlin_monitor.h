@@ -216,7 +216,7 @@ void Save_PSDlin_monitor(PSDlin_monitor *comp) {
     if (!nowritefile) {
         if (!vertical) {
             DETECTOR_OUT_1D(
-                "Linear PSD monitor","x-Position [m]","Intensity","x", xmin, xmax, nbins,
+                "Linear PSD monitor", "x-Position [m]", "Intensity", "x", xmin, xmax, nbins,
                 &PSDlin_N[0],&PSDlin_p[0],&PSDlin_p2[0],filename);
         }
         else {
