@@ -200,28 +200,6 @@ void InitComponent(Component *comp, Instrument *instr = NULL) {
 }
 
 
-void TraceComponent(Component *comp, Neutron *particle, Instrument *instr = NULL) {
-    switch (comp->type) {
-        case CT_Slit: { Trace_Slit((Slit*) comp->comp, particle, instr); } break;
-        case CT_L_monitor: { Trace_L_monitor((L_monitor*) comp->comp, particle, instr); } break;
-        case CT_Bender: { Trace_Bender((Bender*) comp->comp, particle, instr); } break;
-        case CT_Progress_bar: { Trace_Progress_bar((Progress_bar*) comp->comp, particle, instr); } break;
-        case CT_PSD_monitor: { Trace_PSD_monitor((PSD_monitor*) comp->comp, particle, instr); } break;
-        case CT_Arm: { Trace_Arm((Arm*) comp->comp, particle, instr); } break;
-        case CT_Al_window: { Trace_Al_window((Al_window*) comp->comp, particle, instr); } break;
-        case CT_PSDlin_monitor: { Trace_PSDlin_monitor((PSDlin_monitor*) comp->comp, particle, instr); } break;
-        case CT_Guide: { Trace_Guide((Guide*) comp->comp, particle, instr); } break;
-        case CT_Source_Maxwell_3: { Trace_Source_Maxwell_3((Source_Maxwell_3*) comp->comp, particle, instr); } break;
-        case CT_Beamstop: { Trace_Beamstop((Beamstop*) comp->comp, particle, instr); } break;
-        case CT_PowderN: { Trace_PowderN((PowderN*) comp->comp, particle, instr); } break;
-        case CT_Monitor_nD: { Trace_Monitor_nD((Monitor_nD*) comp->comp, particle, instr); } break;
-        case CT_Monochromator_2foc: { Trace_Monochromator_2foc((Monochromator_2foc*) comp->comp, particle, instr); } break;
-
-        default: { } break;
-    }
-}
-
-
 void DisplayComponent(Component *comp) {
     switch (comp->type) {
         case CT_Slit: { Display_Slit((Slit*) comp->comp); } break;
@@ -244,7 +222,48 @@ void DisplayComponent(Component *comp) {
 }
 
 
-// TODO: save
+void TraceComponent(Component *comp, Neutron *particle, Instrument *instr = NULL) {
+    switch (comp->type) {
+        case CT_Slit: { Trace_Slit((Slit*) comp->comp, particle, instr); } break;
+        case CT_L_monitor: { Trace_L_monitor((L_monitor*) comp->comp, particle, instr); } break;
+        case CT_Bender: { Trace_Bender((Bender*) comp->comp, particle, instr); } break;
+        case CT_Progress_bar: { Trace_Progress_bar((Progress_bar*) comp->comp, particle, instr); } break;
+        case CT_PSD_monitor: { Trace_PSD_monitor((PSD_monitor*) comp->comp, particle, instr); } break;
+        case CT_Arm: { Trace_Arm((Arm*) comp->comp, particle, instr); } break;
+        case CT_Al_window: { Trace_Al_window((Al_window*) comp->comp, particle, instr); } break;
+        case CT_PSDlin_monitor: { Trace_PSDlin_monitor((PSDlin_monitor*) comp->comp, particle, instr); } break;
+        case CT_Guide: { Trace_Guide((Guide*) comp->comp, particle, instr); } break;
+        case CT_Source_Maxwell_3: { Trace_Source_Maxwell_3((Source_Maxwell_3*) comp->comp, particle, instr); } break;
+        case CT_Beamstop: { Trace_Beamstop((Beamstop*) comp->comp, particle, instr); } break;
+        case CT_PowderN: { Trace_PowderN((PowderN*) comp->comp, particle, instr); } break;
+        case CT_Monitor_nD: { Trace_Monitor_nD((Monitor_nD*) comp->comp, particle, instr); } break;
+        case CT_Monochromator_2foc: { Trace_Monochromator_2foc((Monochromator_2foc*) comp->comp, particle, instr); } break;
+
+        default: { } break;
+    }
+}
+
+
+void SaveComponent(Component *comp) {
+    switch (comp->type) {
+        case CT_Slit: { Save_Slit((Slit*) comp->comp); } break;
+        case CT_L_monitor: { Save_L_monitor((L_monitor*) comp->comp); } break;
+        case CT_Bender: { Save_Bender((Bender*) comp->comp); } break;
+        case CT_Progress_bar: { Save_Progress_bar((Progress_bar*) comp->comp); } break;
+        case CT_PSD_monitor: { Save_PSD_monitor((PSD_monitor*) comp->comp); } break;
+        case CT_Arm: { Save_Arm((Arm*) comp->comp); } break;
+        case CT_Al_window: { Save_Al_window((Al_window*) comp->comp); } break;
+        case CT_PSDlin_monitor: { Save_PSDlin_monitor((PSDlin_monitor*) comp->comp); } break;
+        case CT_Guide: { Save_Guide((Guide*) comp->comp); } break;
+        case CT_Source_Maxwell_3: { Save_Source_Maxwell_3((Source_Maxwell_3*) comp->comp); } break;
+        case CT_Beamstop: { Save_Beamstop((Beamstop*) comp->comp); } break;
+        case CT_PowderN: { Save_PowderN((PowderN*) comp->comp); } break;
+        case CT_Monitor_nD: { Save_Monitor_nD((Monitor_nD*) comp->comp); } break;
+        case CT_Monochromator_2foc: { Save_Monochromator_2foc((Monochromator_2foc*) comp->comp); } break;
+
+        default: { } break;
+    }
+}
 
 
 void FinallyComponent(Component *comp) {
