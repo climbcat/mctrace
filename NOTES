@@ -1,3 +1,33 @@
+
+
+250902:
+
+The way McStas save calls work, they were called once after the simulation had finished.
+This registered a data pointer to the underlying 1D/2D monitor memory buffer.
+Along with bin counts (m: xbins, n: ybins), we'd be able to get the data.
+
+Once Finally() is called, the buffers would be freed.
+
+So we'd essentially also call the Save() function once to register the buffers,
+and their lifetime would be the same as the Display() output's lifetime: for
+the duration of the current instrument "simulation run"
+
+E.g.: From after instrument configuration to before it is cleaned up / destroyed,
+and another instrument would be initialized in its stead, for example.
+
+(We'd start having just one instrument active at the time.)
+
+Just like we have "struct Wireframe" to represent each component's graphical life,
+we'd need a "struct Monitor" to represent the monitor and store its data pointers, 
+labels, bin count and axis min/max values.
+
+NOTE: on this note, we'd probably want to store the list of wireframes alongside
+the InstrumentConfig, which also has a list of component pointers. We are, 
+however, getting too many types in the system, and some system design would be
+in order to merge some of the types, and just put the graphical data in there 
+with all the rest of it.
+
+
 250901:
 
 Neutron "trajectories" has been implemented. This includes the use of
@@ -70,8 +100,6 @@ p1: (see above)
 p2: (see above)
 f: filename
 c/pos/rot/index: see above
-
-
 
 
 250901:

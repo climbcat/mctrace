@@ -10,10 +10,12 @@
 
 #define DEBUG_DISPLAY
 #define DEBUG_TRACE
+#define DEBUG_PLOT
 
 
 #include "src/display_hooks.h"
 #include "src/trace_hooks.h"
+#include "src/plot_hooks.h"
 #include "simcore/simcore.h"
 #include "simcore/simlib.h"
 

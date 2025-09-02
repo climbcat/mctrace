@@ -637,134 +637,61 @@ char    *mcformat                  = NULL;      /* NULL (default) or a specific 
 /* I/O function prototypes ================================================== */
 
 
-/* output functions */
-MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos, Rotation rot, int index) {
-    // jg-250617 TODO: implement / re-introduce
+MCDETECTOR mcdetector_out_0D(const char *t, double p0, double p1, double p2, char *c, Coords pos, Rotation rot, int index)
+{
+    #ifdef DEBUG_PLOT
+    mcdetector_out_0D_ext_hook(t, p0, p1, p2, c);
+    #endif
 
     MCDETECTOR result = {};
     return result;
 }
-MCDETECTOR mcdetector_out_0D(
-    const char *t,
-    double p0, double p1, double p2,
-    char *c,
-    Coords pos, Rotation rot, int index)
+MCDETECTOR mcdetector_out_1D(const char *t, const char *xl, const char *yl, const char *xvar, double x1, double x2, long n, double *p0, double *p1, double *p2, char *f, char *c, Coords pos, Rotation rot, int index)
 {
-    // jg-250618: const version
-
-    MCDETECTOR result = {};
-    return result;
-}
-
-MCDETECTOR mcdetector_out_1D(
-    char *t, char *xl, char *yl, char *xvar,
-    double x1, double x2,
-    long n,
-    double *p0, double *p1, double *p2,
-    char *f, char *c,
-    Coords pos, Rotation rot, int index)
-{
-    // jg-250617 TODO: implement / re-introduce
+    #ifdef DEBUG_PLOT
+    mcdetector_out_1D_ext_hook(t, xl, yl, xvar, x1, x2, n, p0, p1, p2, f, c);
+    #endif
 
     MCDETECTOR result = {};
     return result;
 }
 
-MCDETECTOR mcdetector_out_1D(
-    const char *t, const char *xl, const char *yl,
-    const char *xvar, double x1, double x2, long n,
-    double *p0, double *p1, double *p2,
-    char *f, char *c,
-    Coords pos, Rotation rot, int index)
+
+MCDETECTOR mcdetector_out_2D(const char *t, const char *xl, const char *yl, double x1, double x2, double y1, double y2, long m, long n, double *p0, double *p1, double *p2, char *f, char *c, Coords pos, Rotation rot, int index)
 {
-    // jg-250618: const version
+    #ifdef DEBUG_PLOT
+    mcdetector_out_2D_ext_hook(t, xl, yl, x1, x2, y1, y2, m, n, p0, p1, p2, f, c);
+    #endif
 
     MCDETECTOR result = {};
     return result;
 }
 
-MCDETECTOR mcdetector_out_2D(
-    char *t, char *xl, char *yl,
-    double x1, double x2, double y1, double y2, long m,
-    long n, double *p0, double *p1, double *p2,
-    char *f, char *c,
-    Coords pos, Rotation rot, int index)
+MCDETECTOR mcdetector_out_2D_list(const char *t, const char *xl, const char *yl, double x1, double x2, double y1, double y2, long m, long n, double *p0, double *p1, double *p2, char *f, char *c, Coords posa, Rotation rota, char* options, int index)
 {
-    // jg-250617 TODO: implement / re-introduce
-
-    MCDETECTOR result = {};
-    return result;
-}
-MCDETECTOR mcdetector_out_2D(
-    const char *t, const char *xl, const char *yl,
-    double x1, double x2, double y1, double y2, long m,
-    long n, double *p0, double *p1, double *p2,
-    char *f, char *c,
-    Coords pos, Rotation rot, int index)
-{
-    // jg-250618: const version
-
-    MCDETECTOR result = {};
-    return result;
-}
-
-MCDETECTOR mcdetector_out_2D_list(
-    char *t, char *xl, char *yl,
-    double x1, double x2, double y1, double y2,
-    long m, long n,
-    double *p0, double *p1, double *p2,
-    char *f, char *c,
-    Coords posa, Rotation rota, char* options, int index)
-{
-    // jg-250617 TODO: implement / re-introduce
-
-    MCDETECTOR result;
-    return result;
-}
-MCDETECTOR mcdetector_out_2D_list(
-    const char *t, const char *xl, const char *yl,
-    double x1, double x2, double y1, double y2,
-    long m, long n,
-    double *p0, double *p1, double *p2,
-    char *f, char *c,
-    Coords posa, Rotation rota, char* options, int index)
-{
-    // jg-250618: const version
+    #ifdef DEBUG_PLOT
+    mcdetector_out_2D_list_ext_hook(t, xl, yl, x1, x2, y1, y2, m, n, p0, p1, p2, f, c);
+    #endif
 
     MCDETECTOR result;
     return result;
 }
 
-MCDETECTOR mcdetector_out_list(
-    char *t, char *xl, char *yl,
-    long m, long n,
-    double *p1, char *f,
-    char *c, Coords posa, Rotation rot, char* options, int index)
+MCDETECTOR mcdetector_out_list(const char *t, const char *xl, const char *yl, long m, long n, double *p1, char *f, char *c, Coords posa, Rotation rot, char* options, int index)
 {
-    // jg-250617 TODO: implement / re-introduce
+    #ifdef DEBUG_PLOT
+    mcdetector_out_list_ext_hook(t, xl, yl, m, n, p1, f, c);
+    #endif
 
     MCDETECTOR result;
     return result;
 }
-MCDETECTOR mcdetector_out_list(
-    const char *t, const char *xl, const char *yl,
-    long m, long n,
-    double *p1,
-    char *f, char *c,
-    Coords posa, Rotation rot, char* options, int index)
-{
-    // jg-250618: const version
-
-    MCDETECTOR result;
-    return result;
-}
-
 
 /* wrappers to output functions, that automatically set NAME and POSITION */
-#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP)
-#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP)
-#define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP)
-#define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP,ROT_A_CURRENT_COMP,INDEX_CURRENT_COMP)
+#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP, p0, p1, p2, NAME_CURRENT_COMP, POS_A_CURRENT_COMP, ROT_A_CURRENT_COMP, INDEX_CURRENT_COMP)
+#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t, p0, p1, p2, NAME_CURRENT_COMP, POS_A_CURRENT_COMP, ROT_A_CURRENT_COMP, INDEX_CURRENT_COMP)
+#define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) mcdetector_out_1D(t, xl, yl, xvar, x1, x2, n, p0, p1, p2, f, NAME_CURRENT_COMP, POS_A_CURRENT_COMP, ROT_A_CURRENT_COMP, INDEX_CURRENT_COMP)
+#define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) mcdetector_out_2D(t, xl, yl, x1, x2, y1, y2, m, n, p0, p1, p2, f, NAME_CURRENT_COMP, POS_A_CURRENT_COMP, ROT_A_CURRENT_COMP, INDEX_CURRENT_COMP)
 
 
 //
