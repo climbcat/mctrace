@@ -1,8 +1,8 @@
 #ifndef __L_monitor__
 #define __L_monitor__
 
-// share block
 
+// share block
 
 
 struct L_monitor {

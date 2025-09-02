@@ -13,9 +13,12 @@
 #define DEBUG_PLOT
 
 
+#include "simcore/simcore_types.h"
+
 #include "src/display_hooks.h"
 #include "src/trace_hooks.h"
 #include "src/plot_hooks.h"
+
 #include "simcore/simcore.h"
 #include "simcore/simlib.h"
 
@@ -63,6 +66,9 @@ InstrumentConfig InitAndConfigure_PSI_DMC(MArena *a_dest, s32 ncount) {
     SceneGraphUpdate();
 
 
+    // TODO: extract into a generic function, independent on the particular instrument (e.g. PSI_DMC)
+
+
     // run display & calculate helper matrices:
     Matrix4f t_world_prev = Matrix4f_Identity();
     for (s32 i = 0; i < instr_conf.comps.len; ++i) {
@@ -95,7 +101,7 @@ InstrumentConfig InitAndConfigure_PSI_DMC(MArena *a_dest, s32 ncount) {
     return instr_conf;
 }
 
-Array<Wireframe> GetDisplayWireframes(MArena *a_dest, Array<Component*> comps) {
+Array<Wireframe> DisplayComponents(MArena *a_dest, Array<Component*> comps) {
     // storge for the graphical objects
     Array<Wireframe> objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
     Wireframe plane = CreatePlane(10, cbui.ctx->a_pers);
@@ -244,7 +250,7 @@ void RunProgram() {
 
     s32 ncount = 1000000;
     InstrumentConfig psi_dmc = InitAndConfigure_PSI_DMC(cbui.ctx->a_pers, ncount);
-    Array<Wireframe> objs = GetDisplayWireframes(cbui.ctx->a_pers, psi_dmc.comps);
+    Array<Wireframe> objs = DisplayComponents(cbui.ctx->a_pers, psi_dmc.comps);
 
 
     // UI
@@ -255,6 +261,18 @@ void RunProgram() {
     // TRACE
     NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, psi_dmc.comps, &psi_dmc.instr, ncount, 1000);
 
+
+    // PLOT
+    Array<Component*> comps = psi_dmc.comps;
+    for (s32 i = 0; i < comps.len; ++i) {
+        Component *comp = comps.arr[i];
+
+        g_a_plot = cbui.ctx->a_pers;
+        g_current_monitor = &comp->plot;
+        SaveComponent(comp);
+    }
+
+    return;
 
     // DISPLAY
     while (cbui.running) {
@@ -284,6 +302,9 @@ void RunProgram() {
         // end 
         CbuiFrameEnd();
     }
+
+
+
     CbuiExit();
 }
 
