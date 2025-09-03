@@ -1,4 +1,12 @@
 
+250903:
+
+Particle intitialization for propagation of monte-carlo probability.
+
+Each particle is normalized initially with p = 1.
+Also set is vz = 1 - although this probably isn't really necessary, since the
+source component will set the velocity.
+
 
 250902:
 

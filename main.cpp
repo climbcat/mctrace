@@ -197,6 +197,10 @@ NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comp
 
 
     for (u32 j = 0; j < ncount; ++j) {
+        // This sets vz = 1 and p = 1.
+        // From the legacy generated code, we got:
+        //      particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);
+        // (see mcsetstate in simcore.h).
         Neutron n = {};
 
         // record trajectories 
@@ -264,15 +268,17 @@ void RunProgram() {
 
     // PLOT
     Array<Component*> comps = psi_dmc.comps;
+    Array<Component*> monitors = InitArray<Component*>(cbui.ctx->a_pers, comps.len);
     for (s32 i = 0; i < comps.len; ++i) {
         Component *comp = comps.arr[i];
 
-        g_a_plot = cbui.ctx->a_pers;
-        g_current_monitor = &comp->plot;
+        g_current_monitor = &comp->monitor;
         SaveComponent(comp);
-    }
 
-    return;
+        if (comp->monitor.mon_tpe != MT_NOT) {
+            monitors.Add(comp);
+        }
+    }
 
     // DISPLAY
     while (cbui.running) {
@@ -299,8 +305,16 @@ void RunProgram() {
         RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs);
 
 
+
         // end 
         CbuiFrameEnd();
+    }
+
+
+    // plot 
+    for (u32 i = 0; i < monitors.len; ++i) {
+        Component *mon = monitors.arr[i];
+        MonitorPrint(&mon->monitor);
     }
 
 

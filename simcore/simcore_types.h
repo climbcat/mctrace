@@ -12,16 +12,27 @@
 
 
 struct NeutronSmall {
-    double x,y,z;
-    double vx,vy,vz;
-    double t, p;
+    double x;
+    double y;
+    double z;
+    double vx;
+    double vy;
+    double vz = 1;
+
+    double t;
+    double p = 1;
+
     float flags;
 };
 
 
 struct NeutronBig {
-    double x,y,z; /* position [m] */
-    double vx,vy,vz; /* velocity [m/s] */
+    double x; /* position [m] */
+    double y; /* position [m] */
+    double z; /* position [m] */
+    double vx; /* velocity [m/s] */
+    double vy; /* velocity [m/s] */
+    double vz = 1; /* velocity [m/s] */
     double sx,sy,sz; /* spin [0-1] */
     int mcgravitation; /* gravity-state */
     void *mcMagnet;    /* precession-state */
@@ -34,7 +45,8 @@ struct NeutronBig {
     double _mctmp_b; /* temp b */
     double _mctmp_c; /* temp c */
     unsigned long randstate[7];
-    double t, p;     /* time, event weight */
+    double t;     // time
+    double p = 1;     // event weight
     long long _uid;  /* Unique event ID */
     long _index;     /* component index where to send this event */
     long _absorbed;  /* flag set to TRUE when this event is to be removed/ignored */
@@ -115,9 +127,9 @@ struct Monitor {
     s32 binm_x;
     s32 binn_y;
 
-    void *N; // otherwise known as p0, ray hit count
-    void *p; // otherwise known as p1, integrated probability per bin
-    void *p2; // p squared, integrated per bin, has something to do with the error bar
+    double *N; // otherwise known as p0, ray hit count
+    double *p; // otherwise known as p1, integrated probability per bin
+    double *p2; // p squared, integrated per bin, has something to do with the error bar
 };
 
 
@@ -133,17 +145,8 @@ struct Component {
     Str type_name; // duplicated info from the shared header
     Str name;  // duplicated info from the shared header
 
-    // TODO: Here we would like to keep the DISPLAY and also PLOT data references.
-    //      Even though most components aren't monitors, we can have the members here
-    //      and they would be of MT_NOT in CompMonitorType
-
-    // TODO: 
-    //      display data is stored externally in a display-lifetime arena
-    //      plot data is stored externally in a plot-lifetime arena
-    //      The two might share the same arena (until lifetimes diverge)
-
     Wireframe display;
-    Monitor plot;
+    Monitor monitor;
 
     // pointer to the underlying component
     void *comp;
