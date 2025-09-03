@@ -1,6 +1,20 @@
 
 250903:
 
+First POC blitting of PSD monitors to the screen. However, a few changes were needed
+to the rendering software, etc. etc.
+There were also issues with the string arenas and the use of StrL; here we wanted 
+to use its static version, which wasn't correctly done in generated code.
+
+TODO:
+- render the Component::Wireframe individuals rather than the total list of segments
+- port cbui code; BlitFill should blend with the background color
+- express the PSD blits as Sprites, which will make them be rendered correctly
+    on top of the framing panels (e.g. enter into the imui system)
+
+
+250903:
+
 Particle intitialization for propagation of monte-carlo probability.
 
 Each particle is normalized initially with p = 1.

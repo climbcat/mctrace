@@ -83,4 +83,54 @@ void MonitorPrint(Monitor *mon) {
 }
 
 
+void MonitorBlit(MArena *a_tmp, Component *comp, Monitor monitor, s32 mon_left, s32 mon_top, s32 dest_width, s32 dest_height, Color* dest_buffer) {
+    // simply blit 2D monitor contents into the image/dest buffer
+
+    // DBG
+    Monitor *mon = &monitor;
+
+    //void Blit32Bit(s32 width, s32 height, s32 left, s32 top, f32 u0, f32 u1, f32 v0, f32 v1, s32 src_width, s32 src_height, Color *src_buffer, s32 dest_width, s32 dest_height, Color *dest) {
+
+    // sprite size
+    s32 width = mon->binm_x;
+    s32 height = mon->binn_y;
+
+    // sprite position in dest buffer 
+    s32 left = mon_left;
+    s32 top = mon_top;
+
+    // texture coords - blit entire source buffer
+    f32 u0 = 0.0f;
+    f32 u1 = 1.0f;
+    f32 v0 = 0.0f;
+    f32 v1 = 1.0f;
+
+    // source size
+    s32 src_width = mon->binm_x;
+    s32 src_height = mon->binn_y;
+
+    // source Color buffer
+    // TODO: transform the double buffers into color (what is the strategy here?)
+    double *src_buffer = mon->N;
+    Color *src_colbuff = (Color*) ArenaAlloc(a_tmp, sizeof(Color) * src_width * src_height);
+    
+
+    // fill with solid color as a test ... 
+    for (s32 i = 0; i < src_width; ++i) {
+        for (s32 j = 0; j < src_width; ++j) {
+            f32 src_value = src_buffer[i*src_width + j];
+
+            Color src_as_color = {};
+            if (src_value != 0) {
+                src_as_color.a = 255;
+            }
+
+            src_colbuff[i*src_width + j] = src_as_color;
+        }
+    }
+
+    Blit32Bit(width, height, left, top, u0, u1, v0, v1, src_width, src_height, src_colbuff, dest_width, dest_height, dest_buffer);
+}
+
+
 #endif

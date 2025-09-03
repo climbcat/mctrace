@@ -252,9 +252,18 @@ void RunProgram() {
     SceneGraphInit();
 
 
+    // NOTE: The use of StrL, while expected to be static, actually isn't.
+    //      This is due to the static version being selected from uses of (cons char*),
+    //      which isn't the default in legacy C, where some of the init code comes from.
+    //      Setting the g_a_strings to be the persistent one here, not the temp one,
+    //      Means that strings won't get implicitly allocated on the temp arena.
+    // TODO: Ensure that generated code uses const char* probably everywhere.
+    // TODO: First off, introduce and use a StrLS which means "String literal static"
+    g_a_strings = cbui.ctx->a_pers;
     s32 ncount = 1000000;
     InstrumentConfig psi_dmc = InitAndConfigure_PSI_DMC(cbui.ctx->a_pers, ncount);
     Array<Wireframe> objs = DisplayComponents(cbui.ctx->a_pers, psi_dmc.comps);
+    g_a_strings = cbui.ctx->a_tmp;
 
 
     // UI
@@ -305,19 +314,50 @@ void RunProgram() {
         RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs);
 
 
+        // put an auto-layout'ed grid of monitor receptacles
+        UI_LayoutVertical();
+        UI_LayoutHorizontal();
+
+
+        // plot 
+        for (u32 i = 0; i < monitors.len; ++i) {
+            Component *mon = monitors.arr[i];
+
+            if (mon->monitor.mon_tpe == MT_2D) {
+                Str text = StrCat(mon->name, " | ");
+                Widget *lbl = UI_Label( (const char*) StrZ(text) );
+                lbl->sz_font = FS_18;
+            }
+        }
+
+        UI_Pop();
+        UI_LayoutHorizontal();
+
+        // plot 
+        for (u32 i = 0; i < monitors.len; ++i) {
+            Component *mon = monitors.arr[i];
+
+            if (mon->monitor.mon_tpe == MT_2D) {
+                Str text = StrCat(mon->name, "_pnl");
+
+                Widget *w = WidgetGetCached( (const char*) StrZ(text) );
+                w->features_flg |= WF_DRAW_BACKGROUND_AND_BORDER;
+                w->w = mon->monitor.binm_x;
+                w->h = mon->monitor.binn_y;
+                w->sz_border = 0;
+                w->col_bckgrnd = COLOR_WHITE;
+                w->col_bckgrnd.a = 0;
+                w->col_border = ColorGray(0.7f);
+                WidgetTreeSibling(w);
+
+                // TODO: we want to express this as a sprite, which will then get properly blitted during FrameEnd
+                MonitorBlit(cbui.ctx->a_tmp, mon, mon->monitor, w->x0, w->y0, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
+            }
+        }
 
         // end 
         CbuiFrameEnd();
     }
-
-
-    // plot 
-    for (u32 i = 0; i < monitors.len; ++i) {
-        Component *mon = monitors.arr[i];
-        MonitorPrint(&mon->monitor);
-    }
-
-
 
     CbuiExit();
 }
