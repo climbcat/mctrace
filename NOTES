@@ -1,4 +1,24 @@
 
+250904:
+
+Continuous background simulation: The idea is, a thread is continuously
+tracing neutrons, to the ncount would not mean much, instead mcrun_num, the
+current number of simulated particles, would take its place. ncount would 
+be a dynamic variable.
+
+Unfortunately, ncount is treated as a constant in the legacy code, a few
+places.
+
+This invalidates the p-values as these are scaled by all sources / source
+components, as this scales with 1/ncount. However, we might be able to re-scale
+p-values in monitor output in a very generic way. E.g.:
+
+p = p * ncount / mcrun_num
+
+since in the source, they scaled p with 1/ncount. Further investiation is
+warrented.
+
+
 250903:
 
 First POC blitting of PSD monitors to the screen. However, a few changes were needed

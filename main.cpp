@@ -101,37 +101,23 @@ InstrumentConfig InitAndConfigure_PSI_DMC(MArena *a_dest, s32 ncount) {
     return instr_conf;
 }
 
-Array<Wireframe> DisplayComponents(MArena *a_dest, Array<Component*> comps) {
-    // storge for the graphical objects
-    Array<Wireframe> objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
-    Wireframe plane = CreatePlane(10, cbui.ctx->a_pers);
-    plane.transform = TransformBuildTranslation( { 0, -0.5f, 0 } );
-    objs.Add(plane);
-
-
+void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
     for (s32 i = 0; i < comps.len; ++i) {
         Component *comp = comps.arr[i];
 
         printf("%.*s\n", comp->name.len, comp->name.str);
         PrintTransform(g_mcdis_t_world);
 
-
         McDisplayNext(cbui.ctx->a_pers, comp->transform->t_world);
         DisplayComponent(comp);        
 
-        // component as wireframe
-        // TODO: we could just set the component transform here, and not worry about doing anything to the 
-        //      mcdis_* points.:
-        Wireframe wf_comp = {};
-        wf_comp.transform = Matrix4f_Identity();
-        wf_comp.color = ComponentCatToColor(comp->cat);
-        wf_comp.segments.arr = g_mcdis_anchors.lst;
-        wf_comp.segments.len = g_mcdis_anchors.len;
-        wf_comp.segments.max = g_mcdis_anchors.len;
-        objs.Add(wf_comp);
+        comp->display = {};
+        comp->display.transform = Matrix4f_Identity();
+        comp->display.color = ComponentCatToColor(comp->cat);
+        comp->display.segments.arr = g_mcdis_anchors.lst;
+        comp->display.segments.len = g_mcdis_anchors.len;
+        comp->display.segments.max = g_mcdis_anchors.len;
     }
-
-    return objs;
 }
 
 
@@ -260,16 +246,24 @@ void RunProgram() {
     // TODO: Ensure that generated code uses const char* probably everywhere.
     // TODO: First off, introduce and use a StrLS which means "String literal static"
     g_a_strings = cbui.ctx->a_pers;
-    s32 ncount = 1000000;
+    s32 ncount = 1e6;
     InstrumentConfig psi_dmc = InitAndConfigure_PSI_DMC(cbui.ctx->a_pers, ncount);
-    Array<Wireframe> objs = DisplayComponents(cbui.ctx->a_pers, psi_dmc.comps);
     g_a_strings = cbui.ctx->a_tmp;
+
+    // scene objects
+    Array<Wireframe> scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
+    Wireframe plane = CreatePlane(10, cbui.ctx->a_pers);
+    plane.transform = TransformBuildTranslation( { 0, -0.5f, 0 } );
+    scene_objs.Add(plane);
+
+    // component wireframes
+    DisplayComponents(cbui.ctx->a_pers, psi_dmc.comps);
 
 
     // UI
     Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
     OrbitCamera cam = OrbitCameraInit(persp.aspect);
-    
+
 
     // TRACE
     NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, psi_dmc.comps, &psi_dmc.instr, ncount, 1000);
@@ -311,7 +305,11 @@ void RunProgram() {
 
 
         // render
-        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, objs);
+        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, scene_objs);
+
+        for (s32 i = 0; i < comps.len; ++i) {
+            RenderWireframe(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, comps.arr[i]->display);
+        }
 
 
         // put an auto-layout'ed grid of monitor receptacles
