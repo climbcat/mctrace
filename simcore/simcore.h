@@ -401,9 +401,7 @@ struct mcdetector_struct {
     double Position[3];                 /* position of detector component*/
     char   position[CHAR_BUF_LENGTH];   /* position of detector component (string)*/
 
-    // jg-250616: had to rename Rotaion member for C++ port
-    //Rotation Rotation;                  /* position of detector component*/
-    Rotation rot;
+    Rotation rotation;                  /* position of detector component*/
 
     char   options[CHAR_BUF_LENGTH];    /* Monitor_nD style list-mode'options' (string)*/
     char   component[CHAR_BUF_LENGTH];  /* component instance name */
@@ -454,6 +452,372 @@ static   char *dirname             = NULL;      /* name of output directory */
 static   const char *siminfo_name  = "mccode";  /* default output sim file name */
 char    *mcformat                  = NULL;      /* NULL (default) or a specific format */
 
+
+
+
+
+
+/*******************************************************************************
+* mcestimate_error: compute sigma from N,p,p2 in Gaussian large numbers approx
+*******************************************************************************/
+double mcestimate_error(double N, double p1, double p2)
+{
+    double pmean, n1;
+    if(N <= 1)
+        return p1;
+    pmean = p1 / N;
+    n1 = N - 1;
+    /* Note: underflow may cause p2 to become zero; the fabs() below guards
+        against this. */
+    return sqrt((N/n1)*fabs(p2 - pmean*pmean));
+}
+
+double (*mcestimate_error_p) (double V2, double psum, double p2sum)=mcestimate_error;
+
+
+
+/*******************************************************************************
+* mcdetector_statistics: compute detector statistics, error bars, [x I I_err N] 1D
+* RETURN:            updated detector structure
+* Used by: detector_import
+*******************************************************************************/
+MCDETECTOR mcdetector_statistics(MCDETECTOR detector)
+{
+
+    if (!detector.p1 || !detector.m)
+        return(detector);
+
+  /* compute statistics and update MCDETECTOR structure ===================== */
+    double sum_z  = 0, min_z  = 0, max_z  = 0;
+    double fmon_x =0,  smon_x = 0, fmon_y =0, smon_y=0, mean_z=0;
+    double Nsum=0, P2sum=0;
+
+    double sum_xz = 0, sum_yz = 0, sum_x = 0, sum_y = 0, sum_x2z = 0, sum_y2z = 0;
+    int    i,j;
+    char   hasnan=0, hasinf=0;
+    char   israw = ((char*)strcasestr(detector.format,"raw") != NULL);
+    double *this_p1=NULL; /* new 1D McCode array [x I E N]. Freed after writing data */
+
+  /* if McCode/PGPLOT and rank==1 we create a new m*4 data block=[x I E N] */
+    if (detector.rank == 1 && strcasestr(detector.format,"McCode")) {
+        this_p1 = (double *)calloc(detector.m*detector.n*detector.p*4, sizeof(double));
+        if (!this_p1)
+            exit(-fprintf(stderr, "Error: Out of memory creating %zi 1D " MCCODE_STRING " data set for file '%s' (detector_import)\n",
+        detector.m*detector.n*detector.p*4*sizeof(double*), detector.filename));
+    }
+
+    max_z = min_z = detector.p1[0];
+
+    /* compute sum and moments (not for lists) */
+    if (!strcasestr(detector.format,"list") && detector.m)
+    for(j = 0; j < detector.n*detector.p; j++)
+    {
+        for(i = 0; i < detector.m; i++)
+        {
+            double x,y,z;
+            double N, E;
+            long   index= !detector.istransposed ? i*detector.n*detector.p + j : i+j*detector.m;
+            char   hasnaninf=0;
+
+            if (detector.m)
+                x = detector.xmin + (i + 0.5)/detector.m*(detector.xmax - detector.xmin);
+            else x = 0;
+            if (detector.n && detector.p)
+                y = detector.ymin + (j + 0.5)/detector.n/detector.p*(detector.ymax - detector.ymin);
+            else y = 0;
+            z = detector.p1[index];
+            N = detector.p0 ? detector.p0[index] : 1;
+            E = detector.p2 ? detector.p2[index] : 0;
+            if (detector.p2 && !israw)
+                detector.p2[index] = (*mcestimate_error_p)(detector.p0[index],detector.p1[index],detector.p2[index]); /* set sigma */
+
+            if (detector.rank == 1 && this_p1 && strcasestr(detector.format,"McCode")) {
+                /* fill-in 1D McCode array [x I E N] */
+                this_p1[index*4]   = x;
+                this_p1[index*4+1] = z;
+                this_p1[index*4+2] = detector.p2 ? detector.p2[index] : 0;
+                this_p1[index*4+3] = N;
+            }
+
+            if (isnan(z) || isnan(E) || isnan(N)) hasnaninf=hasnan=1;
+            if (isinf(z) || isinf(E) || isinf(N)) hasnaninf=hasinf=1;
+
+            /* compute stats integrals */
+            if (!hasnaninf) {
+                sum_xz += x*z;
+                sum_yz += y*z;
+                sum_x  += x;
+                sum_y  += y;
+                sum_z  += z;
+                sum_x2z += x*x*z;
+                sum_y2z += y*y*z;
+                if (z > max_z) max_z = z;
+                if (z < min_z) min_z = z;
+
+                Nsum += N;
+                P2sum += E;
+            }
+        }
+    } /* for j */
+
+    /* compute 1st and 2nd moments. For lists, sum_z=0 so this is skipped. */
+    if (sum_z && detector.n*detector.m*detector.p)
+    {
+        fmon_x = sum_xz/sum_z;
+        fmon_y = sum_yz/sum_z;
+        smon_x = sum_x2z/sum_z-fmon_x*fmon_x; smon_x = smon_x > 0 ? sqrt(smon_x) : 0;
+        smon_y = sum_y2z/sum_z-fmon_y*fmon_y; smon_y = smon_y > 0 ? sqrt(smon_y) : 0;
+        mean_z = sum_z/detector.n/detector.m/detector.p;
+    }
+
+    /* store statistics into detector */
+    detector.intensity = sum_z;
+    detector.error     = Nsum ? (*mcestimate_error_p)(Nsum, sum_z, P2sum) : 0;
+    detector.events    = Nsum;
+    detector.min       = min_z;
+    detector.max       = max_z;
+    detector.mean      = mean_z;
+    detector.centerX   = fmon_x;
+    detector.halfwidthX= smon_x;
+    detector.centerY   = fmon_y;
+    detector.halfwidthY= smon_y;
+
+    /* if McCode/PGPLOT and rank==1 replace p1 with new m*4 1D McCode and clear others */
+    if (detector.rank == 1 && this_p1 && strcasestr(detector.format,"McCode")) {
+
+        detector.p1 = this_p1;
+        detector.n  = detector.m; detector.m  = 4;
+        detector.p0 = detector.p2 = NULL;
+        detector.istransposed = 1;
+    }
+
+    if (detector.n*detector.m*detector.p > 1)
+        snprintf(detector.signal, CHAR_BUF_LENGTH, "Min=%g; Max=%g; Mean=%g;", detector.min, detector.max, detector.mean);
+    else
+        strcpy(detector.signal, "None");
+    snprintf(detector.values, CHAR_BUF_LENGTH, "%g %g %g", detector.intensity, detector.error, detector.events);
+
+    switch (detector.rank) {
+        case 1:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g;", detector.centerX, detector.halfwidthX); break;
+        case 2:
+        case 3:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g; Y0=%g; dY=%g;", detector.centerX, detector.halfwidthX, detector.centerY, detector.halfwidthY);
+        break;
+        default: strcpy(detector.statistics, "None");
+    }
+
+    if (hasnan)
+        printf("WARNING: Nan detected in component/file %s %s\n", detector.component, strlen(detector.filename) ? detector.filename : "");
+    if (hasinf)
+        printf("WARNING: Inf detected in component/file %s %s\n", detector.component, strlen(detector.filename) ? detector.filename : "");
+
+    return(detector);
+} /* mcdetector_statistics */
+
+
+/*******************************************************************************
+* detector_import: build detector structure, merge non-lists from MPI
+*                    compute basic stat, write "Detector:" line
+* RETURN:            detector structure. Invalid data if detector.p1 == NULL
+*                    Invalid detector sets m=0 and filename=""
+*                    Simulation data  sets m=0 and filename=siminfo_name
+* This function is equivalent to the old 'mcdetector_out', returning a structure
+*******************************************************************************/
+MCDETECTOR detector_import(
+    char *format,
+    char *component, char *title,
+    long m, long n,  long p,
+    char *xlabel, char *ylabel, char *zlabel,
+    char *xvar, char *yvar, char *zvar,
+    double x1, double x2, double y1, double y2, double z1, double z2,
+    char *filename,
+    double *p0, double *p1, double *p2,
+    Coords position, Rotation rotation, int index)
+{
+    time_t t;       /* for detector.date */
+    long   date_l;  /* date as a long number */
+    char   istransposed=0;
+    char   c[CHAR_BUF_LENGTH]; /* temp var for signal label */
+
+    MCDETECTOR detector;
+
+    /* build MCDETECTOR structure ============================================= */
+    /* make sure we do not have NULL for char fields */
+
+    /* these also apply to simfile */
+    strncpy (detector.filename,  filename ? filename : "",        CHAR_BUF_LENGTH);
+    strncpy (detector.format,    format   ? format   : "McCode" , CHAR_BUF_LENGTH);
+    /* add extension if missing */
+    if (strlen(detector.filename) && !strchr(detector.filename, '.'))
+    { /* add extension if not in file name already */
+        strcat(detector.filename, ".dat");
+    }
+    strncpy (detector.component, component ? component : MCCODE_STRING " component", CHAR_BUF_LENGTH);
+    #ifdef USE_NEXUS
+    char pref[5];
+    if (index-1 < 10) {
+        sprintf(pref,"000");
+    } else if (index-1 < 100) {
+        sprintf(pref,"00");
+    } else if (index-1 < 1000) {
+        sprintf(pref,"0");
+    } else if (index-1 < 10000) {
+        sprintf(pref,"");
+    } else {
+        fprintf(stderr,"Error, no support for > 10000 comps at the moment!\n");
+        exit(-1);
+    }
+    sprintf(detector.nexuscomp,"%s%d_%s",pref,index-1,detector.component);
+    #endif
+
+    snprintf(detector.instrument, CHAR_BUF_LENGTH, "%s (%s)", instrument_name, instrument_source);
+    snprintf(detector.user, CHAR_BUF_LENGTH,      "%s on %s",
+        getenv("USER") ? getenv("USER") : MCCODE_NAME,
+        getenv("HOST") ? getenv("HOST") : "localhost");
+    time(&t);         /* get current write time */
+    date_l = (long)t; /* same but as a long */
+    snprintf(detector.date, CHAR_BUF_LENGTH, "%s", ctime(&t));
+    if (strlen(detector.date))   detector.date[strlen(detector.date)-1] = '\0'; /* remove last \n in date */
+    detector.date_l = date_l;
+
+    if (!mcget_run_num() || mcget_run_num() >= mcget_ncount())
+        snprintf(detector.ncount, CHAR_BUF_LENGTH, "%llu", mcget_ncount());
+    else
+        snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g/%g", (double)mcget_run_num(), (double)mcget_ncount());
+
+    detector.p0         = p0;
+    detector.p1         = p1;
+    detector.p2         = p2;
+
+    /* handle transposition (not for NeXus) */
+    if (!strcasestr(detector.format, "NeXus")) {
+        if (m<0 || n<0 || p<0)             istransposed = !istransposed;
+        if (strcasestr(detector.format, "transpose")) istransposed = !istransposed;
+        if (istransposed) { /* do the swap once for all */
+            long i=m; m=n; n=i;
+        }
+    }
+
+    m=labs(m); n=labs(n); p=labs(p); /* make sure dimensions are positive */
+    detector.istransposed = istransposed;
+
+    /* determine detector rank (dimensionality) */
+    if (!m || !n || !p || !p1) detector.rank = 4; /* invalid: exit with m=0 filename="" */
+    else if (m*n*p == 1)       detector.rank = 0; /* 0D */
+    else if (n == 1 || m == 1) detector.rank = 1; /* 1D */
+    else if (p == 1)           detector.rank = 2; /* 2D */
+    else                       detector.rank = 3; /* 3D */
+
+    /* from rank, set type */
+    switch (detector.rank) {
+        case 0:  strcpy(detector.type,  "array_0d"); m=n=p=1; break;
+        case 1:  snprintf(detector.type, CHAR_BUF_LENGTH, "array_1d(%ld)", m*n*p); m *= n*p; n=p=1; break;
+        case 2:  snprintf(detector.type, CHAR_BUF_LENGTH, "array_2d(%ld, %ld)", m, n*p); n *= p; p=1; break;
+        case 3:  snprintf(detector.type, CHAR_BUF_LENGTH, "array_3d(%ld, %ld, %ld)", m, n, p); break;
+        default: m=0; strcpy(detector.type, ""); strcpy(detector.filename, "");/* invalid */
+    }
+
+    detector.m    = m;
+    detector.n    = n;
+    detector.p    = p;
+
+    /* these only apply to detector files ===================================== */
+
+    detector.Position[0]=position.x;
+    detector.Position[1]=position.y;
+    detector.Position[2]=position.z;
+    rot_copy(detector.rotation, rotation);
+    snprintf(detector.position, CHAR_BUF_LENGTH, "%g %g %g", position.x, position.y, position.z);
+    /* may also store actual detector orientation in the future */
+
+    strncpy(detector.title,      title && strlen(title) ? title : component,       CHAR_BUF_LENGTH);
+    strncpy(detector.xlabel,     xlabel && strlen(xlabel) ? xlabel : "X", CHAR_BUF_LENGTH); /* axis labels */
+    strncpy(detector.ylabel,     ylabel && strlen(ylabel) ? ylabel : "Y", CHAR_BUF_LENGTH);
+    strncpy(detector.zlabel,     zlabel && strlen(zlabel) ? zlabel : "Z", CHAR_BUF_LENGTH);
+    strncpy(detector.xvar,       xvar && strlen(xvar) ? xvar :       "x", CHAR_BUF_LENGTH); /* axis variables */
+    strncpy(detector.yvar,       yvar && strlen(yvar) ? yvar :       detector.xvar, CHAR_BUF_LENGTH);
+    strncpy(detector.zvar,       zvar && strlen(zvar) ? zvar :       detector.yvar, CHAR_BUF_LENGTH);
+
+    /* set "variables" as e.g. "I I_err N" */
+    strcpy(c, "I ");
+    if (strlen(detector.zvar))      strncpy(c, detector.zvar,32);
+    else if (strlen(detector.yvar)) strncpy(c, detector.yvar,32);
+    else if (strlen(detector.xvar)) strncpy(c, detector.xvar,32);
+
+
+    if (detector.rank == 1)
+        // jg-250904: added the "%.16s" to get rid of warnings; original code was out-commented
+        //snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s %s_err N", detector.xvar, c, c);
+        snprintf(detector.variables, CHAR_BUF_LENGTH, "%.16s %.16s %.16s_err N", detector.xvar, c, c);
+    else
+        // jg-250904: added the "%.16s" to get rid of warnings; original code was out-commented
+        //snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s_err N", c, c);
+        snprintf(detector.variables, CHAR_BUF_LENGTH, "%.16s %.16s_err N", c, c);
+
+    /* limits */
+    detector.xmin = x1;
+    detector.xmax = x2;
+    detector.ymin = y1;
+    detector.ymax = y2;
+    detector.zmin = z1;
+    detector.zmax = z2;
+    if (abs(detector.rank) == 1)
+        snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g", x1, x2);
+    else if (detector.rank == 2)
+        snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g", x1, x2, y1, y2);
+    else
+        snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g %g %g", x1, x2, y1, y2, z1, z2);
+
+
+/* if MPI and nodes_nb > 1: reduce data sets when using MPI =============== */
+#ifdef USE_MPI
+  if (!strcasestr(detector.format,"list") && mpi_node_count > 1 && m) {
+    /* we save additive data: reduce everything into mpi_node_root */
+    if (p0) mc_MPI_Sum(p0, m*n*p);
+    if (p1) mc_MPI_Sum(p1, m*n*p);
+    if (p2) mc_MPI_Sum(p2, m*n*p);
+    if (!p0) {  /* additive signal must be then divided by the number of nodes */
+      int i;
+      for (i=0; i<m*n*p; i++) {
+        p1[i] /= mpi_node_count;
+        if (p2) p2[i] /= mpi_node_count;
+      }
+    }
+  }
+#endif /* USE_MPI */
+
+
+    /* compute statistics, Nsum, intensity, Error bars */
+    detector = mcdetector_statistics(detector);
+
+
+#ifdef USE_MPI
+  /* slaves are done */
+  if(mpi_node_rank != mpi_node_root) {
+    return detector;
+  }
+#endif
+
+
+    /* output "Detector:" line ================================================ */
+    /* when this is a detector written by a component (not the SAVE from instrument),
+        not an event lists */
+    if (!m) return(detector);
+    if (!strcasestr(detector.format,"list")) {
+        if (!strcmp(detector.component, instrument_name)) {
+            if (strlen(detector.filename))  /* we name it from its filename, or from its title */
+                strncpy(c, detector.filename, CHAR_BUF_LENGTH);
+            else
+                snprintf(c, CHAR_BUF_LENGTH, "%s", instrument_name);
+        }
+        else
+            strncpy(c, detector.component, CHAR_BUF_LENGTH);  /* usual detectors written by components */
+
+        printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g", c, detector.intensity, c, detector.error, c, detector.events);
+        printf(" \"%s\"\n", strlen(detector.filename) ? detector.filename : detector.component);
+    }
+
+    return(detector);
+} /* detector_import */
 
 
 /* I/O function prototypes ================================================== */
