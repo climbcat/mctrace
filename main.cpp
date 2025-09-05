@@ -5,7 +5,8 @@
 #include <cstddef>
 
 #include "lib/jg_baselayer.h"
-#include "lib/jg_cbui.h"
+//#include "lib/jg_cbui.h"
+#include "../cbui/cbui_includes.h"
 
 
 #define DEBUG_DISPLAY
@@ -450,7 +451,7 @@ int main (int argc, char **argv) {
     TimeProgram;
 
     BaselayerAssertVersion(0, 2, 4);
-    CbuiAssertVersion(0, 2, 2);
+    CbuiAssertVersion(0, 2, 3);
 
     if (CLAContainsArg("--help", argc, argv) || CLAContainsArg("-h", argc, argv)) {
         printf("--help:          display help (this text)\n");
