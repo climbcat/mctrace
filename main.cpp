@@ -176,8 +176,9 @@ struct NeutronTrajectory {
 };
 
 
-NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount,u32 DBG_break_after_ncount) {
+NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount, u32 ncount_record_as_trajectories) {
 
+    g_do_trace_trajectories = true;
     NeutronTrajectory *ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));;
     NeutronTrajectory *ntrace_prev = ntrace;
     NeutronTrajectory *ntrace_head = ntrace;
@@ -190,17 +191,25 @@ NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comp
         // (see mcsetstate in simcore.h).
         Neutron n = {};
 
-        // record trajectories 
-        ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
-        ntrace->event_segments = InitList<Vector3f>(a_trajectories, 0);
-        g_anchors_trace = &ntrace->event_segments;
-        g_a_dest_trace = a_trajectories;
 
-        ntrace_prev->next = ntrace;
-        ntrace_prev = ntrace;
+        // record trajectories
+        if (j < ncount_record_as_trajectories) {
+            // record trajectories
+            ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
+            ntrace->event_segments = InitList<Vector3f>(a_trajectories, 0);
+            g_anchors_trace = &ntrace->event_segments;
+            g_a_dest_trace = a_trajectories;
 
-        g_trace_prev = {};
-        g_trace_current = {};
+            ntrace_prev->next = ntrace;
+            ntrace_prev = ntrace;
+
+            g_trace_prev = {};
+            g_trace_current = {};
+
+        }
+        else {
+            g_do_trace_trajectories = false;
+        }
 
 
         // trace components
@@ -224,8 +233,6 @@ NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comp
                 break;
             }
         }
-
-        if (j + 1 == DBG_break_after_ncount) { break; }
     }
 
     return ntrace_head;
@@ -267,7 +274,7 @@ void RunProgram() {
 
 
     // TRACE
-    NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, psi_dmc.comps, &psi_dmc.instr, ncount, 1000);
+    NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, psi_dmc.comps, &psi_dmc.instr, ncount, 100);
 
 
     // PLOT
@@ -348,6 +355,7 @@ void RunProgram() {
                 w->col_bckgrnd.a = 0;
                 w->col_border = ColorGray(0.7f);
                 WidgetTreeSibling(w);
+
 
                 // TODO: we want to express this as a sprite, which will then get properly blitted during FrameEnd
                 MonitorBlit(cbui.ctx->a_tmp, mon, mon->monitor, w->x0, w->y0, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);

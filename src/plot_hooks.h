@@ -113,19 +113,27 @@ void MonitorBlit(MArena *a_tmp, Component *comp, Monitor monitor, s32 mon_left, 
     // TODO: transform the double buffers into color (what is the strategy here?)
     double *src_buffer = mon->N;
     Color *src_colbuff = (Color*) ArenaAlloc(a_tmp, sizeof(Color) * src_width * src_height);
-    
+
+
+    // TODO: cache the prev-frame max value on the Monitor struct
+    f32 max_value = 0;
+    for (s32 i = 0; i < src_width; ++i) {
+        for (s32 j = 0; j < src_width; ++j) {
+            f32 src_value = src_buffer[i*src_width + j];
+            max_value = MaxF32(max_value, src_value);
+        }
+    }
+
 
     // fill with solid color as a test ... 
     for (s32 i = 0; i < src_width; ++i) {
         for (s32 j = 0; j < src_width; ++j) {
             f32 src_value = src_buffer[i*src_width + j];
 
-            Color src_as_color = {};
-            if (src_value != 0) {
-                src_as_color.a = 255;
+            if (src_value > 0) {
+                //src_colbuff[i*src_width + j] = ColorMapGet(src_value / max_value, colormap_paletted_autumn);
+                src_colbuff[i*src_width + j] = ColorMapGet(src_value / max_value, colormap_paletted_jet);
             }
-
-            src_colbuff[i*src_width + j] = src_as_color;
         }
     }
 
