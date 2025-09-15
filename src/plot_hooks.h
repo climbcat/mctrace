@@ -89,8 +89,6 @@ void MonitorBlit(MArena *a_tmp, Component *comp, Monitor monitor, s32 mon_left, 
     // DBG
     Monitor *mon = &monitor;
 
-    //void Blit32Bit(s32 width, s32 height, s32 left, s32 top, f32 u0, f32 u1, f32 v0, f32 v1, s32 src_width, s32 src_height, Color *src_buffer, s32 dest_width, s32 dest_height, Color *dest) {
-
     // sprite size
     s32 width = mon->binm_x;
     s32 height = mon->binn_y;
@@ -131,7 +129,6 @@ void MonitorBlit(MArena *a_tmp, Component *comp, Monitor monitor, s32 mon_left, 
             f32 src_value = src_buffer[i*src_width + j];
 
             if (src_value > 0) {
-                //src_colbuff[i*src_width + j] = ColorMapGet(src_value / max_value, colormap_paletted_autumn);
                 src_colbuff[i*src_width + j] = ColorMapGet(src_value / max_value, colormap_paletted_jet);
             }
         }
