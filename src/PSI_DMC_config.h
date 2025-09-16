@@ -44,11 +44,11 @@ struct PSI_DMC {
 };
 
 
-static PSI_DMC psi_dmc;
+static PSI_DMC PSI_DMC_var;
 
 
 Array<Component*> InitAndConfig_PSI_DMC(MArena *a_dest, Instrument *instr, u32 ncount) {
-    PSI_DMC *spec = &psi_dmc;
+    PSI_DMC *spec = &PSI_DMC_var;
 
     // NOTE: We must set mcncount BEFORE initialization.
     //      This is used by API call mcget_ncount(), and called by some components during init (SourceMaxwell)
@@ -143,7 +143,7 @@ Array<Component*> InitAndConfig_PSI_DMC(MArena *a_dest, Instrument *instr, u32 n
     #undef ldiff
     #undef angleGuideCurved
 
-    
+
     // configure
 
 
@@ -783,10 +783,8 @@ Array<Component*> InitAndConfig_PSI_DMC(MArena *a_dest, Instrument *instr, u32 n
     Detector->transform = SceneGraphAlloc(sa_arm->transform);
     Detector->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
-
     SceneGraphUpdate();
     UpdateLegacyTransforms(comp_sequence);
-
 
     return comp_sequence;
 }
