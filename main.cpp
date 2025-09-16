@@ -260,8 +260,9 @@ void RunProgram() {
 
     // scene objects
     Array<Wireframe> scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
-    Wireframe plane = CreatePlane(10, cbui.ctx->a_pers);
+    Wireframe plane = CreatePlane(10);
     plane.transform = TransformBuildTranslation( { 0, -0.5f, 0 } );
+    WireframeRawSegments(cbui.ctx->a_pers, &plane);
     scene_objs.Add(plane);
 
     // component wireframes
@@ -313,7 +314,9 @@ void RunProgram() {
 
 
         // render
-        RenderLineSegmentList(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, scene_objs);
+        for (s32 i = 0; i < scene_objs.len; ++i) {
+            RenderWireframe(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, scene_objs.arr[i]);
+        }
 
         for (s32 i = 0; i < comps.len; ++i) {
             RenderWireframe(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, comps.arr[i]->display);
