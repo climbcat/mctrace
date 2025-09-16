@@ -307,7 +307,7 @@ void RunProgram() {
                     Vector3f a = traces->event_segments.lst[2*i];
                     Vector3f b = traces->event_segments.lst[2*i + 1];
 
-                    RenderLineSegment(cbui.image_buffer, cam.view, persp.proj, a, b, cbui.plf.width, cbui.plf.height, COLOR_BLACK);
+                    RenderLineSegment(cbui.image_buffer, TransformGetInverse(cam.view), persp, a, b, cbui.plf.width, cbui.plf.height, COLOR_BLACK);
                 }
 
                 traces = traces->next;
@@ -319,12 +319,12 @@ void RunProgram() {
         {
             // render scene objects
             for (s32 i = 0; i < scene_objs.len; ++i) {
-                RenderWireframe(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, scene_objs.arr[i]);
+                RenderWireframe(cbui.image_buffer, cam.view, persp, cbui.plf.width, cbui.plf.height, scene_objs.arr[i]);
             }
 
             // render components
             for (s32 i = 0; i < comps.len; ++i) {
-                RenderWireframe(cbui.image_buffer, cam.view, persp.proj, cbui.plf.width, cbui.plf.height, comps.arr[i]->display);
+                RenderWireframe(cbui.image_buffer, cam.view, persp, cbui.plf.width, cbui.plf.height, comps.arr[i]->display);
             }
         }
 
