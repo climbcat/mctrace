@@ -103,30 +103,13 @@ void RunProgram() {
     CbuiInit("mctrace", false);
     Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
     OrbitCamera cam = OrbitCameraInit(persp.aspect);
-    // TODO: scenegraph init might be included in CbuiInit, why not
+    // TODO: scenegraph init might be included in CbuiInit
     SceneGraphInit();
 
-
-    // NOTE: The use of StrL, while expected to be static, actually isn't.
-    //      This is due to the static version being selected from uses of (cons char*),
-    //      which isn't the default in legacy C, where some of the init code comes from.
-    //      Setting the g_a_strings to be the persistent one here, not the temp one,
-    //      Means that strings won't get implicitly allocated on the temp arena.
-    // TODO: Ensure that generated code uses const char* probably everywhere.
-    // TODO: First off, introduce and use a StrLS which means "String literal static"
-    g_a_strings = cbui.ctx->a_pers;
-
-
-    // Initialize the instrument:
-    //      Here, a "instrument" is just a procedure which configures a sequence of components
-    //      into a meaningful, simulation-able state.
 
     s32 ncount = 1e6;
     InstrumentConfig config = {};
     config.comps = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, &config.instr, ncount);
-
-    //
-    g_a_strings = cbui.ctx->a_tmp;
 
 
     // scene objects

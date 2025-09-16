@@ -54,6 +54,11 @@ enum CompCategory {
 };
 
 
+Str StrLS(char *str) {
+    return Str { str, (u32) strlen(str) };
+}
+
+
 Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char *name) {
     Component *comp = (Component*) ArenaAlloc(a_dest, sizeof(Component));
     comp->type = type;
@@ -62,112 +67,112 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
         case CT_Slit: {
             Slit comp_spec = Create_Slit(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Slit));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_optics;
         } break;
 
         case CT_L_monitor: {
             L_monitor comp_spec = Create_L_monitor(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(L_monitor));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_monitors;
         } break;
 
         case CT_Bender: {
             Bender comp_spec = Create_Bender(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Bender));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_optics;
         } break;
 
         case CT_Progress_bar: {
             Progress_bar comp_spec = Create_Progress_bar(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Progress_bar));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_misc;
         } break;
 
         case CT_PSD_monitor: {
             PSD_monitor comp_spec = Create_PSD_monitor(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PSD_monitor));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_monitors;
         } break;
 
         case CT_Arm: {
             Arm comp_spec = Create_Arm(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Arm));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_optics;
         } break;
 
         case CT_Al_window: {
             Al_window comp_spec = Create_Al_window(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Al_window));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_contrib;
         } break;
 
         case CT_PSDlin_monitor: {
             PSDlin_monitor comp_spec = Create_PSDlin_monitor(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PSDlin_monitor));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_monitors;
         } break;
 
         case CT_Guide: {
             Guide comp_spec = Create_Guide(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Guide));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_optics;
         } break;
 
         case CT_Source_Maxwell_3: {
             Source_Maxwell_3 comp_spec = Create_Source_Maxwell_3(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Source_Maxwell_3));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_sources;
         } break;
 
         case CT_Beamstop: {
             Beamstop comp_spec = Create_Beamstop(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Beamstop));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_optics;
         } break;
 
         case CT_PowderN: {
             PowderN comp_spec = Create_PowderN(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(PowderN));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_samples;
         } break;
 
         case CT_Monitor_nD: {
             Monitor_nD comp_spec = Create_Monitor_nD(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Monitor_nD));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_monitors;
         } break;
 
         case CT_Monochromator_2foc: {
             Monochromator_2foc comp_spec = Create_Monochromator_2foc(index, (char*) name);
             comp->comp = ArenaPush(a_dest, &comp_spec, sizeof(Monochromator_2foc));
-            comp->type_name = StrL(comp_spec.type);
-            comp->name = StrL(comp_spec.name);
+            comp->type_name = StrLS(comp_spec.type);
+            comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_contrib;
         } break;
 
