@@ -24,157 +24,15 @@
 #include "simcore/simlib.h"
 
 #include "src/comps_meta.h"
+#include "src/helpers.h"
 #include "src/PSI_DMC_config.h"
 
-
-Color ComponentCatToColor(u32 cat) {
-    switch ((CompCategory) cat) {
-        case CCAT_sources: return COLOR_RED;
-        case CCAT_monitors: return COLOR_GREEN_50;
-        case CCAT_contrib: return COLOR_GRAY_50;
-        case CCAT_misc: return COLOR_BLACK;
-        case CCAT_optics: return COLOR_BLUE;
-        case CCAT_samples: return COLOR_RED;
-    }
-
-    return COLOR_BLACK;
-}
-
-struct InstrumentConfig {
-    Instrument instr;
-    Array<Component*> comps;
-
-    Matrix4f box_t_worold;
-    Vector3f box_dims;
-};
-
-
-// TODO: Should this be a code generated function?
-//      Actually, this should be compressed into a library function
-InstrumentConfig InitAndConfigure_PSI_DMC(MArena *a_dest, s32 ncount) {
-    InstrumentConfig instr_conf = {};
-
-
-    // NOTE: We must set mcncount BEFORE initialization.
-    //      This is used by API call mcget_ncount(), and called by some components during init (SourceMaxwell)
-    mcset_ncount(ncount);
-
-
-    // create, configure & init:
-    PSI_DMC spec = {};
-    Init_PSI_DMC(&spec);
-    instr_conf.comps = Config_PSI_DMC(a_dest, &spec, &instr_conf.instr);
-    SceneGraphUpdate();
-
-
-    // TODO: extract into a generic function, independent on the particular instrument (e.g. PSI_DMC)
-
-
-    // run display & calculate helper matrices:
-    Matrix4f t_world_prev = Matrix4f_Identity();
-    for (s32 i = 0; i < instr_conf.comps.len; ++i) {
-        Component *comp = instr_conf.comps.arr[i];
-        McDisplayNext(a_dest, comp->transform->t_world);
-
-        DisplayComponent(comp);
-
-        Matrix4f t_world = comp->transform->t_world;
-        comp->t_prev2loc = TransformGetInverse(t_world) * t_world_prev;
-        t_world_prev = t_world;
-
-        ComponentSharedHeader *hdr = comp->GetHeader();
-        hdr-> position_absolute.x =  comp->transform->t_world.m[0][3];
-        hdr-> position_absolute.y =  comp->transform->t_world.m[1][3];
-        hdr-> position_absolute.z =  comp->transform->t_world.m[2][3];
-        hdr-> position_relative.x =  comp->transform->t_loc.m[0][3];
-        hdr-> position_relative.y =  comp->transform->t_loc.m[1][3];
-        hdr-> position_relative.z =  comp->transform->t_loc.m[2][3];
-        for (u32 i = 0; i < 3; i++) {
-            for (u32 j = 0; j < 3; j++) {
-                // NOTE: testing will tell if we may need to mirror the rot matrix, or what
-
-                hdr->rotation_absolute[i][j] = comp->transform->t_world.m[i][j];
-                hdr->rotation_relative[i][j] = comp->transform->t_loc.m[i][j];
-            }
-        }
-    }
-
-    return instr_conf;
-}
-
-void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
-    for (s32 i = 0; i < comps.len; ++i) {
-        Component *comp = comps.arr[i];
-
-        printf("%.*s\n", comp->name.len, comp->name.str);
-        PrintTransform(g_mcdis_t_world);
-
-        McDisplayNext(cbui.ctx->a_pers, comp->transform->t_world);
-        DisplayComponent(comp);        
-
-        comp->display = {};
-        comp->display.transform = Matrix4f_Identity();
-        comp->display.color = ComponentCatToColor(comp->cat);
-        comp->display.segments.arr = g_mcdis_anchors.lst;
-        comp->display.segments.len = g_mcdis_anchors.len;
-        comp->display.segments.max = g_mcdis_anchors.len;
-    }
-}
-
-
-inline
-void ParticleTransform(Matrix4f t, Neutron *n) {
-    Vector3f n_pos = { (f32) n->x, (f32) n->y, (f32) n->z };
-    n_pos = TransformPoint(t, n_pos);
-    n->x = n_pos.x;
-    n->y = n_pos.y;
-    n->z = n_pos.z;
-
-    Vector3f n_vel = { (f32) n->vx, (f32) n->vy, (f32) n->vz };
-    n_vel = TransformDirection(t, n_vel);
-    n->vx = n_vel.x;
-    n->vy = n_vel.y;
-    n->vz = n_vel.z;
-
-    // NOTE: figure out at what point the components start utilizing the spin // s
-}
-
-inline
-Neutron ParticleImmutableTransform(Matrix4f t, Neutron n) {
-    Neutron r = {};
-    Vector3f n_pos = { (f32) n.x, (f32) n.y, (f32) n.z };
-    n_pos = TransformPoint(t, n_pos);
-    r.x = n_pos.x;
-    r.y = n_pos.y;
-    r.z = n_pos.z;
-
-    Vector3f n_vel = { (f32) n.vx, (f32) n.vy, (f32) n.vz };
-    n_vel = TransformDirection(t, n_vel);
-    r.vx = n_vel.x;
-    r.vy = n_vel.y;
-    r.vz = n_vel.z;
-
-    r.t = n.t;
-    r.p = n.p;
-
-    return r;
-}
-
-void ParticlePrintWorld(Matrix4f t_world, Neutron n) {
-    n = ParticleImmutableTransform(t_world, n);
-    printf("(%g %g %g, %g %g %g, %g, %g)\n", n.x, n.y, n.z, n.vx, n.vy, n.vz, n.t, n.p);
-}
-
-void ParticlePrint(Neutron n) {
-    printf("(%g %g %g, %g %g %g, %g, %g)\n", n.x, n.y, n.z, n.vx, n.vy, n.vz, n.t, n.p);
-}
 
 
 struct NeutronTrajectory {
     NeutronTrajectory *next;
     List<Vector3f> event_segments; // these are just pairs of vector3, but they could have been events ...
 };
-
 
 NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount, u32 ncount_record_as_trajectories) {
 
@@ -243,6 +101,9 @@ void RunProgram() {
     TimeFunction;
 
     CbuiInit("mctrace", false);
+    Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
+    OrbitCamera cam = OrbitCameraInit(persp.aspect);
+    // TODO: scenegraph init might be included in CbuiInit, why not
     SceneGraphInit();
 
 
@@ -254,9 +115,19 @@ void RunProgram() {
     // TODO: Ensure that generated code uses const char* probably everywhere.
     // TODO: First off, introduce and use a StrLS which means "String literal static"
     g_a_strings = cbui.ctx->a_pers;
+
+
+    // Initialize the instrument:
+    //      Here, a "instrument" is just a procedure which configures a sequence of components
+    //      into a meaningful, simulation-able state.
+
     s32 ncount = 1e6;
-    InstrumentConfig psi_dmc = InitAndConfigure_PSI_DMC(cbui.ctx->a_pers, ncount);
+    InstrumentConfig config = {};
+    config.comps = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, &config.instr, ncount);
+
+    //
     g_a_strings = cbui.ctx->a_tmp;
+
 
     // scene objects
     Array<Wireframe> scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
@@ -265,20 +136,16 @@ void RunProgram() {
     WireframeRawSegments(cbui.ctx->a_pers, &plane);
     scene_objs.Add(plane);
 
-    // component wireframes
-    DisplayComponents(cbui.ctx->a_pers, psi_dmc.comps);
-
-    // UI
-    Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
-    OrbitCamera cam = OrbitCameraInit(persp.aspect);
+    // create component wireframes
+    DisplayComponents(cbui.ctx->a_pers, config.comps);
 
 
     // TRACE
-    NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, psi_dmc.comps, &psi_dmc.instr, ncount, 100);
+    NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, config.comps, &config.instr, ncount, 100);
 
 
     // PLOT
-    Array<Component*> comps = psi_dmc.comps;
+    Array<Component*> comps = config.comps;
     Array<Component*> monitors = InitArray<Component*>(cbui.ctx->a_pers, comps.len);
     for (s32 i = 0; i < comps.len; ++i) {
         Component *comp = comps.arr[i];
@@ -388,12 +255,14 @@ int main (int argc, char **argv) {
     BaselayerAssertVersion(0, 2, 4);
     CbuiAssertVersion(0, 2, 3);
 
+    bool force_test = false;
+
     if (CLAContainsArg("--help", argc, argv) || CLAContainsArg("-h", argc, argv)) {
         printf("--help:          display help (this text)\n");
         printf("--test:          run test functions\n");
         exit(0);
     }
-    else if (CLAContainsArg("--test", argc, argv)) {
+    else if (CLAContainsArg("--test", argc, argv) || force_test) {
         Test();
     }
     else {

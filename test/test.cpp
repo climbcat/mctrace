@@ -3,29 +3,37 @@ void TestComponentFuncitonsRun() {
     TimeFunction;
     printf("TestComponentFuncitonsRun\n\n");
 
-
     // init
     MContext *ctx = InitBaselayer();
     SceneGraphInit();
-    Instrument instr = {};
 
 
-    // NOTE: We must set mcncount BEFORE initialization.
-    //      This is used by API call mcget_ncount(), and called by some components during init (SourceMaxwell)
-    mcncount = 1000000;
+    // NOTE: The use of StrL, while expected to be static, actually isn't.
+    //      This is due to the static version being selected from uses of (cons char*),
+    //      which isn't the default in legacy C, where some of the init code comes from.
+    //      Setting the g_a_strings to be the persistent one here, not the temp one,
+    //      Means that strings won't get implicitly allocated on the temp arena.
+    // TODO: Ensure that generated code uses const char* probably everywhere.
+    // TODO: First off, introduce and use a StrLS which means "String literal static"
+    g_a_strings = ctx->a_pers;
 
 
-    // create, configure & init:
-    PSI_DMC spec = {};
-    Init_PSI_DMC(&spec);
-    Array<Component*> comps = Config_PSI_DMC(ctx->a_life, &spec, &instr);
-    SceneGraphUpdate();
+    // Initialize the instrument:
+    //      Here, a "instrument" is just a procedure which configures a sequence of components
+    //      into a meaningful, simulation-able state.
+
+    s32 ncount = 1e6;
+    InstrumentConfig config = {};
+    config.comps = InitAndConfig_PSI_DMC(ctx->a_pers, &config.instr, ncount);
+
+    //
+    g_a_strings = ctx->a_tmp;
 
 
     // run display & calculate helper matrices:
     Matrix4f t_world_prev = Matrix4f_Identity();
-    for (s32 i = 0; i < comps.len; ++i) {
-        Component *comp = comps.arr[i];
+    for (s32 i = 0; i < config.comps.len; ++i) {
+        Component *comp = config.comps.arr[i];
         McDisplayNext(ctx->a_pers, comp->transform->t_world);
 
         DisplayComponent(comp);
@@ -57,8 +65,8 @@ void TestComponentFuncitonsRun() {
     for (u32 j = 0; j < mcncount; ++j) {
         Neutron particle = {};
 
-        for (s32 i = 0; i < comps.len; ++i) {
-            Component *comp = comps.arr[i];
+        for (s32 i = 0; i < config.comps.len; ++i) {
+            Component *comp = config.comps.arr[i];
 
             ParticlePrintWorld(comp->transform->t_world, particle);
 
@@ -66,7 +74,7 @@ void TestComponentFuncitonsRun() {
             ParticleTransform(comp->t_prev2loc, &particle);
 
             // run trace code
-            TraceComponent(comp, &particle, &instr);
+            TraceComponent(comp, &particle, &config.instr);
         }
 
         if (j + 1 == DBG_break_after_ncount) {
@@ -76,8 +84,8 @@ void TestComponentFuncitonsRun() {
 
 
     // finally
-    for (s32 i = 0; i < comps.len; ++i) {
-        Component *comp = comps.arr[i];
+    for (s32 i = 0; i < config.comps.len; ++i) {
+        Component *comp = config.comps.arr[i];
 
         FinallyComponent(comp);
     }
