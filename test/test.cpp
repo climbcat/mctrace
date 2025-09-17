@@ -5,7 +5,7 @@ void TestComponentFuncitonsRun() {
 
     // init
     MContext *ctx = InitBaselayer();
-    SceneGraphInit();
+    SceneGraphHandle sg = SceneGraphInit(ctx->a_pers);
 
 
     // NOTE: The use of StrL, while expected to be static, actually isn't.
@@ -24,7 +24,7 @@ void TestComponentFuncitonsRun() {
 
     s32 ncount = 1e6;
     InstrumentConfig config = {};
-    config.comps = InitAndConfig_PSI_DMC(ctx->a_pers, &config.instr, ncount);
+    config.comps = InitAndConfig_PSI_DMC(ctx->a_pers, &config.instr, &sg, ncount);
 
     //
     g_a_strings = ctx->a_tmp;

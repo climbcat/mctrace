@@ -105,12 +105,11 @@ void RunProgram() {
     Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
     OrbitCamera cam = OrbitCameraInit(persp.aspect);
     // TODO: scenegraph init might be included in CbuiInit
-    SceneGraphInit();
-
 
     s32 ncount = 1e6;
     InstrumentConfig config = {};
-    config.comps = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, &config.instr, ncount);
+    config.scenegraph = SceneGraphInit(cbui.ctx->a_pers);
+    config.comps = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, &config.instr, &config.scenegraph, ncount);
 
 
     // scene objects

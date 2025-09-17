@@ -18,6 +18,7 @@ Color ComponentCatToColor(u32 cat) {
 struct InstrumentConfig {
     Instrument instr;
     Array<Component*> comps;
+    SceneGraphHandle scenegraph;
 
     Matrix4f box_t_worold;
     Vector3f box_dims;
