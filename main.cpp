@@ -4,7 +4,8 @@
 #include <cstdio>
 #include <cstddef>
 
-#include "lib/jg_baselayer.h"
+//#include "lib/jg_baselayer.h"
+#include "../baselayer/baselayer_includes.h"
 //#include "lib/jg_cbui.h"
 #include "../cbui/cbui_includes.h"
 
@@ -235,7 +236,7 @@ void RunProgram() {
 int main (int argc, char **argv) {
     TimeProgram;
 
-    BaselayerAssertVersion(0, 2, 4);
+    BaselayerAssertVersion(0, 2, 5);
     CbuiAssertVersion(0, 2, 3);
 
     bool force_test = false;
