@@ -50,7 +50,7 @@ static PSI_DMC PSI_DMC_var;
 InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     PSI_DMC *spec = &PSI_DMC_var;
 
-    // NOTE: Must be set mcncount BEFORE initialization.
+    // NOTE: mcncount must be set BEFORE initialization:
     //      This is used by API call mcget_ncount(), and called by some components during init (SourceMaxwell)
     mcset_ncount(ncount);
 
@@ -404,7 +404,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     phi_z = 0;
     guide4->transform = SceneGraphAlloc(sg, bunker->transform);
     guide4->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
-    SceneGraphSetRotParent(sg,  guide4->transform, guide3->transform );
+    SceneGraphSetRotParent(sg, guide4->transform, guide3->transform);
 
     Component *window1 = CreateComponent(a_dest, CT_Al_window, index++, "window1");
     config.comps.Add(window1);
@@ -438,7 +438,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     phi_z = 90;
     ydist_fluxpos->transform = SceneGraphAlloc(sg, guide4->transform);
     ydist_fluxpos->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
-    SceneGraphSetRotParent(sg,  ydist_fluxpos->transform, window1->transform );
+    SceneGraphSetRotParent(sg, ydist_fluxpos->transform, window1->transform);
 
     Component *PSD_fluxpos = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_fluxpos");
     config.comps.Add(PSD_fluxpos);
@@ -593,7 +593,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     phi_z = 0;
     msa->transform = SceneGraphAlloc(sg, sma->transform);
     msa->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
-    SceneGraphSetRotParent(sg,  msa->transform, in_slit->transform );
+    SceneGraphSetRotParent(sg, msa->transform, in_slit->transform);
 
     Component *out1_slit = CreateComponent(a_dest, CT_Slit, index++, "out1_slit");
     config.comps.Add(out1_slit);
