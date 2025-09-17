@@ -83,7 +83,7 @@ void MonitorPrint(Monitor *mon) {
 }
 
 
-void MonitorBlit(MArena *a_tmp, Component *comp, Monitor monitor, s32 mon_left, s32 mon_top, s32 dest_width, s32 dest_height, Color* dest_buffer) {
+void MonitorBlit(MArena *a_tmp, Monitor monitor, s32 mon_left, s32 mon_top, s32 dest_width, s32 dest_height, Color* dest_buffer) {
     // simply blit 2D monitor contents into the image/dest buffer
 
     // DBG

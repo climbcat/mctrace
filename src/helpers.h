@@ -66,6 +66,7 @@ void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
         comp->display.segments.arr = g_mcdis_anchors.lst;
         comp->display.segments.len = g_mcdis_anchors.len;
         comp->display.segments.max = g_mcdis_anchors.len;
+        comp->display.CalculateAABox();
     }
 }
 

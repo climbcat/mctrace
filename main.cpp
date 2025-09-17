@@ -98,129 +98,191 @@ NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comp
 }
 
 
-void RunProgram() {
-    TimeFunction;
+void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp) {
+    while (traces) {
+        for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
+            Vector3f a = traces->event_segments.lst[2*i];
+            Vector3f b = traces->event_segments.lst[2*i + 1];
 
-    CbuiInit("mctrace", false);
-    Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
-    OrbitCamera cam = OrbitCameraInit(persp.aspect);
-    // TODO: scenegraph init might be included in CbuiInit
+            RenderLineSegment(cbui.image_buffer, TransformGetInverse(view), persp, a, b, cbui.plf.width, cbui.plf.height, COLOR_BLACK);
+        }
 
-    s32 ncount = 1e6;
-    InstrumentConfig config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, ncount);
+        traces = traces->next;
+    }
+}
+
+void RenderWireframes(Array<Wireframe> objs, Matrix4f view, Perspective persp) {
+    for (s32 i = 0; i < objs.len; ++i) {
+        RenderWireframe(cbui.image_buffer, view, persp, cbui.plf.width, cbui.plf.height, objs.arr[i]);
+    }
+}
+
+void RenderMonitors(Array<Monitor> monitors) {
+    UI_LayoutVertical();
+    UI_LayoutHorizontal();
+
+    // labels
+    for (u32 i = 0; i < monitors.len; ++i) {
+        Monitor mon = monitors.arr[i];
+
+        if (mon.mon_tpe == MT_2D) {
+            Str text = StrCat(mon.comp_name, " | ");
+            Widget *lbl = UI_Label( (const char*) StrZ(text) );
+            lbl->sz_font = FS_18;
+        }
+    }
+
+    UI_Pop();
+    UI_LayoutHorizontal();
+
+    // blit plot into some panels
+    for (u32 i = 0; i < monitors.len; ++i) {
+        Monitor mon = monitors.arr[i];
+
+        if (mon.mon_tpe == MT_2D) {
+            Str text = StrCat(mon.comp_name, "_pnl");
+
+            Widget *w = WidgetGetCached( (const char*) StrZ(text) );
+            w->features_flg |= WF_DRAW_BACKGROUND_AND_BORDER;
+            w->w = mon.binm_x;
+            w->h = mon.binn_y;
+            w->sz_border = 0;
+            w->col_bckgrnd = COLOR_WHITE;
+            w->col_bckgrnd.a = 0;
+            w->col_border = ColorGray(0.7f);
+            WidgetTreeSibling(w);
+
+            // TODO: we want to express this as a sprite, which will then get properly blitted during FrameEnd
+            MonitorBlit(cbui.ctx->a_tmp, mon, w->x0, w->y0, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
+        }
+    }
+}
 
 
-    // scene objects
-    Array<Wireframe> scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
-    Wireframe plane = CreatePlane(10);
-    plane.transform = TransformBuildTranslation( { 0, -0.5f, 0 } );
-    WireframeRawSegments(cbui.ctx->a_pers, &plane);
-    scene_objs.Add(plane);
 
-    // create component wireframes
-    DisplayComponents(cbui.ctx->a_pers, config.comps);
+/*
+void RenderMonitors(Array<Component*> monitors) {
+    UI_LayoutVertical();
+    UI_LayoutHorizontal();
+
+    // labels
+    for (u32 i = 0; i < monitors.len; ++i) {
+        Component *mon = monitors.arr[i];
+
+        if (mon->monitor.mon_tpe == MT_2D) {
+            //Str text = StrCat(mon->name, " | ");
+            Str text = StrCat(mon->monitor.title, " | ");
+            Widget *lbl = UI_Label( (const char*) StrZ(text) );
+            lbl->sz_font = FS_18;
+        }
+    }
+
+    UI_Pop();
+    UI_LayoutHorizontal();
+
+    // blit plot into some panels
+    for (u32 i = 0; i < monitors.len; ++i) {
+        Component *mon = monitors.arr[i];
+
+        if (mon->monitor.mon_tpe == MT_2D) {
+            Str text = StrCat(mon->name, "_pnl");
+
+            Widget *w = WidgetGetCached( (const char*) StrZ(text) );
+            w->features_flg |= WF_DRAW_BACKGROUND_AND_BORDER;
+            w->w = mon->monitor.binm_x;
+            w->h = mon->monitor.binn_y;
+            w->sz_border = 0;
+            w->col_bckgrnd = COLOR_WHITE;
+            w->col_bckgrnd.a = 0;
+            w->col_border = ColorGray(0.7f);
+            WidgetTreeSibling(w);
+
+            // TODO: we want to express this as a sprite, which will then get properly blitted during FrameEnd
+            MonitorBlit(cbui.ctx->a_tmp, mon, mon->monitor, w->x0, w->y0, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
+        }
+    }
+}
+*/
 
 
-    // TRACE
-    NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, config.comps, &config.instr, ncount, 100);
-
-
-    // PLOT
-    Array<Component*> comps = config.comps;
-    Array<Component*> monitors = InitArray<Component*>(cbui.ctx->a_pers, comps.len);
+Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
+    List<Monitor> monitors = InitList<Monitor>(a_dest, 0);
     for (s32 i = 0; i < comps.len; ++i) {
         Component *comp = comps.arr[i];
 
         g_current_monitor = &comp->monitor;
         SaveComponent(comp);
 
+        // NOTE: not sure where this should be initialized, probably in the component_create generated function 
+        // TODO: init this field in generated code
+        comp->monitor.comp_name = comp->name;
+
         if (comp->monitor.mon_tpe != MT_NOT) {
-            monitors.Add(comp);
+            ArenaAlloc(a_dest, sizeof(Monitor));
+            monitors.Add(comp->monitor);
         }
     }
 
+    Array<Monitor> result = {};
+    result.arr = monitors.lst;
+    result.len = monitors.len;
+    result.max = monitors.len;
 
-    // DISPLAY
+    return result;
+}
+
+
+void RunProgram() {
+    TimeFunction;
+
+    CbuiInit("mctrace", true);
+    Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
+    OrbitCamera cam = OrbitCameraInit(persp.aspect);
+
+    //s32 ncount = 1e6;
+    s32 ncount = 1e5;
+    InstrumentConfig config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, ncount);
+
+    // scene objects
+    Array<Wireframe> scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
+    Wireframe plane = CreatePlaneDetailed(10, 60, 6);
+
+    Vector3f v_inst_center = { 0, -0.5f, 25 };
+    plane.transform = TransformBuildTranslation( v_inst_center );
+
+    WireframeRawSegments(cbui.ctx->a_pers, &plane);
+    scene_objs.Add(plane);
+
+    cam.center = v_inst_center;
+    cam.radius = v_inst_center.z * 2;
+    cam.phi = 0;
+    cam.theta = 25;
+
+
+    // get DISPLAY/TRACE data and PLOT data pointers
+    DisplayComponents(cbui.ctx->a_pers, config.comps);
+    NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, config.comps, &config.instr, ncount, 100);
+    Array<Monitor> monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, config.comps);
+
+
+    // app display
     while (cbui.running) {
+        // frame start
         CbuiFrameStart();
         OrbitCameraRotateZoom(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
         OrbitCameraPanInPlane(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
+        scene_objs.len = 0;
+        scene_objs.Add(plane);
 
-
-        // render neutron trajectories
-        {
-            NeutronTrajectory *traces = traces_first;
-            while (traces) {
-                for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
-                    Vector3f a = traces->event_segments.lst[2*i];
-                    Vector3f b = traces->event_segments.lst[2*i + 1];
-
-                    RenderLineSegment(cbui.image_buffer, TransformGetInverse(cam.view), persp, a, b, cbui.plf.width, cbui.plf.height, COLOR_BLACK);
-                }
-
-                traces = traces->next;
-            }
+        // swoop up component wireframes for rendering
+        for (s32 i = 0; i < config.comps.len; ++i) {
+            scene_objs.Add(config.comps.arr[i]->display);
         }
 
-
-        // render wireframes
-        {
-            // render scene objects
-            for (s32 i = 0; i < scene_objs.len; ++i) {
-                RenderWireframe(cbui.image_buffer, cam.view, persp, cbui.plf.width, cbui.plf.height, scene_objs.arr[i]);
-            }
-
-            // render components
-            for (s32 i = 0; i < comps.len; ++i) {
-                RenderWireframe(cbui.image_buffer, cam.view, persp, cbui.plf.width, cbui.plf.height, comps.arr[i]->display);
-            }
-        }
-
-
-        // render monitors
-        {
-            UI_LayoutVertical();
-            UI_LayoutHorizontal();
-
-            // labels
-            for (u32 i = 0; i < monitors.len; ++i) {
-                Component *mon = monitors.arr[i];
-
-                if (mon->monitor.mon_tpe == MT_2D) {
-                    Str text = StrCat(mon->name, " | ");
-                    Widget *lbl = UI_Label( (const char*) StrZ(text) );
-                    lbl->sz_font = FS_18;
-                }
-            }
-
-            UI_Pop();
-            UI_LayoutHorizontal();
-
-            // blit plot into some panels
-            for (u32 i = 0; i < monitors.len; ++i) {
-                Component *mon = monitors.arr[i];
-
-                if (mon->monitor.mon_tpe == MT_2D) {
-                    Str text = StrCat(mon->name, "_pnl");
-
-                    Widget *w = WidgetGetCached( (const char*) StrZ(text) );
-                    w->features_flg |= WF_DRAW_BACKGROUND_AND_BORDER;
-                    w->w = mon->monitor.binm_x;
-                    w->h = mon->monitor.binn_y;
-                    w->sz_border = 0;
-                    w->col_bckgrnd = COLOR_WHITE;
-                    w->col_bckgrnd.a = 0;
-                    w->col_border = ColorGray(0.7f);
-                    WidgetTreeSibling(w);
-
-                    // TODO: we want to express this as a sprite, which will then get properly blitted during FrameEnd
-                    MonitorBlit(cbui.ctx->a_tmp, mon, mon->monitor, w->x0, w->y0, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
-                }
-            }
-        }
-
-
-        CbuiFrameEnd();
+        // render calls
+        RenderTrajectories(traces_first, cam.view, persp);
+        RenderWireframes(scene_objs, cam.view, persp);
+        RenderMonitors(monitors);
     }
 
     CbuiExit();
