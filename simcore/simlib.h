@@ -5364,43 +5364,43 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS, MonitornD_Variables_type
         for(ih = 0; ih < NH; ih++){
             for(iv = 0; iv < NV; iv++)
             {
-            double theta0, phi0, theta1, phi1;          /* angles in spherical coordinates */
-            double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3; /* vertices at plate edges */
-            phi0 = (hdiv_min+ width*ih-90)*DEG2RAD;        /* in xz plane */
-            phi1 = (hdiv_min+ width*(ih+1)-90)*DEG2RAD;
-            if (issphere)
-            {
-                theta0= (vdiv_min+height* iv + 90)   *DEG2RAD; /* in vertical plane */
-                theta1= (vdiv_min+height*(iv+1) + 90)*DEG2RAD;
-                
-                y0 = -radius*cos(theta0);            /* z with Z vertical */
-                y1 = -radius*cos(theta1);
-                if (y0 < ymin) y0=ymin;
-                if (y0 > ymax) y0=ymax;
-                if (y1 < ymin) y1=ymin;
-                if (y1 > ymax) y1=ymax;
-            } else {
-                y0 = ymin;
-                y1 = ymax;
-                theta0=theta1=90*DEG2RAD;
-            }
+                double theta0, phi0, theta1, phi1;          /* angles in spherical coordinates */
+                double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3; /* vertices at plate edges */
+                phi0 = (hdiv_min+ width*ih-90)*DEG2RAD;        /* in xz plane */
+                phi1 = (hdiv_min+ width*(ih+1)-90)*DEG2RAD;
+                if (issphere)
+                {
+                    theta0= (vdiv_min+height* iv + 90)   *DEG2RAD; /* in vertical plane */
+                    theta1= (vdiv_min+height*(iv+1) + 90)*DEG2RAD;
+                    
+                    y0 = -radius*cos(theta0);            /* z with Z vertical */
+                    y1 = -radius*cos(theta1);
+                    if (y0 < ymin) y0=ymin;
+                    if (y0 > ymax) y0=ymax;
+                    if (y1 < ymin) y1=ymin;
+                    if (y1 > ymax) y1=ymax;
+                } else {
+                    y0 = ymin;
+                    y1 = ymax;
+                    theta0=theta1=90*DEG2RAD;
+                }
 
-            x0 = radius*sin(theta0)*cos(phi0); /* x with Z vertical */
-            z0 =-radius*sin(theta0)*sin(phi0); /* y with Z vertical */
-            x1 = radius*sin(theta1)*cos(phi0); 
-            z1 =-radius*sin(theta1)*sin(phi0);
-            x2 = radius*sin(theta1)*cos(phi1); 
-            z2 =-radius*sin(theta1)*sin(phi1);
-            x3 = radius*sin(theta0)*cos(phi1); 
-            z3 =-radius*sin(theta0)*sin(phi1);
-            y2 = y1; y3 = y0;
+                x0 = radius*sin(theta0)*cos(phi0); /* x with Z vertical */
+                z0 =-radius*sin(theta0)*sin(phi0); /* y with Z vertical */
+                x1 = radius*sin(theta1)*cos(phi0); 
+                z1 =-radius*sin(theta1)*sin(phi0);
+                x2 = radius*sin(theta1)*cos(phi1); 
+                z2 =-radius*sin(theta1)*sin(phi1);
+                x3 = radius*sin(theta0)*cos(phi1); 
+                z3 =-radius*sin(theta0)*sin(phi1);
+                y2 = y1; y3 = y0;
 
-            mcdis_multiline(5,
-                x0,y0,z0,
-                x1,y1,z1,
-                x2,y2,z2,
-                x3,y3,z3,
-                x0,y0,z0);
+                mcdis_multiline(5,
+                    x0,y0,z0,
+                    x1,y1,z1,
+                    x2,y2,z2,
+                    x3,y3,z3,
+                    x0,y0,z0);
             }
         }
         if (Vars->Flag_mantid) {
