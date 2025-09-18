@@ -5269,9 +5269,8 @@ void Monitor_nD_Finally(MonitornD_Defines_type *DEFS,
 /* Monitor_nD_McDisplay: this routine is used to display component           */
 /* ========================================================================= */
 
-void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
-  MonitornD_Variables_type *Vars)
-  {
+void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
+{
     double radius, h;
     double xmin;
     double xmax;
@@ -5280,7 +5279,7 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
     double zmin;
     double zmax;
     int    i;
-    double hdiv_min=-180, hdiv_max=180, vdiv_min=-90, vdiv_max=90;
+    double hdiv_min = -180, hdiv_max = 180, vdiv_min = -90, vdiv_max = 90;
     char   restricted = 0;
 
     radius = Vars->Sphere_Radius;
@@ -5299,171 +5298,182 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
      */
     for (i= 0; i <= Vars->Coord_Number; i++)
     {
-      int Set_Vars_Coord_Type;
-      Set_Vars_Coord_Type = (Vars->Coord_Type[i] & (DEFS->COORD_LOG-1));
-      if (Set_Vars_Coord_Type == DEFS->COORD_HDIV || Set_Vars_Coord_Type == DEFS->COORD_THETA)
-      { hdiv_min = Vars->Coord_Min[i]; hdiv_max = Vars->Coord_Max[i]; restricted = 1; }
-      else if (Set_Vars_Coord_Type == DEFS->COORD_VDIV || Set_Vars_Coord_Type == DEFS->COORD_PHI)
-      { vdiv_min = Vars->Coord_Min[i]; vdiv_max = Vars->Coord_Max[i];restricted = 1;  }
-      else if (Set_Vars_Coord_Type == DEFS->COORD_ANGLE)
-      { hdiv_min = vdiv_min = Vars->Coord_Min[i];
-        hdiv_max = vdiv_max = Vars->Coord_Max[i];
-        restricted = 1; }
-      else if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS)
-      { double angle;
-        angle = RAD2DEG*atan2(Vars->Coord_Max[i], radius);
-        hdiv_min = vdiv_min = angle;
-        hdiv_max = vdiv_max = angle;
-        restricted = 1; }
-      else if (Set_Vars_Coord_Type == DEFS->COORD_Y && abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE)
-      {
-        vdiv_min = atan2(ymin,radius)*RAD2DEG;
-        vdiv_max = atan2(ymax,radius)*RAD2DEG;
-        restricted = 1;
-      }
+        int Set_Vars_Coord_Type;
+        Set_Vars_Coord_Type = (Vars->Coord_Type[i] & (DEFS->COORD_LOG-1));
+        if (Set_Vars_Coord_Type == DEFS->COORD_HDIV || Set_Vars_Coord_Type == DEFS->COORD_THETA)
+        {
+            hdiv_min = Vars->Coord_Min[i]; hdiv_max = Vars->Coord_Max[i]; restricted = 1;
+        }
+        else if (Set_Vars_Coord_Type == DEFS->COORD_VDIV || Set_Vars_Coord_Type == DEFS->COORD_PHI)
+        {
+            vdiv_min = Vars->Coord_Min[i]; vdiv_max = Vars->Coord_Max[i];restricted = 1;
+        }
+        else if (Set_Vars_Coord_Type == DEFS->COORD_ANGLE)
+        {
+            hdiv_min = vdiv_min = Vars->Coord_Min[i];
+            hdiv_max = vdiv_max = Vars->Coord_Max[i];
+            restricted = 1;
+        }
+        else if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS)
+        {
+            double angle;
+            angle = RAD2DEG*atan2(Vars->Coord_Max[i], radius);
+            hdiv_min = vdiv_min = angle;
+            hdiv_max = vdiv_max = angle;
+            restricted = 1;
+        }
+        else if (Set_Vars_Coord_Type == DEFS->COORD_Y && abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE)
+        {
+            vdiv_min = atan2(ymin,radius)*RAD2DEG;
+            vdiv_max = atan2(ymax,radius)*RAD2DEG;
+            restricted = 1;
+        }
     }
+
     /* full sphere */
-    if ((!restricted && (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE))
-    || abs(Vars->Flag_Shape) == DEFS->SHAPE_PREVIOUS)
+    if ((!restricted && (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE)) || abs(Vars->Flag_Shape) == DEFS->SHAPE_PREVIOUS)
     {
-      mcdis_magnify((char*) "");
-      mcdis_circle((char*) "xy",0,0,0,radius);
-      mcdis_circle((char*) "xz",0,0,0,radius);
-      mcdis_circle((char*) "yz",0,0,0,radius);
+        mcdis_magnify((char*) "");
+        mcdis_circle((char*) "xy",0,0,0,radius);
+        mcdis_circle((char*) "xz",0,0,0,radius);
+        mcdis_circle((char*) "yz",0,0,0,radius);
     }
+
     /* banana/cylinder/sphere portion */
-    else
-    if (restricted && ((abs(Vars->Flag_Shape) == DEFS->SHAPE_CYLIND)
+    else if (restricted && ((abs(Vars->Flag_Shape) == DEFS->SHAPE_CYLIND)
                     || (abs(Vars->Flag_Shape) == DEFS->SHAPE_BANANA)
                     || (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE)))
     {
-      int NH=24, NV=24;
-      int ih, iv;
-      double width, height;
-      int issphere;
-      issphere = (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE);
-      width = (hdiv_max-hdiv_min)/NH;
-      if (!issphere) {
-	NV=1; /* cylinder has vertical axis */
-      }
-      height= (vdiv_max-vdiv_min)/NV;
-      
-      /* check width and height of elements (sphere) to make sure the nb
-         of plates remains limited */
-      if (width < 10  && NH > 1) { width = 10;  NH=(hdiv_max-hdiv_min)/width; width=(hdiv_max-hdiv_min)/NH; }
-      if (height < 10 && NV > 1) { height = 10; NV=(vdiv_max-vdiv_min)/height; height= (vdiv_max-vdiv_min)/NV; }
-      
-      mcdis_magnify((char*) "xyz");
-      for(ih = 0; ih < NH; ih++)
-        for(iv = 0; iv < NV; iv++)
-        {
-          double theta0, phi0, theta1, phi1;          /* angles in spherical coordinates */
-          double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3; /* vertices at plate edges */
-          phi0 = (hdiv_min+ width*ih-90)*DEG2RAD;        /* in xz plane */
-          phi1 = (hdiv_min+ width*(ih+1)-90)*DEG2RAD;
-          if (issphere)
-          {
-            theta0= (vdiv_min+height* iv + 90)   *DEG2RAD; /* in vertical plane */
-            theta1= (vdiv_min+height*(iv+1) + 90)*DEG2RAD;
-            
-            y0 = -radius*cos(theta0);            /* z with Z vertical */
-            y1 = -radius*cos(theta1);
-            if (y0 < ymin) y0=ymin;
-            if (y0 > ymax) y0=ymax;
-            if (y1 < ymin) y1=ymin;
-            if (y1 > ymax) y1=ymax;
-          } else {
-            y0 = ymin;
-            y1 = ymax;
-            theta0=theta1=90*DEG2RAD;
-          }
-
-          x0 = radius*sin(theta0)*cos(phi0); /* x with Z vertical */
-          z0 =-radius*sin(theta0)*sin(phi0); /* y with Z vertical */
-          x1 = radius*sin(theta1)*cos(phi0); 
-          z1 =-radius*sin(theta1)*sin(phi0);
-          x2 = radius*sin(theta1)*cos(phi1); 
-          z2 =-radius*sin(theta1)*sin(phi1);
-          x3 = radius*sin(theta0)*cos(phi1); 
-          z3 =-radius*sin(theta0)*sin(phi1);
-          y2 = y1; y3 = y0;
-
-          mcdis_multiline(5,
-            x0,y0,z0,
-            x1,y1,z1,
-            x2,y2,z2,
-            x3,y3,z3,
-            x0,y0,z0);
+        int NH=24, NV=24;
+        int ih, iv;
+        double width, height;
+        int issphere;
+        issphere = (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE);
+        width = (hdiv_max-hdiv_min)/NH;
+        if (!issphere) {
+            NV=1; /* cylinder has vertical axis */
         }
-      if (Vars->Flag_mantid) {
-	/* First define the base pixel type */
-	double dt, dy;
-	dt = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
-	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
-	printf("MANTID_BANANA_DET:  %g, %g, %g, %g, %g, %li, %li, %llu\n", radius, 
-	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], (long long unsigned)Vars->Coord_Min[4]); 
-      }
-    }
-    /* disk (circle) */
-    else
-    if (abs(Vars->Flag_Shape) == DEFS->SHAPE_DISK)
-    {
-      mcdis_magnify((char*) "");
-      mcdis_circle((char*) "xy",0,0,0,radius);
-    }
-    /* rectangle (square) */
-    else
-    if (abs(Vars->Flag_Shape) == DEFS->SHAPE_SQUARE)
-    {
-      mcdis_magnify((char*) "xy");
-      mcdis_multiline(5, (double)xmin, (double)ymin, 0.0,
-             (double)xmax, (double)ymin, 0.0,
-             (double)xmax, (double)ymax, 0.0,
-             (double)xmin, (double)ymax, 0.0,
-             (double)xmin, (double)ymin, 0.0);
+        height= (vdiv_max-vdiv_min)/NV;
+
+        /* check width and height of elements (sphere) to make sure the nb
+            of plates remains limited */
+        if (width < 10  && NH > 1) { width = 10;  NH=(hdiv_max-hdiv_min)/width; width=(hdiv_max-hdiv_min)/NH; }
+        if (height < 10 && NV > 1) { height = 10; NV=(vdiv_max-vdiv_min)/height; height= (vdiv_max-vdiv_min)/NV; }
       
-      if (Vars->Flag_mantid) {
-	/* First define the base pixel type */
-	double dx, dy;
-	dx = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
-	dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
-	printf("MANTID_RECTANGULAR_DET:  %g, %g, %g, %g, %li, %li, %llu\n", 
-	       Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], (long long unsigned)Vars->Coord_Min[4]);
-      }
+        mcdis_magnify((char*) "xyz");
+        for(ih = 0; ih < NH; ih++){
+            for(iv = 0; iv < NV; iv++)
+            {
+            double theta0, phi0, theta1, phi1;          /* angles in spherical coordinates */
+            double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3; /* vertices at plate edges */
+            phi0 = (hdiv_min+ width*ih-90)*DEG2RAD;        /* in xz plane */
+            phi1 = (hdiv_min+ width*(ih+1)-90)*DEG2RAD;
+            if (issphere)
+            {
+                theta0= (vdiv_min+height* iv + 90)   *DEG2RAD; /* in vertical plane */
+                theta1= (vdiv_min+height*(iv+1) + 90)*DEG2RAD;
+                
+                y0 = -radius*cos(theta0);            /* z with Z vertical */
+                y1 = -radius*cos(theta1);
+                if (y0 < ymin) y0=ymin;
+                if (y0 > ymax) y0=ymax;
+                if (y1 < ymin) y1=ymin;
+                if (y1 > ymax) y1=ymax;
+            } else {
+                y0 = ymin;
+                y1 = ymax;
+                theta0=theta1=90*DEG2RAD;
+            }
+
+            x0 = radius*sin(theta0)*cos(phi0); /* x with Z vertical */
+            z0 =-radius*sin(theta0)*sin(phi0); /* y with Z vertical */
+            x1 = radius*sin(theta1)*cos(phi0); 
+            z1 =-radius*sin(theta1)*sin(phi0);
+            x2 = radius*sin(theta1)*cos(phi1); 
+            z2 =-radius*sin(theta1)*sin(phi1);
+            x3 = radius*sin(theta0)*cos(phi1); 
+            z3 =-radius*sin(theta0)*sin(phi1);
+            y2 = y1; y3 = y0;
+
+            mcdis_multiline(5,
+                x0,y0,z0,
+                x1,y1,z1,
+                x2,y2,z2,
+                x3,y3,z3,
+                x0,y0,z0);
+            }
+        }
+        if (Vars->Flag_mantid) {
+            /* First define the base pixel type */
+            double dt, dy;
+            dt = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
+            dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
+            printf("MANTID_BANANA_DET:  %g, %g, %g, %g, %g, %li, %li, %llu\n", radius, 
+            Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], (long long unsigned)Vars->Coord_Min[4]); 
+        }
     }
+
+    /* disk (circle) */
+    else if (abs(Vars->Flag_Shape) == DEFS->SHAPE_DISK)
+    {
+        mcdis_magnify((char*) "");
+        mcdis_circle((char*) "xy",0,0,0,radius);
+    }
+
+    /* rectangle (square) */
+    else if (abs(Vars->Flag_Shape) == DEFS->SHAPE_SQUARE)
+    {
+        mcdis_magnify((char*) "xy");
+        mcdis_multiline(5, (double)xmin, (double)ymin, 0.0,
+            (double)xmax, (double)ymin, 0.0,
+            (double)xmax, (double)ymax, 0.0,
+            (double)xmin, (double)ymax, 0.0,
+            (double)xmin, (double)ymin, 0.0);
+      
+        if (Vars->Flag_mantid) {
+            /* First define the base pixel type */
+            double dx, dy;
+            dx = (Vars->Coord_Max[1]-Vars->Coord_Min[1])/Vars->Coord_Bin[1];
+            dy = (Vars->Coord_Max[2]-Vars->Coord_Min[2])/Vars->Coord_Bin[2];
+            printf("MANTID_RECTANGULAR_DET:  %g, %g, %g, %g, %li, %li, %llu\n", 
+            Vars->Coord_Min[1],Vars->Coord_Max[1], Vars->Coord_Min[2],Vars->Coord_Max[2], Vars->Coord_Bin[1], Vars->Coord_Bin[2], (long long unsigned)Vars->Coord_Min[4]);
+        }
+    }
+
     /* full cylinder/banana */
     else
     if (!restricted && ((abs(Vars->Flag_Shape) == DEFS->SHAPE_CYLIND) || (abs(Vars->Flag_Shape) == DEFS->SHAPE_BANANA)))
     {
-      mcdis_magnify((char*) "xyz");
-      mcdis_circle((char*) "xz", 0,  h/2.0, 0, radius);
-      mcdis_circle((char*) "xz", 0, -h/2.0, 0, radius);
-      mcdis_line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
-      mcdis_line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
-      mcdis_line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
-      mcdis_line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
+        mcdis_magnify((char*) "xyz");
+
+        mcdis_circle((char*) "xz", 0,  h/2.0, 0, radius);
+        mcdis_circle((char*) "xz", 0, -h/2.0, 0, radius);
+        mcdis_line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
+        mcdis_line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
+        mcdis_line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
+        mcdis_line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
     }
-    else
+
     /* box */
-    if (abs(Vars->Flag_Shape) == DEFS->SHAPE_BOX)
+    else if (abs(Vars->Flag_Shape) == DEFS->SHAPE_BOX)
     {
-      mcdis_magnify((char*) "xyz");
-      mcdis_multiline(5, xmin, ymin, zmin,
-                   xmax, ymin, zmin,
-                   xmax, ymax, zmin,
-                   xmin, ymax, zmin,
-                   xmin, ymin, zmin);
-      mcdis_multiline(5, xmin, ymin, zmax,
-                   xmax, ymin, zmax,
-                   xmax, ymax, zmax,
-                   xmin, ymax, zmax,
-                   xmin, ymin, zmax);
-      mcdis_line(xmin, ymin, zmin, xmin, ymin, zmax);
-      mcdis_line(xmax, ymin, zmin, xmax, ymin, zmax);
-      mcdis_line(xmin, ymax, zmin, xmin, ymax, zmax);
-      mcdis_line(xmax, ymax, zmin, xmax, ymax, zmax);
+        mcdis_magnify((char*) "xyz");
+        mcdis_multiline(5, xmin, ymin, zmin,
+            xmax, ymin, zmin,
+            xmax, ymax, zmin,
+            xmin, ymax, zmin,
+            xmin, ymin, zmin);
+        mcdis_multiline(5, xmin, ymin, zmax,
+            xmax, ymin, zmax,
+            xmax, ymax, zmax,
+            xmin, ymax, zmax,
+            xmin, ymin, zmax);
+        mcdis_line(xmin, ymin, zmin, xmin, ymin, zmax);
+        mcdis_line(xmax, ymin, zmin, xmax, ymin, zmax);
+        mcdis_line(xmin, ymax, zmin, xmin, ymax, zmax);
+        mcdis_line(xmax, ymax, zmin, xmax, ymax, zmax);
     }
-  } /* end Monitor_nD_McDisplay */
+} /* end Monitor_nD_McDisplay */
 
 /* end of monitor_nd-lib.c */
 

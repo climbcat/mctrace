@@ -1107,7 +1107,7 @@ static void mcsetseed(char *arg)
 *******************************************************************************/
 
 
-// TODO: does anyone, anywhere, call mcdis_magnify? Looks like dead code
+// NOTE: called by, of all things, Monitor_nD
 void mcdis_magnify(char *what){
     // Do nothing here, better use interactive zoom from the tools
 }
