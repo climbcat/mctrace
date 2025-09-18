@@ -255,7 +255,23 @@ void RunProgram() {
             scene_objs.Add(wf);
 
             if (wf.type == WFT_SEGMENTS && comp->interactable) {
-                scene_objs.Add( CreateAABoundingBox(cbui.ctx->a_tmp, wf, 0.02f) );
+                Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, wf, 0.02f);
+
+                Ray mouse_ray = CameraGetRayWorld(cam.view, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
+                bool collided = BoxCollideSLAB(mouse_ray, box);
+
+                if (collided) {
+                    Button lft = MouseLeft();
+                    if (lft.ended_down) {
+                        box.style = WFR_FAT;
+                    }
+                    if (lft.pushed) {
+                        cam.center = box.Center();
+                        cam.radius = box.SizeBallpark() * 1.5f;
+                    }
+                    scene_objs.Add(box);
+                }
+
             }
         }
 
