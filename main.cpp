@@ -104,7 +104,7 @@ void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
         PrintTransform(g_mcdis_t_world);
 
         McDisplayNext(cbui.ctx->a_pers, Matrix4f_Identity());
-        DisplayComponent(comp);        
+        DisplayComponent(comp);
 
         comp->display = {};
         comp->display.type = WFT_SEGMENTS;
@@ -252,7 +252,7 @@ void RunProgram() {
             scene_objs.Add(wf);
 
             if (wf.type == WFT_SEGMENTS) {
-                scene_objs.Add( CreateAABoundingBox(cbui.ctx->a_tmp, wf) );
+                scene_objs.Add( CreateAABoundingBox(cbui.ctx->a_tmp, wf, 0.02f) );
             }
         }
 
