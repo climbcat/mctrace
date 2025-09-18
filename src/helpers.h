@@ -61,6 +61,7 @@ void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
         DisplayComponent(comp);        
 
         comp->display = {};
+        comp->display.type = WFT_SEGMENTS;
         comp->display.transform = Matrix4f_Identity();
         comp->display.color = ComponentCatToColor(comp->cat);
         comp->display.segments.arr = g_mcdis_anchors.lst;

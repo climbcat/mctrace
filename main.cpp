@@ -159,52 +159,6 @@ void RenderMonitors(Array<Monitor> monitors) {
 }
 
 
-
-/*
-void RenderMonitors(Array<Component*> monitors) {
-    UI_LayoutVertical();
-    UI_LayoutHorizontal();
-
-    // labels
-    for (u32 i = 0; i < monitors.len; ++i) {
-        Component *mon = monitors.arr[i];
-
-        if (mon->monitor.mon_tpe == MT_2D) {
-            //Str text = StrCat(mon->name, " | ");
-            Str text = StrCat(mon->monitor.title, " | ");
-            Widget *lbl = UI_Label( (const char*) StrZ(text) );
-            lbl->sz_font = FS_18;
-        }
-    }
-
-    UI_Pop();
-    UI_LayoutHorizontal();
-
-    // blit plot into some panels
-    for (u32 i = 0; i < monitors.len; ++i) {
-        Component *mon = monitors.arr[i];
-
-        if (mon->monitor.mon_tpe == MT_2D) {
-            Str text = StrCat(mon->name, "_pnl");
-
-            Widget *w = WidgetGetCached( (const char*) StrZ(text) );
-            w->features_flg |= WF_DRAW_BACKGROUND_AND_BORDER;
-            w->w = mon->monitor.binm_x;
-            w->h = mon->monitor.binn_y;
-            w->sz_border = 0;
-            w->col_bckgrnd = COLOR_WHITE;
-            w->col_bckgrnd.a = 0;
-            w->col_border = ColorGray(0.7f);
-            WidgetTreeSibling(w);
-
-            // TODO: we want to express this as a sprite, which will then get properly blitted during FrameEnd
-            MonitorBlit(cbui.ctx->a_tmp, mon, mon->monitor, w->x0, w->y0, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
-        }
-    }
-}
-*/
-
-
 Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
     List<Monitor> monitors = InitList<Monitor>(a_dest, 0);
     for (s32 i = 0; i < comps.len; ++i) {
@@ -276,7 +230,12 @@ void RunProgram() {
 
         // swoop up component wireframes for rendering
         for (s32 i = 0; i < config.comps.len; ++i) {
-            scene_objs.Add(config.comps.arr[i]->display);
+            Wireframe wf = config.comps.arr[i]->display;
+            scene_objs.Add(wf);
+
+            if (wf.type == WFT_SEGMENTS) {
+                scene_objs.Add( CreateAABoundingBox(cbui.ctx->a_tmp, wf) );
+            }
         }
 
         // render calls
