@@ -148,6 +148,7 @@ struct Component {
 
     Wireframe display;
     Monitor monitor;
+    bool interactable;
 
     // pointer to the underlying component
     void *comp;

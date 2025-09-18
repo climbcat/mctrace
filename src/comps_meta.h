@@ -70,6 +70,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->type_name = StrLS(comp_spec.type);
             comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_optics;
+            comp->interactable = true;
         } break;
 
         case CT_L_monitor: {
@@ -86,6 +87,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->type_name = StrLS(comp_spec.type);
             comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_optics;
+            comp->interactable = true;
         } break;
 
         case CT_Progress_bar: {
@@ -134,6 +136,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->type_name = StrLS(comp_spec.type);
             comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_optics;
+            comp->interactable = true;
         } break;
 
         case CT_Source_Maxwell_3: {
@@ -142,6 +145,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->type_name = StrLS(comp_spec.type);
             comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_sources;
+            comp->interactable = true;
         } break;
 
         case CT_Beamstop: {
@@ -150,6 +154,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->type_name = StrLS(comp_spec.type);
             comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_optics;
+            comp->interactable = true;
         } break;
 
         case CT_PowderN: {
@@ -158,6 +163,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->type_name = StrLS(comp_spec.type);
             comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_samples;
+            comp->interactable = true;
         } break;
 
         case CT_Monitor_nD: {
@@ -166,6 +172,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->type_name = StrLS(comp_spec.type);
             comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_monitors;
+            comp->interactable = true;
         } break;
 
         case CT_Monochromator_2foc: {
@@ -174,6 +181,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->type_name = StrLS(comp_spec.type);
             comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_contrib;
+            comp->interactable = true;
         } break;
 
         default: { } break;

@@ -118,12 +118,14 @@ void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
 }
 
 void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp) {
+    Color traj_col = COLOR_BLACK;
+    traj_col.a = 64;
     while (traces) {
         for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
             Vector3f a = traces->event_segments.lst[2*i];
             Vector3f b = traces->event_segments.lst[2*i + 1];
 
-            RenderLineSegment(cbui.image_buffer, TransformGetInverse(view), persp, a, b, cbui.plf.width, cbui.plf.height, COLOR_BLACK);
+            RenderLineSegment(cbui.image_buffer, TransformGetInverse(view), persp, a, b, cbui.plf.width, cbui.plf.height, traj_col);
         }
 
         traces = traces->next;
@@ -248,10 +250,11 @@ void RunProgram() {
 
         // swoop up component wireframes for rendering
         for (s32 i = 0; i < config.comps.len; ++i) {
-            Wireframe wf = config.comps.arr[i]->display;
+            Component *comp = config.comps.arr[i];
+            Wireframe wf = comp->display;
             scene_objs.Add(wf);
 
-            if (wf.type == WFT_SEGMENTS) {
+            if (wf.type == WFT_SEGMENTS && comp->interactable) {
                 scene_objs.Add( CreateAABoundingBox(cbui.ctx->a_tmp, wf, 0.02f) );
             }
         }
