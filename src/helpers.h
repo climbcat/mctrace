@@ -50,27 +50,6 @@ void UpdateLegacyTransforms(Array<Component*> comps) {
     }
 }
 
-void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
-    for (s32 i = 0; i < comps.len; ++i) {
-        Component *comp = comps.arr[i];
-
-        printf("%.*s\n", comp->name.len, comp->name.str);
-        PrintTransform(g_mcdis_t_world);
-
-        McDisplayNext(cbui.ctx->a_pers, Matrix4f_Identity());
-        DisplayComponent(comp);        
-
-        comp->display = {};
-        comp->display.type = WFT_SEGMENTS;
-        comp->display.transform = comp->transform->t_world;
-        comp->display.color = ComponentCatToColor(comp->cat);
-        comp->display.segments.arr = g_mcdis_anchors.lst;
-        comp->display.segments.len = g_mcdis_anchors.len;
-        comp->display.segments.max = g_mcdis_anchors.len;
-        comp->display.CalculateAABox();
-    }
-}
-
 inline
 void ParticleTransform(Matrix4f t, Neutron *n) {
     Vector3f n_pos = { (f32) n->x, (f32) n->y, (f32) n->z };
