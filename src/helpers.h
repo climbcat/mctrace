@@ -57,12 +57,12 @@ void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
         printf("%.*s\n", comp->name.len, comp->name.str);
         PrintTransform(g_mcdis_t_world);
 
-        McDisplayNext(cbui.ctx->a_pers, comp->transform->t_world);
+        McDisplayNext(cbui.ctx->a_pers, Matrix4f_Identity());
         DisplayComponent(comp);        
 
         comp->display = {};
         comp->display.type = WFT_SEGMENTS;
-        comp->display.transform = Matrix4f_Identity();
+        comp->display.transform = comp->transform->t_world;
         comp->display.color = ComponentCatToColor(comp->cat);
         comp->display.segments.arr = g_mcdis_anchors.lst;
         comp->display.segments.len = g_mcdis_anchors.len;

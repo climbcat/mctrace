@@ -29,7 +29,6 @@
 #include "src/PSI_DMC_config.h"
 
 
-
 struct NeutronTrajectory {
     NeutronTrajectory *next;
     List<Vector3f> event_segments; // these are just pairs of vector3, but they could have been events ...
@@ -97,6 +96,26 @@ NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comp
     return ntrace_head;
 }
 
+void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
+    for (s32 i = 0; i < comps.len; ++i) {
+        Component *comp = comps.arr[i];
+
+        printf("%.*s\n", comp->name.len, comp->name.str);
+        PrintTransform(g_mcdis_t_world);
+
+        McDisplayNext(cbui.ctx->a_pers, Matrix4f_Identity());
+        DisplayComponent(comp);        
+
+        comp->display = {};
+        comp->display.type = WFT_SEGMENTS;
+        comp->display.transform = comp->transform->t_world;
+        comp->display.color = ComponentCatToColor(comp->cat);
+        comp->display.segments.arr = g_mcdis_anchors.lst;
+        comp->display.segments.len = g_mcdis_anchors.len;
+        comp->display.segments.max = g_mcdis_anchors.len;
+        comp->display.CalculateAABox();
+    }
+}
 
 void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp) {
     while (traces) {
@@ -157,7 +176,6 @@ void RenderMonitors(Array<Monitor> monitors) {
         }
     }
 }
-
 
 Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
     List<Monitor> monitors = InitList<Monitor>(a_dest, 0);
