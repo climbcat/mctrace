@@ -118,8 +118,8 @@ void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
 }
 
 void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp) {
-    Color traj_col = COLOR_BLACK;
-    traj_col.a = 64;
+    Color traj_col = COLOR_GRAY_75;
+    //traj_col.a = 64;
     while (traces) {
         for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
             Vector3f a = traces->event_segments.lst[2*i];
@@ -209,7 +209,8 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
 void RunProgram() {
     TimeFunction;
 
-    CbuiInit("mctrace", true);
+    bool do_fullscreen = true;
+    CbuiInit("mctrace", do_fullscreen);
     Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
     OrbitCamera cam = OrbitCameraInit(persp.aspect);
 
@@ -239,6 +240,9 @@ void RunProgram() {
     Array<Monitor> monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, config.comps);
 
 
+    Component *comp_selected = NULL;
+
+
     // app display
     while (cbui.running) {
         // frame start
@@ -256,6 +260,8 @@ void RunProgram() {
 
             if (wf.type == WFT_SEGMENTS && comp->interactable) {
                 Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, wf, 0.02f);
+                //box.color = Color { 173, 192, 216, 200 };
+                box.color = Color { 74, 78, 121, 128 };
 
                 Ray mouse_ray = CameraGetRayWorld(cam.view, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
                 bool collided = BoxCollideSLAB(mouse_ray, box);
@@ -265,13 +271,24 @@ void RunProgram() {
                     if (lft.ended_down) {
                         box.style = WFR_FAT;
                     }
-                    if (lft.pushed) {
+                    if (lft.dblclicked) {
                         cam.center = box.Center();
                         cam.radius = box.SizeBallpark() * 1.5f;
+
+                        comp_selected = comp;
                     }
+
                     scene_objs.Add(box);
                 }
 
+                if (comp == comp_selected) {
+                    if (collided) {
+                        scene_objs.Pop();
+                    }
+
+                    box.style = WFR_FAT;
+                    scene_objs.Add(box);
+                }
             }
         }
 
