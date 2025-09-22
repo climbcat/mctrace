@@ -119,7 +119,6 @@ void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
 
 void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp) {
     Color traj_col = COLOR_GRAY_75;
-    //traj_col.a = 64;
     while (traces) {
         for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
             Vector3f a = traces->event_segments.lst[2*i];
@@ -209,10 +208,10 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
 void RunProgram() {
     TimeFunction;
 
-    bool do_fullscreen = true;
+    bool do_fullscreen = false;
     CbuiInit("mctrace", do_fullscreen);
     Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
-    OrbitCamera cam = OrbitCameraInit(persp.aspect);
+    OrbitCamera cam = OrbitCameraInit();
 
     //s32 ncount = 1e6;
     s32 ncount = 1e5;
@@ -222,17 +221,17 @@ void RunProgram() {
     Array<Wireframe> scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
     Wireframe plane = CreatePlaneDetailed(10, 60, 6);
 
-    Vector3f v_inst_center = { 0, -0.5f, 25 };
-    plane.transform = TransformBuildTranslation( v_inst_center );
+    Vector3f v_instr_center = { 0, -0.5f, 25 };
+    plane.transform = TransformBuildTranslation( v_instr_center );
 
     WireframeRawSegments(cbui.ctx->a_pers, &plane);
     scene_objs.Add(plane);
 
-    cam.center = v_inst_center;
-    cam.radius = v_inst_center.z * 2;
+    v_instr_center.y = 0;
+    cam.radius = v_instr_center.z * 1.5;
     cam.phi = 0;
     cam.theta = 25;
-
+    cam.Update(v_instr_center);
 
     // get DISPLAY/TRACE data and PLOT data pointers
     DisplayComponents(cbui.ctx->a_pers, config.comps);
@@ -248,11 +247,13 @@ void RunProgram() {
         // frame start
         CbuiFrameStart();
         OrbitCameraRotateZoom(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
-        OrbitCameraPanInPlane(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
+        //OrbitCameraPanInPlane(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
         scene_objs.len = 0;
         scene_objs.Add(plane);
 
         // swoop up component wireframes for rendering
+        bool collided_this_frame = false;
+        Button lft = MouseLeft();
         for (s32 i = 0; i < config.comps.len; ++i) {
             Component *comp = config.comps.arr[i];
             Wireframe wf = comp->display;
@@ -260,20 +261,19 @@ void RunProgram() {
 
             if (wf.type == WFT_SEGMENTS && comp->interactable) {
                 Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, wf, 0.02f);
-                //box.color = Color { 173, 192, 216, 200 };
                 box.color = Color { 74, 78, 121, 128 };
 
                 Ray mouse_ray = CameraGetRayWorld(cam.view, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
                 bool collided = BoxCollideSLAB(mouse_ray, box);
+                collided_this_frame |= collided;
 
                 if (collided) {
-                    Button lft = MouseLeft();
                     if (lft.ended_down) {
                         box.style = WFR_FAT;
                     }
                     if (lft.dblclicked) {
-                        cam.center = box.Center();
-                        cam.radius = box.SizeBallpark() * 1.5f;
+                        cam.radius = box.SizeBallpark() * 1.25f;
+                        cam.SetRelativeTo(box.transform);
 
                         comp_selected = comp;
                     }
@@ -290,6 +290,14 @@ void RunProgram() {
                     scene_objs.Add(box);
                 }
             }
+        }
+
+        if (collided_this_frame == false && lft.clicked) {
+            comp_selected = NULL;
+        }
+
+        if (comp_selected == NULL) {
+            cam.SetRelativeWorld();
         }
 
         // render calls
