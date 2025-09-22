@@ -272,9 +272,7 @@ void RunProgram() {
                         box.style = WFR_FAT;
                     }
                     if (lft.dblclicked) {
-                        cam.radius = box.SizeBallpark() * 1.25f;
-                        cam.SetRelativeTo(box.transform);
-
+                        cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
                         comp_selected = comp;
                     }
 
@@ -297,7 +295,8 @@ void RunProgram() {
         }
 
         if (comp_selected == NULL) {
-            cam.SetRelativeWorld();
+            // TODO: what should we do with the camera, now?
+            //cam.SetRelativeWorld();
         }
 
         // render calls
