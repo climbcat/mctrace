@@ -35,7 +35,6 @@ struct NeutronTrajectory {
 };
 
 NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount, u32 ncount_record_as_trajectories) {
-
     g_do_trace_trajectories = true;
     NeutronTrajectory *ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));;
     NeutronTrajectory *ntrace_prev = ntrace;
@@ -139,30 +138,26 @@ void RenderWireframes(Array<Wireframe> objs, Matrix4f view, Perspective persp) {
 
 void RenderMonitors(Array<Monitor> monitors) {
     UI_LayoutVertical();
+    UI_SpaceV(10);
     UI_LayoutHorizontal();
+    UI_SpaceH(10);
 
     // labels
     for (u32 i = 0; i < monitors.len; ++i) {
         Monitor mon = monitors.arr[i];
 
         if (mon.mon_tpe == MT_2D) {
-            Str text = StrCat(mon.comp_name, " | ");
-            Widget *lbl = UI_Label( (const char*) StrZ(text) );
+            Widget *l = UI_LayoutVertical(0);
+            l->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+            l->sz_border = 1;
+            l->col_border = COLOR_BLACK;
+            l->col_bckgrnd = COLOR_WHITE;
+
+            Widget *lbl = UI_Label( (const char*) StrZ(StrCat(mon.comp_name, " ")) );
             lbl->sz_font = FS_18;
-        }
-    }
+            UI_SpaceV(10);
 
-    UI_Pop();
-    UI_LayoutHorizontal();
-
-    // blit plot into some panels
-    for (u32 i = 0; i < monitors.len; ++i) {
-        Monitor mon = monitors.arr[i];
-
-        if (mon.mon_tpe == MT_2D) {
-            Str text = StrCat(mon.comp_name, "_pnl");
-
-            Widget *w = WidgetGetCached( (const char*) StrZ(text) );
+            Widget *w = WidgetGetCached( (const char*) StrZ(StrCat(mon.comp_name, "_pnl")) );
             w->features_flg |= WF_DRAW_BACKGROUND_AND_BORDER;
             w->w = mon.binm_x;
             w->h = mon.binn_y;
@@ -173,7 +168,20 @@ void RenderMonitors(Array<Monitor> monitors) {
             WidgetTreeSibling(w);
 
             // TODO: we want to express this as a sprite, which will then get properly blitted during FrameEnd
+            //
+            // jg-250922: This can be done by pushing a sprite with SpriteBufferPush().
+            //      However, we still need a way to push it to the "top" of the stack.
+            //      This also works with a "texture" that has a "texture id". This means registering textures,
+            //      per-frame or persistently. It is fine to put it on the appropriate lifescale areana, but 
+            //      we also need to register the texture with an ID in a persistent hashmap; How should it be
+            //      de-registered, then?
+            //
+            //      Temporary hack: We store the widget in our Monitor and draw it at the right time.
             MonitorBlit(cbui.ctx->a_tmp, mon, w->x0, w->y0, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
+            UI_SpaceV(10);
+
+            UI_Pop();
+            UI_SpaceH(10);
         }
     }
 }
@@ -203,6 +211,24 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
 
     return result;
 }
+
+
+enum McTraceMode {
+    MTM_UNDEF,
+    MTM_TRACE,
+
+    MTM_CNT
+};
+
+
+struct McTraceApp {
+    bool do_display;
+    bool do_plot;
+    bool do_rays;
+    bool do_plane;
+    McTraceMode mode;
+    Component *comp_selected = NULL;
+};
 
 
 void RunProgram() {
@@ -239,7 +265,12 @@ void RunProgram() {
     Array<Monitor> monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, config.comps);
 
 
-    Component *comp_selected = NULL;
+    McTraceApp app = {};
+    app.mode = MTM_TRACE;
+    app.do_display = true;
+    app.do_plane = true;
+    app.do_rays = true;
+    app.do_plot = true;
 
 
     // app display
@@ -249,7 +280,6 @@ void RunProgram() {
         OrbitCameraRotateZoom(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
         OrbitCameraPanInPlane(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
         scene_objs.len = 0;
-        scene_objs.Add(plane);
 
         // swoop up component wireframes for rendering
         bool collided_this_frame = false;
@@ -273,13 +303,13 @@ void RunProgram() {
                     }
                     if (lft.dblclicked) {
                         cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
-                        comp_selected = comp;
+                        app.comp_selected = comp;
                     }
 
                     scene_objs.Add(box);
                 }
 
-                if (comp == comp_selected) {
+                if (comp == app.comp_selected) {
                     if (collided) {
                         scene_objs.Pop();
                     }
@@ -291,18 +321,35 @@ void RunProgram() {
         }
 
         if (collided_this_frame == false && lft.clicked) {
-            comp_selected = NULL;
+            app.comp_selected = NULL;
         }
 
-        if (comp_selected == NULL) {
+        if (app.comp_selected == NULL) {
             // TODO: what should we do with the camera, now?
             //cam.SetRelativeWorld();
         }
 
+        if (GetChar('p')) { app.do_plot = !app.do_plot; }
+        if (GetChar('l')) { app.do_plane = !app.do_plane; }
+        if (GetChar('r')) { app.do_rays = !app.do_rays; }
+        if (GetChar('d')) { app.do_display = !app.do_display; }
+
         // render calls
-        RenderTrajectories(traces_first, cam.view, persp);
-        RenderWireframes(scene_objs, cam.view, persp);
-        RenderMonitors(monitors);
+        if (app.do_display) {
+            if (app.do_rays) {
+                RenderTrajectories(traces_first, cam.view, persp);
+            }
+
+            if (app.do_plane) {
+                scene_objs.Add(plane);
+            }
+
+            RenderWireframes(scene_objs, cam.view, persp);
+
+            if (app.do_plot) {
+                RenderMonitors(monitors);
+            }
+        }
     }
 
     CbuiExit();
