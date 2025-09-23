@@ -290,13 +290,14 @@ void RunProgram() {
     app.do_display = true;
     app.do_plane = true;
     app.do_rays = true;
-    app.do_plot = true;
+    app.do_plot = false;
 
 
     // app display
     while (cbui.running) {
         // frame start
         CbuiFrameStart();
+        PerspectiveSetAspectAndP(&persp, cbui.plf.width, cbui.plf.height);
         OrbitCameraRotateZoom(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
         OrbitCameraPanInPlane(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
         scene_objs.len = 0;
@@ -316,14 +317,17 @@ void RunProgram() {
 
                 Ray mouse_ray = CameraGetRayWorld(cam.view, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
                 bool collided = BoxCollideSLAB(mouse_ray, box);
-                collided_this_frame |= collided;
 
-                if (collided) {
-                    if (lft.ended_down) {
-                        box.style = WFR_FAT;
-                    }
+                if (collided && (collided_this_frame == false)) {
+                    collided_this_frame = true;
+
                     if (lft.dblclicked) {
+                        box.style = WFR_FAT;
                         cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
+                        app.comp_selected = comp;
+                    }
+                    else if (lft.clicked) {
+                        box.style = WFR_FAT;
                         app.comp_selected = comp;
                     }
 
