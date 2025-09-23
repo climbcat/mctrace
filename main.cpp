@@ -309,7 +309,8 @@ void RunProgram() {
             Wireframe wf = comp->display;
             scene_objs.Add(wf);
 
-            if (wf.type == WFT_SEGMENTS && comp->interactable) {
+
+            if (app.do_plot == false && wf.type == WFT_SEGMENTS && comp->interactable) {
                 Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, wf, 0.02f);
                 box.color = Color { 74, 78, 121, 128 };
 
@@ -340,13 +341,8 @@ void RunProgram() {
             }
         }
 
-        if (collided_this_frame == false && lft.clicked) {
+        if (app.do_plot == false && collided_this_frame == false && lft.clicked) {
             app.comp_selected = NULL;
-        }
-
-        if (app.comp_selected == NULL) {
-            // TODO: what should we do with the camera, now?
-            //cam.SetRelativeWorld();
         }
 
         if (GetChar('p')) { app.do_plot = !app.do_plot; }
@@ -364,20 +360,26 @@ void RunProgram() {
                 scene_objs.Add(plane);
             }
 
-            RenderWireframes(scene_objs, cam.view, persp);
-
-            Component *monitor_clicked = NULL;
             if (app.do_plot) {
-                monitor_clicked = RenderMonitors(monitors);
-            }
-            if (monitor_clicked) {
-                monitor_clicked;
+                Component *monitor_clicked = RenderMonitors(monitors);
 
-                Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, monitor_clicked->display, 0.02f);
-                box.color = Color { 74, 78, 121, 128 };
+                if (monitor_clicked) {
+                    app.comp_selected = monitor_clicked;
+                }
+                if (app.comp_selected && app.comp_selected->monitor.mon_tpe == MT_2D) {
 
-                cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
+                    Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app.comp_selected->display, 0.02f);
+                    //box.color = Color { 74, 78, 121, 128 };
+                    box.color = COLOR_RED;
+                    scene_objs.Add(box);
+
+                    if (monitor_clicked) {
+                        cam.SetRelativeTo(box.transform, box.SizeBallpark() * 2);
+                    }
+                }
             }
+
+            RenderWireframes(scene_objs, cam.view, persp);
         }
     }
 
