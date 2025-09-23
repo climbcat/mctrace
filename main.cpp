@@ -136,31 +136,48 @@ void RenderWireframes(Array<Wireframe> objs, Matrix4f view, Perspective persp) {
     }
 }
 
-void RenderMonitors(Array<Monitor> monitors) {
+Component *RenderMonitors(Array<Monitor> monitors) {
     UI_LayoutVertical();
     UI_SpaceV(10);
     UI_LayoutHorizontal();
     UI_SpaceH(10);
+
+    s32 plot_area_width = 128;
+    s32 plot_area_height = 128;
+
+    Component *result_clicked = NULL;
 
     // labels
     for (u32 i = 0; i < monitors.len; ++i) {
         Monitor mon = monitors.arr[i];
 
         if (mon.mon_tpe == MT_2D) {
-            Widget *l = UI_LayoutVertical(0);
+            Widget *l = WidgetGetCached( (const char*) StrZ(StrCat(mon.comp_name, "_pnl")) );
+            WidgetTreeBranch(l);
             l->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+            l->SetFlag(WF_CAN_COLLIDE);
+            l->SetFlag(WF_LAYOUT_VERTICAL);
+            l->SetFlag(WF_ALIGN_CENTER);
             l->sz_border = 1;
             l->col_border = COLOR_BLACK;
             l->col_bckgrnd = COLOR_WHITE;
+            l->w = plot_area_height * 1.4;
+            l->h = plot_area_width * 1.4;
+            if (l->hot) {
+                l->col_border = COLOR_RED;
+            }
+            if (l->clicked) {
+                result_clicked = (Component*) mon.comp;
+            }
 
             Widget *lbl = UI_Label( (const char*) StrZ(StrCat(mon.comp_name, " ")) );
             lbl->sz_font = FS_18;
             UI_SpaceV(10);
 
-            Widget *w = WidgetGetCached( (const char*) StrZ(StrCat(mon.comp_name, "_pnl")) );
+            Widget *w = WidgetGetCached( (const char*) StrZ(StrCat(mon.comp_name, "_plot")) );
             w->features_flg |= WF_DRAW_BACKGROUND_AND_BORDER;
-            w->w = mon.binm_x;
-            w->h = mon.binn_y;
+            w->w = plot_area_width;
+            w->h = plot_area_height;
             w->sz_border = 0;
             w->col_bckgrnd = COLOR_WHITE;
             w->col_bckgrnd.a = 0;
@@ -177,13 +194,15 @@ void RenderMonitors(Array<Monitor> monitors) {
             //      de-registered, then?
             //
             //      Temporary hack: We store the widget in our Monitor and draw it at the right time.
-            MonitorBlit(cbui.ctx->a_tmp, mon, w->x0, w->y0, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
+            MonitorBlit(cbui.ctx->a_tmp, mon, w->x0, w->y0, plot_area_width, plot_area_height, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
             UI_SpaceV(10);
 
             UI_Pop();
             UI_SpaceH(10);
         }
     }
+
+    return result_clicked;
 }
 
 Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
@@ -197,6 +216,7 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
         // NOTE: not sure where this should be initialized, probably in the component_create generated function 
         // TODO: init this field in generated code
         comp->monitor.comp_name = comp->name;
+        comp->monitor.comp = comp;
 
         if (comp->monitor.mon_tpe != MT_NOT) {
             ArenaAlloc(a_dest, sizeof(Monitor));
@@ -346,8 +366,17 @@ void RunProgram() {
 
             RenderWireframes(scene_objs, cam.view, persp);
 
+            Component *monitor_clicked = NULL;
             if (app.do_plot) {
-                RenderMonitors(monitors);
+                monitor_clicked = RenderMonitors(monitors);
+            }
+            if (monitor_clicked) {
+                monitor_clicked;
+
+                Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, monitor_clicked->display, 0.02f);
+                box.color = Color { 74, 78, 121, 128 };
+
+                cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
             }
         }
     }

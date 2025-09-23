@@ -83,15 +83,11 @@ void MonitorPrint(Monitor *mon) {
 }
 
 
-void MonitorBlit(MArena *a_tmp, Monitor monitor, s32 mon_left, s32 mon_top, s32 dest_width, s32 dest_height, Color* dest_buffer) {
+void MonitorBlit(MArena *a_tmp, Monitor monitor, s32 mon_left, s32 mon_top, s32 sprite_width, s32 sprite_height, s32 dest_width, s32 dest_height, Color* dest_buffer) {
     // simply blit 2D monitor contents into the image/dest buffer
 
     // DBG
     Monitor *mon = &monitor;
-
-    // sprite size
-    s32 width = mon->binm_x;
-    s32 height = mon->binn_y;
 
     // sprite position in dest buffer 
     s32 left = mon_left;
@@ -134,7 +130,7 @@ void MonitorBlit(MArena *a_tmp, Monitor monitor, s32 mon_left, s32 mon_top, s32 
         }
     }
 
-    Blit32Bit(width, height, left, top, u0, u1, v0, v1, src_width, src_height, src_colbuff, dest_width, dest_height, dest_buffer);
+    Blit32Bit(sprite_width, sprite_height, left, top, u0, u1, v0, v1, src_width, src_height, src_colbuff, dest_width, dest_height, dest_buffer);
 }
 
 

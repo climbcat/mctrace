@@ -112,6 +112,7 @@ enum CompMonitorType {
 
 struct Monitor {
     CompMonitorType mon_tpe;
+    void *comp;
 
     Str comp_name;
     Str title;
