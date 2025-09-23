@@ -251,10 +251,9 @@ struct McTraceApp {
 };
 
 
-void RunProgram() {
+void RunProgram(bool do_fullscreen) {
     TimeFunction;
 
-    bool do_fullscreen = false;
     CbuiInit("mctrace", do_fullscreen);
     Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
     OrbitCamera cam = OrbitCameraInit();
@@ -401,16 +400,22 @@ int main (int argc, char **argv) {
     CbuiAssertVersion(0, 2, 3);
 
     bool force_test = false;
+    bool do_fullscreen = false;
+
+    if (CLAContainsArg("--fullscreen", argc, argv) || CLAContainsArg("-f", argc, argv)) {
+        do_fullscreen = true;
+    }
 
     if (CLAContainsArg("--help", argc, argv) || CLAContainsArg("-h", argc, argv)) {
-        printf("--help:          display help (this text)\n");
-        printf("--test:          run test functions\n");
+        printf("--help / -h         display help (this text)\n");
+        printf("--fullscreen / -f   display help (this text)\n");
+        printf("--test              run test functions\n");
         exit(0);
     }
     else if (CLAContainsArg("--test", argc, argv) || force_test) {
         Test();
     }
     else {
-        RunProgram();
+        RunProgram(do_fullscreen);
     }
 }
