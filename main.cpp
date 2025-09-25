@@ -116,14 +116,13 @@ void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
     }
 }
 
-void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp) {
-    Color traj_col = COLOR_GRAY_75;
+void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp, Color trajectory_color) {
     while (traces) {
         for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
             Vector3f a = traces->event_segments.lst[2*i];
             Vector3f b = traces->event_segments.lst[2*i + 1];
 
-            RenderLineSegment(cbui.image_buffer, TransformGetInverse(view), persp, a, b, cbui.plf.width, cbui.plf.height, traj_col);
+            RenderLineSegment(cbui.image_buffer, TransformGetInverse(view), persp, a, b, cbui.plf.width, cbui.plf.height, trajectory_color);
         }
 
         traces = traces->next;
@@ -235,20 +234,28 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
 
 enum McTraceMode {
     MTM_UNDEF,
-    MTM_TRACE,
+    MTM_DISPLAY,
+    MTM_PLOT,
 
     MTM_CNT
 };
 
 
 struct McTraceApp {
-    bool do_display;
-    bool do_plot;
     bool do_rays;
     bool do_plane;
+
     McTraceMode mode;
     Component *comp_selected = NULL;
 };
+
+
+#define MCT_COLOR_SELECTION_BOX         (( Color { 74, 78, 121, 128 } ))
+#define MCT_COLOR_MONITOR               COLOR_RED
+#define MCT_COLOR_TRAJECTORY            COLOR_GRAY_75
+#define MCT_COLOR_OPTICS                COLOR_BLUE
+#define MCT_COLOR_SOURCE_OR_SAMPLE      COLOR_RED
+#define MCT_COLOR_DEFOCUSED             COLOR_GRAY_30
 
 
 void RunProgram(bool do_fullscreen) {
@@ -285,11 +292,9 @@ void RunProgram(bool do_fullscreen) {
 
 
     McTraceApp app = {};
-    app.mode = MTM_TRACE;
-    app.do_display = true;
+    app.mode = MTM_DISPLAY;
     app.do_plane = true;
     app.do_rays = true;
-    app.do_plot = false;
 
 
     // app display
@@ -300,90 +305,120 @@ void RunProgram(bool do_fullscreen) {
         OrbitCameraRotateZoom(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
         OrbitCameraPanInPlane(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
         scene_objs.len = 0;
-
-        // swoop up component wireframes for rendering
-        bool collided_this_frame = false;
         Button lft = MouseLeft();
-        for (s32 i = 0; i < config.comps.len; ++i) {
-            Component *comp = config.comps.arr[i];
-            Wireframe wf = comp->display;
-            scene_objs.Add(wf);
 
 
-            if (app.do_plot == false && wf.type == WFT_SEGMENTS && comp->interactable) {
-                Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, wf, 0.02f);
-                box.color = Color { 74, 78, 121, 128 };
+        if (app.mode == MTM_DISPLAY) {
+            bool collided_this_frame = false;
 
-                Ray mouse_ray = CameraGetRayWorld(cam.view, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
-                bool collided = BoxCollideSLAB(mouse_ray, box);
+            for (s32 i = 0; i < config.comps.len; ++i) {
+                Component *comp = config.comps.arr[i];
+                scene_objs.Add(comp->display);
 
-                if (collided && (collided_this_frame == false)) {
-                    collided_this_frame = true;
+                if (comp->interactable) {
+                    Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, comp->display, 0.02f);
+                    box.color = MCT_COLOR_SELECTION_BOX;
 
-                    if (lft.dblclicked) {
+                    Ray mouse_ray = CameraGetRayWorld(cam.view, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
+                    bool collided = BoxCollideSLAB(mouse_ray, box);
+
+                    if (collided && (collided_this_frame == false)) {
+                        collided_this_frame = true;
+
+                        if (lft.dblclicked) {
+                            box.style = WFR_FAT;
+                            cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
+                            app.comp_selected = comp;
+                        }
+                        else if (lft.clicked) {
+                            box.style = WFR_FAT;
+                            app.comp_selected = comp;
+                        }
+
+                        scene_objs.Add(box);
+                    }
+
+                    if (comp == app.comp_selected) {
+                        if (collided) {
+                            scene_objs.Pop();
+                        }
+
                         box.style = WFR_FAT;
-                        cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
-                        app.comp_selected = comp;
+                        scene_objs.Add(box);
                     }
-                    else if (lft.clicked) {
-                        box.style = WFR_FAT;
-                        app.comp_selected = comp;
-                    }
-
-                    scene_objs.Add(box);
                 }
+            }
 
-                if (comp == app.comp_selected) {
-                    if (collided) {
-                        scene_objs.Pop();
-                    }
-
-                    box.style = WFR_FAT;
-                    scene_objs.Add(box);
-                }
+            // click selection off
+            if (collided_this_frame == false && lft.clicked) {
+                app.comp_selected = NULL;
             }
         }
 
-        if (app.do_plot == false && collided_this_frame == false && lft.clicked) {
-            app.comp_selected = NULL;
+
+        else if (app.mode == MTM_PLOT) {
+            for (s32 i = 0; i < config.comps.len; ++i) {
+                Component *comp = config.comps.arr[i];
+                Wireframe comp_wireframe = comp->display;
+                if (comp->cat == CCAT_monitors) {
+                    comp_wireframe.color = MCT_COLOR_MONITOR;
+                    comp_wireframe.style = WFR_FAT;
+                }
+                else {
+                    comp_wireframe.color = MCT_COLOR_DEFOCUSED;
+                }
+
+                scene_objs.Add(comp_wireframe);
+            }
         }
 
-        if (GetChar('p')) { app.do_plot = !app.do_plot; }
+
+        if (GetSpace()) {
+            if (app.mode == MTM_DISPLAY) {
+                app.mode = MTM_PLOT;
+            }
+            else {
+                app.mode = MTM_DISPLAY;
+            }
+        }
         if (GetChar('l')) { app.do_plane = !app.do_plane; }
         if (GetChar('r')) { app.do_rays = !app.do_rays; }
-        if (GetChar('d')) { app.do_display = !app.do_display; }
+
 
         // render calls
-        if (app.do_display) {
-            if (app.do_rays) {
-                RenderTrajectories(traces_first, cam.view, persp);
-            }
-
-            if (app.do_plane) {
-                scene_objs.Add(plane);
-            }
-
-            if (app.do_plot) {
-                Component *monitor_clicked = RenderMonitors(monitors);
-
-                if (monitor_clicked) {
-                    app.comp_selected = monitor_clicked;
-                }
-                if (app.comp_selected && app.comp_selected->monitor.mon_tpe == MT_2D) {
-
-                    Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app.comp_selected->display, 0.02f);
-                    //box.color = Color { 74, 78, 121, 128 };
-                    box.color = COLOR_RED;
-                    scene_objs.Add(box);
-
-                    if (monitor_clicked) {
-                        cam.SetRelativeTo(box.transform, box.SizeBallpark() * 2);
-                    }
-                }
-            }
-
-            RenderWireframes(scene_objs, cam.view, persp);
+        if (app.do_rays) {
+            RenderTrajectories(traces_first, cam.view, persp, MCT_COLOR_TRAJECTORY);
         }
+
+        if (app.do_plane) {
+            scene_objs.Add(plane);
+        }
+
+
+        if (app.mode == MTM_PLOT) {
+            Component *monitor_clicked = RenderMonitors(monitors);
+
+            if (monitor_clicked) {
+                app.comp_selected = monitor_clicked;
+            }
+            if (app.comp_selected && app.comp_selected->monitor.mon_tpe == MT_2D) {
+
+                Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app.comp_selected->display, 0.02f);
+                box.color = MCT_COLOR_SELECTION_BOX;
+                scene_objs.Add(box);
+
+                if (monitor_clicked && lft.dblclicked) {
+                    cam.SetRelativeTo(box.transform, box.SizeBallpark() * 2);
+                }
+                else if (monitor_clicked) {
+                    printf("clicked\n");
+                    cam.SetRelativeTo(box.transform);
+                }
+            }
+        }
+
+
+        RenderWireframes(scene_objs, cam.view, persp);
     }
 
     CbuiExit();
