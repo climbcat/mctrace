@@ -232,6 +232,19 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
 }
 
 
+Vector2f PointToScreen(Vector3f point, Matrix4f view_l2w, Perspective persp, u32 screen_width, u32 screen_height) {
+    Matrix4f view_w2l = TransformGetInverse(view_l2w);
+    Vector3f p_cam = TransformPoint(view_w2l, point);
+    Vector3f p_ndc = TransformPerspective(persp.proj, p_cam);
+
+    Vector2f p_screen = {};
+    p_screen.x = (p_ndc.x + 1) / 2 * screen_width;
+    p_screen.y = (p_ndc.y + 1) / 2 * screen_height;
+
+    return p_screen;
+}
+
+
 enum McTraceMode {
     MTM_UNDEF,
     MTM_DISPLAY,
@@ -306,6 +319,7 @@ void RunProgram(bool do_fullscreen) {
         OrbitCameraPanInPlane(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
         scene_objs.len = 0;
         Button lft = MouseLeft();
+        UI_SetFontSize(FS_24);
 
 
         if (app.mode == MTM_DISPLAY) {
@@ -335,6 +349,23 @@ void RunProgram(bool do_fullscreen) {
                             app.comp_selected = comp;
                         }
 
+                        // draw hover component name
+                        if (true) {
+                            Widget *w = UI_LayoutVertical();
+                            w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+                            w->SetFlag(WF_ABSREL_POSITION);
+                            w->col_bckgrnd = COLOR_WHITE;
+                            w->col_border = COLOR_BLACK;
+                            w->sz_border = 1;
+
+                            Vector2f p = CurserPos();
+                            w->x0 = p.x + 15;
+                            w->y0 = p.y + 15;
+
+                            UI_Label(comp->name.str);
+                            UI_Pop();
+                        }
+
                         scene_objs.Add(box);
                     }
 
@@ -345,6 +376,39 @@ void RunProgram(bool do_fullscreen) {
 
                         box.style = WFR_FAT;
                         scene_objs.Add(box);
+
+
+                        // draw selected component info box
+                        if (true) {
+                            Widget *w = UI_LayoutVertical();
+                            w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+                            w->col_bckgrnd = COLOR_WHITE;
+                            w->col_border = COLOR_BLACK;
+                            w->sz_border = 1;
+
+                            Str line1 = StrCat(comp->name, " (");
+                            line1 = StrCat(line1, comp->type_name);
+                            line1 = StrCat(line1, ")");
+                            
+                            UI_Label(StrZ(line1));
+                            comp->transform;
+
+                            ComponentSharedHeader *hdr = comp->GetHeader();
+
+                            char *buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
+                            sprintf(buff, "x = %.2f", hdr->position_absolute.x);
+                            UI_Label(buff);
+
+                            buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
+                            sprintf(buff, "y = %.2f", hdr->position_absolute.y);
+                            UI_Label(buff);
+
+                            buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
+                            sprintf(buff, "z = %.2f", hdr->position_absolute.z);
+                            UI_Label(buff);
+
+                            UI_Pop();
+                        }
                     }
                 }
             }
