@@ -29,6 +29,14 @@
 #include "src/PSI_DMC_config.h"
 
 
+#define MCT_COLOR_SELECTION_BOX         (( Color { 74, 78, 121, 128 } ))
+#define MCT_COLOR_MONITOR               COLOR_RED
+#define MCT_COLOR_TRAJECTORY            COLOR_GRAY_75
+#define MCT_COLOR_OPTICS                COLOR_BLUE
+#define MCT_COLOR_SOURCE_OR_SAMPLE      COLOR_RED
+#define MCT_COLOR_DEFOCUSED             COLOR_GRAY_30
+
+
 struct NeutronTrajectory {
     NeutronTrajectory *next;
     List<Vector3f> event_segments; // these are just pairs of vector3, but they could have been events ...
@@ -245,6 +253,58 @@ Vector2f PointToScreen(Vector3f point, Matrix4f view_l2w, Perspective persp, u32
 }
 
 
+void DrawComponentInfoBox(Component *comp) {
+    Widget *w = UI_LayoutVertical();
+    w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+    w->col_bckgrnd = COLOR_WHITE;
+    w->col_border = COLOR_BLACK;
+    w->sz_border = 1;
+
+    Str line1 = StrCat(comp->name, " (");
+    line1 = StrCat(line1, comp->type_name);
+    line1 = StrCat(line1, ")");
+    
+    UI_Label(StrZ(line1));
+    comp->transform;
+
+    ComponentSharedHeader *hdr = comp->GetHeader();
+
+    char *buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
+    sprintf(buff, "x = %.2f", hdr->position_absolute.x);
+    UI_Label(buff);
+
+    buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
+    sprintf(buff, "y = %.2f", hdr->position_absolute.y);
+    UI_Label(buff);
+
+    buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
+    sprintf(buff, "z = %.2f", hdr->position_absolute.z);
+    UI_Label(buff);
+
+    UI_Pop();
+}
+
+
+void DrawComponentHover(Component *comp) {
+    Widget *w = UI_LayoutVertical();
+    w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+    w->SetFlag(WF_ABSREL_POSITION);
+    w->col_bckgrnd = COLOR_WHITE;
+    w->col_border = COLOR_BLACK;
+    w->sz_border = 1;
+
+    Vector2f p = CurserPos();
+    w->x0 = p.x + 15;
+    w->y0 = p.y + 15;
+
+    UI_Label(comp->name.str);
+    UI_Pop();
+}
+
+
+
+
+
 enum McTraceMode {
     MTM_UNDEF,
     MTM_DISPLAY,
@@ -263,12 +323,95 @@ struct McTraceApp {
 };
 
 
-#define MCT_COLOR_SELECTION_BOX         (( Color { 74, 78, 121, 128 } ))
-#define MCT_COLOR_MONITOR               COLOR_RED
-#define MCT_COLOR_TRAJECTORY            COLOR_GRAY_75
-#define MCT_COLOR_OPTICS                COLOR_BLUE
-#define MCT_COLOR_SOURCE_OR_SAMPLE      COLOR_RED
-#define MCT_COLOR_DEFOCUSED             COLOR_GRAY_30
+
+void DoComponentSelection(McTraceApp *app, Array<Component*> comps, Perspective *persp, OrbitCamera *cam, Array<Wireframe> *scene_objs) {
+    bool collision_this_frame = false;
+    Button lft = MouseLeft();
+
+    for (s32 i = 0; i < comps.len; ++i) {
+        Component *comp = comps.arr[i];
+        comp->collided_this_frame = false;
+        scene_objs->Add(comp->display);
+
+        if (comp->interactable) {
+            Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, comp->display, 0.02f);
+            box.color = MCT_COLOR_SELECTION_BOX;
+
+            Ray mouse_ray = CameraGetRayWorld(cam->view, persp->fov, persp->aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
+            comp->collided_this_frame = BoxCollideSLAB(mouse_ray, box);
+
+            if (comp->collided_this_frame && (collision_this_frame == false)) {
+                collision_this_frame = true;
+
+                if (lft.dblclicked) {
+                    box.style = WFR_FAT;
+                    cam->SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
+                    app->comp_selected = comp;
+                }
+                else if (lft.clicked) {
+                    box.style = WFR_FAT;
+                    app->comp_selected = comp;
+                }
+
+                // draw hover component name
+                DrawComponentHover(comp);
+                scene_objs->Add(box);
+            }
+
+            if (comp == app->comp_selected) {
+                box.style = WFR_FAT;
+                scene_objs->Add(box);
+
+                // draw selected component info box
+                DrawComponentInfoBox(comp);
+            }
+        }
+    }
+
+    // selection off
+    if (collision_this_frame == false && lft.clicked) {
+        app->comp_selected = NULL;
+    }
+}
+
+
+void DoPlotMode(McTraceApp *app, Array<Component*> comps, Array<Monitor> monitors, OrbitCamera *cam, Array<Wireframe> *scene_objs) {
+    Button lft = MouseLeft();
+
+    for (s32 i = 0; i < comps.len; ++i) {
+        Component *comp = comps.arr[i];
+        Wireframe comp_wireframe = comp->display;
+        if (comp->cat == CCAT_monitors) {
+            comp_wireframe.color = MCT_COLOR_MONITOR;
+            comp_wireframe.style = WFR_FAT;
+        }
+        else {
+            comp_wireframe.color = MCT_COLOR_DEFOCUSED;
+        }
+
+        scene_objs->Add(comp_wireframe);
+    }
+
+    Component *monitor_clicked = RenderMonitors(monitors);
+
+    if (monitor_clicked) {
+        app->comp_selected = monitor_clicked;
+    }
+
+    if (app->comp_selected && app->comp_selected->monitor.mon_tpe == MT_2D) {
+
+        Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
+        box.color = MCT_COLOR_SELECTION_BOX;
+        scene_objs->Add(box);
+
+        if (monitor_clicked && lft.dblclicked) {
+            cam->SetRelativeTo(box.transform, box.SizeBallpark() * 2);
+        }
+        else if (monitor_clicked) {
+            cam->SetRelativeTo(box.transform);
+        }
+    }
+}
 
 
 void RunProgram(bool do_fullscreen) {
@@ -318,125 +461,10 @@ void RunProgram(bool do_fullscreen) {
         OrbitCameraRotateZoom(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
         OrbitCameraPanInPlane(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
         scene_objs.len = 0;
-        Button lft = MouseLeft();
         UI_SetFontSize(FS_24);
+        Button lft = MouseLeft();
 
-
-        if (app.mode == MTM_DISPLAY) {
-            bool collided_this_frame = false;
-
-            for (s32 i = 0; i < config.comps.len; ++i) {
-                Component *comp = config.comps.arr[i];
-                scene_objs.Add(comp->display);
-
-                if (comp->interactable) {
-                    Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, comp->display, 0.02f);
-                    box.color = MCT_COLOR_SELECTION_BOX;
-
-                    Ray mouse_ray = CameraGetRayWorld(cam.view, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
-                    bool collided = BoxCollideSLAB(mouse_ray, box);
-
-                    if (collided && (collided_this_frame == false)) {
-                        collided_this_frame = true;
-
-                        if (lft.dblclicked) {
-                            box.style = WFR_FAT;
-                            cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
-                            app.comp_selected = comp;
-                        }
-                        else if (lft.clicked) {
-                            box.style = WFR_FAT;
-                            app.comp_selected = comp;
-                        }
-
-                        // draw hover component name
-                        if (true) {
-                            Widget *w = UI_LayoutVertical();
-                            w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
-                            w->SetFlag(WF_ABSREL_POSITION);
-                            w->col_bckgrnd = COLOR_WHITE;
-                            w->col_border = COLOR_BLACK;
-                            w->sz_border = 1;
-
-                            Vector2f p = CurserPos();
-                            w->x0 = p.x + 15;
-                            w->y0 = p.y + 15;
-
-                            UI_Label(comp->name.str);
-                            UI_Pop();
-                        }
-
-                        scene_objs.Add(box);
-                    }
-
-                    if (comp == app.comp_selected) {
-                        if (collided) {
-                            scene_objs.Pop();
-                        }
-
-                        box.style = WFR_FAT;
-                        scene_objs.Add(box);
-
-
-                        // draw selected component info box
-                        if (true) {
-                            Widget *w = UI_LayoutVertical();
-                            w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
-                            w->col_bckgrnd = COLOR_WHITE;
-                            w->col_border = COLOR_BLACK;
-                            w->sz_border = 1;
-
-                            Str line1 = StrCat(comp->name, " (");
-                            line1 = StrCat(line1, comp->type_name);
-                            line1 = StrCat(line1, ")");
-                            
-                            UI_Label(StrZ(line1));
-                            comp->transform;
-
-                            ComponentSharedHeader *hdr = comp->GetHeader();
-
-                            char *buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
-                            sprintf(buff, "x = %.2f", hdr->position_absolute.x);
-                            UI_Label(buff);
-
-                            buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
-                            sprintf(buff, "y = %.2f", hdr->position_absolute.y);
-                            UI_Label(buff);
-
-                            buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
-                            sprintf(buff, "z = %.2f", hdr->position_absolute.z);
-                            UI_Label(buff);
-
-                            UI_Pop();
-                        }
-                    }
-                }
-            }
-
-            // click selection off
-            if (collided_this_frame == false && lft.clicked) {
-                app.comp_selected = NULL;
-            }
-        }
-
-
-        else if (app.mode == MTM_PLOT) {
-            for (s32 i = 0; i < config.comps.len; ++i) {
-                Component *comp = config.comps.arr[i];
-                Wireframe comp_wireframe = comp->display;
-                if (comp->cat == CCAT_monitors) {
-                    comp_wireframe.color = MCT_COLOR_MONITOR;
-                    comp_wireframe.style = WFR_FAT;
-                }
-                else {
-                    comp_wireframe.color = MCT_COLOR_DEFOCUSED;
-                }
-
-                scene_objs.Add(comp_wireframe);
-            }
-        }
-
-
+        // handle input
         if (GetSpace()) {
             if (app.mode == MTM_DISPLAY) {
                 app.mode = MTM_PLOT;
@@ -449,6 +477,15 @@ void RunProgram(bool do_fullscreen) {
         if (GetChar('r')) { app.do_rays = !app.do_rays; }
 
 
+        // component hover / selections
+        if (app.mode == MTM_DISPLAY) {
+            DoComponentSelection(&app, config.comps, &persp, &cam, &scene_objs);
+        }
+
+        if (app.mode == MTM_PLOT) {
+            DoPlotMode(&app, config.comps, monitors, &cam, &scene_objs);
+        }
+
         // render calls
         if (app.do_rays) {
             RenderTrajectories(traces_first, cam.view, persp, MCT_COLOR_TRAJECTORY);
@@ -457,30 +494,6 @@ void RunProgram(bool do_fullscreen) {
         if (app.do_plane) {
             scene_objs.Add(plane);
         }
-
-
-        if (app.mode == MTM_PLOT) {
-            Component *monitor_clicked = RenderMonitors(monitors);
-
-            if (monitor_clicked) {
-                app.comp_selected = monitor_clicked;
-            }
-            if (app.comp_selected && app.comp_selected->monitor.mon_tpe == MT_2D) {
-
-                Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app.comp_selected->display, 0.02f);
-                box.color = MCT_COLOR_SELECTION_BOX;
-                scene_objs.Add(box);
-
-                if (monitor_clicked && lft.dblclicked) {
-                    cam.SetRelativeTo(box.transform, box.SizeBallpark() * 2);
-                }
-                else if (monitor_clicked) {
-                    printf("clicked\n");
-                    cam.SetRelativeTo(box.transform);
-                }
-            }
-        }
-
 
         RenderWireframes(scene_objs, cam.view, persp);
     }

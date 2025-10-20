@@ -150,6 +150,7 @@ struct Component {
     Wireframe display;
     Monitor monitor;
     bool interactable;
+    bool collided_this_frame;
 
     // pointer to the underlying component
     void *comp;
