@@ -4,8 +4,32 @@
 #include <cstdio>
 #include <cstddef>
 
-//#include "lib/jg_baselayer.h"
-#include "../baselayer/baselayer_includes.h"
+#include "lib/jg_baselayer.h"
+
+
+// ***************** will be included in jg_baselayer 0.2.5: **************************
+MPool PoolCreate(MArena *a_dest, u32 block_size_min, u32 nblocks) {
+    assert(nblocks > 1);
+
+    MPool p = {};
+    p.block_size = MPOOL_MIN_BLOCK_SIZE * (block_size_min / MPOOL_MIN_BLOCK_SIZE + 1);
+    p.nblocks = nblocks;
+    p.lock = (u64) &p; // this "magic" number is a lifetime constant, checked at allocation time
+    p.mem = (u8*) ArenaAlloc(a_dest, p.block_size * p.nblocks);
+
+    MPoolBlockHdr *freeblck = &p.free_list;
+    for (u32 i = 0; i < nblocks; ++i) {
+        freeblck->next = (MPoolBlockHdr*) (p.mem + i * p.block_size);
+        freeblck->lock = p.lock;
+        freeblck = freeblck->next;
+    }
+    freeblck->next = NULL;
+
+    return p;
+}
+// ************************************************************************************
+
+
 //#include "lib/jg_cbui.h"
 #include "../cbui/cbui_includes.h"
 
@@ -508,7 +532,7 @@ void RunProgram(bool do_fullscreen) {
 int main (int argc, char **argv) {
     TimeProgram;
 
-    BaselayerAssertVersion(0, 2, 5);
+    BaselayerAssertVersion(0, 2, 4);
     CbuiAssertVersion(0, 2, 3);
 
     bool force_test = false;
