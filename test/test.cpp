@@ -73,6 +73,42 @@ void TestComponentFuncitonsRun() {
 }
 
 
+void TestMainLayout() {
+    printf("TestMainLayout\n\n");
+
+
+    CbuiInit("insert_project_name", false);
+
+    // TODO: init
+
+    while (cbui.running) {
+        CbuiFrameStart();
+
+        //
+        UI_Center();
+
+        Widget *q = UI_Branch();
+        q->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+        q->SetFlag(WF_EXPAND_HORIZONTAL);
+        q->SetFlag(WF_EXPAND_VERTICAL);
+        q->col_bckgrnd = COLOR_GREEN;
+
+        Widget *w = UI_Branch();
+        w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+        w->SetFlag(WF_EXPAND_HORIZONTAL);
+        w->SetFlag(WF_EXPAND_VERTICAL);
+        w->col_bckgrnd = COLOR_WHITE;
+        w->sz_border = 30;
+        w->col_border = {};
+
+
+    }
+    CbuiExit();
+
+}
+
+
 void Test() {
-    TestComponentFuncitonsRun();
+    //TestComponentFuncitonsRun();
+    TestMainLayout();
 }
