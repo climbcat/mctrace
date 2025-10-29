@@ -81,27 +81,105 @@ void TestMainLayout() {
 
     // TODO: init
 
+    s32 padding_1 = 20;
+    s32 padding_2 = 10;
+
+    bool b1 = true;
+    bool b2 = false;
+    bool b3 = false;
+    bool b4 = false;
+
     while (cbui.running) {
         CbuiFrameStart();
 
         //
-        UI_Center();
 
-        Widget *q = UI_Branch();
-        q->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
-        q->SetFlag(WF_EXPAND_HORIZONTAL);
-        q->SetFlag(WF_EXPAND_VERTICAL);
-        q->col_bckgrnd = COLOR_GREEN;
+        /*
+        Widget *m1 = UI_Branch();
+        m1->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+        m1->SetFlag(WF_EXPAND_HORIZONTAL);
+        m1->SetFlag(WF_EXPAND_VERTICAL);
+        m1->col_bckgrnd = COLOR_GREEN;
+        */
 
-        Widget *w = UI_Branch();
-        w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
-        w->SetFlag(WF_EXPAND_HORIZONTAL);
-        w->SetFlag(WF_EXPAND_VERTICAL);
-        w->col_bckgrnd = COLOR_WHITE;
-        w->sz_border = 30;
-        w->col_border = {};
+        Widget *m2 = UI_Center();
+        m2->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+        m2->col_bckgrnd = COLOR_GREEN;
+        m2->col_border = COLOR_BLACK;
+        m2->sz_border = 1;
+        m2->padding = padding_1;
+        m2->DBG_tag = StrL("B");
 
 
+        Widget *p = UI_LayoutVertical();
+        p->SetFlag(WF_EXPAND_VERTICAL);
+        p->SetFlag(WF_EXPAND_HORIZONTAL);
+        p->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER); // TODO: what if we had a WF_DRAW_BORDER flag, ignoring the fill
+        p->col_bckgrnd = COLOR_WHITE;
+        p->col_border = COLOR_BLACK;
+        p->sz_border = 1;
+        p->padding = padding_2;
+        p->DBG_tag = StrL("V");
+
+        UI_SetFontSize(FS_18);
+
+        UI_Label("First");
+        UI_Label("Second");
+        UI_Label("Third");
+
+
+        Widget *menu_align = UI_LayoutVertical(0);
+        menu_align->SetFlag(WF_ABSREL_POSITION);
+        menu_align->SetFlag(WF_EXPAND_HORIZONTAL);
+        menu_align->y0 = - (padding_1 + padding_2) + 5;
+        //menu_align->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+        //menu_align->col_border = COLOR_BLACK;
+        //menu_align->sz_border = 1;
+
+
+        Widget *menu_2 = UI_LayoutHorizontal();
+        //menu_2->SetFlag(WF_ABSREL_POSITION);
+        //menu_2->SetFlag(WF_EXPAND_HORIZONTAL);
+        //menu_2->SetFlag(WF_EXPAND_VERTICAL);
+        //menu_2->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+        //menu_2->col_bckgrnd = COLOR_WHITE;
+        //menu_2->col_border = COLOR_BLACK;
+        menu_2->padding = padding_2;
+        //menu_2->sz_border = 1;
+        //menu_2->DBG_tag = StrL("H");
+
+
+        if (UI_ToggleButton2("  Sim  ", &b1)) { b1 = true; b2 = false; b3 = false; b4 = false; }
+        if (UI_ToggleButton2("  Run  ", &b2)) { b1 = false; b2 = true; b3 = false; b4 = false; }
+        if (UI_ToggleButton2(" Trace ", &b3)) { b1 = false; b2 = false; b3 = true; b4 = false; }
+        if (UI_ToggleButton2(" Plot ", &b4)) { b1 = false; b2 = false; b3 = false; b4 = true; }
+
+        /*
+        UI_Button("[Trace]");
+        UI_Label("h_1");
+        UI_Label("h_2");
+        UI_Label("h_3");
+        */
+
+
+        if (GetUp()) {
+            padding_1++;
+        }
+        else if (GetDown()) {
+            padding_1--;
+            if (padding_1 < 0) {
+                padding_1 = 0;
+            }
+        }
+        else if (GetRight()) {
+            padding_2++;
+        }
+        else if (GetLeft()) {
+            padding_2--;
+            if (padding_2 < 0) {
+                padding_2 = 0;
+            }
+        }
     }
     CbuiExit();
 
