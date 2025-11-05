@@ -331,7 +331,10 @@ void DrawComponentHover(Component *comp) {
 
 enum McTraceMode {
     MTM_UNDEF,
-    MTM_DISPLAY,
+
+    MTM_SIM,
+    MTM_TRACE,
+    MTM_MONITORS,
     MTM_PLOT,
 
     MTM_CNT
@@ -339,8 +342,8 @@ enum McTraceMode {
 
 
 struct McTraceApp {
-    bool do_rays;
-    bool do_plane;
+    bool draw_rays;
+    bool draw_plane;
 
     McTraceMode mode;
     Component *comp_selected = NULL;
@@ -472,9 +475,9 @@ void RunProgram(bool do_fullscreen) {
 
 
     McTraceApp app = {};
-    app.mode = MTM_DISPLAY;
-    app.do_plane = true;
-    app.do_rays = true;
+    app.mode = MTM_TRACE;
+    app.draw_plane = true;
+    app.draw_rays = true;
 
 
     // app display
@@ -490,19 +493,19 @@ void RunProgram(bool do_fullscreen) {
 
         // handle input
         if (GetSpace()) {
-            if (app.mode == MTM_DISPLAY) {
+            if (app.mode == MTM_TRACE) {
                 app.mode = MTM_PLOT;
             }
             else {
-                app.mode = MTM_DISPLAY;
+                app.mode = MTM_TRACE;
             }
         }
-        if (GetChar('l')) { app.do_plane = !app.do_plane; }
-        if (GetChar('r')) { app.do_rays = !app.do_rays; }
+        if (GetChar('l')) { app.draw_plane = !app.draw_plane; }
+        if (GetChar('r')) { app.draw_rays = !app.draw_rays; }
 
 
         // component hover / selections
-        if (app.mode == MTM_DISPLAY) {
+        if (app.mode == MTM_TRACE) {
             DoComponentSelection(&app, config.comps, &persp, &cam, &scene_objs);
         }
 
@@ -511,11 +514,11 @@ void RunProgram(bool do_fullscreen) {
         }
 
         // render calls
-        if (app.do_rays) {
+        if (app.draw_rays) {
             RenderTrajectories(traces_first, cam.view, persp, MCT_COLOR_TRAJECTORY);
         }
 
-        if (app.do_plane) {
+        if (app.draw_plane) {
             scene_objs.Add(plane);
         }
 
