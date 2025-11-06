@@ -7,7 +7,7 @@
 #include "lib/jg_baselayer.h"
 
 
-// ***************** will be included in jg_baselayer 0.2.5: **************************
+// ***************** include in jg_baselayer 0.2.5: ***********************************
 MPool PoolCreate(MArena *a_dest, u32 block_size_min, u32 nblocks) {
     assert(nblocks > 1);
 
@@ -34,6 +34,26 @@ MPool PoolCreate(MArena *a_dest, u32 block_size_min, u32 nblocks) {
 #include "../cbui/cbui_includes.h"
 
 
+// ***************** include in jg_cbui: **********************************************
+void RenderWireframes(Array<Wireframe> objs, Matrix4f view, Perspective persp) {
+    for (s32 i = 0; i < objs.len; ++i) {
+        RenderWireframe(cbui.image_buffer, view, persp, cbui.plf.width, cbui.plf.height, objs.arr[i]);
+    }
+}
+Vector2f PointToScreen(Vector3f point, Matrix4f view_l2w, Perspective persp, u32 screen_width, u32 screen_height) {
+    Matrix4f view_w2l = TransformGetInverse(view_l2w);
+    Vector3f p_cam = TransformPoint(view_w2l, point);
+    Vector3f p_ndc = TransformPerspective(persp.proj, p_cam);
+
+    Vector2f p_screen = {};
+    p_screen.x = (p_ndc.x + 1) / 2 * screen_width;
+    p_screen.y = (p_ndc.y + 1) / 2 * screen_height;
+
+    return p_screen;
+}
+// ************************************************************************************
+
+
 #define DEBUG_DISPLAY
 #define DEBUG_TRACE
 #define DEBUG_PLOT
@@ -52,363 +72,7 @@ MPool PoolCreate(MArena *a_dest, u32 block_size_min, u32 nblocks) {
 #include "src/comps/PSI_DMC_config.h"
 
 #include "src/mctrace.h"
-
-
-
-struct NeutronTrajectory {
-    NeutronTrajectory *next;
-    List<Vector3f> event_segments; // these are just pairs of vector3, but they could have been events ...
-};
-
-NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount, u32 ncount_record_as_trajectories) {
-    g_do_trace_trajectories = true;
-    NeutronTrajectory *ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));;
-    NeutronTrajectory *ntrace_prev = ntrace;
-    NeutronTrajectory *ntrace_head = ntrace;
-
-
-    for (u32 j = 0; j < ncount; ++j) {
-        // This sets vz = 1 and p = 1.
-        // From the legacy generated code, we got:
-        //      particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);
-        // (see mcsetstate in simcore.h).
-        Neutron n = {};
-
-
-        // record trajectories
-        if (j < ncount_record_as_trajectories) {
-            // record trajectories
-            ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
-            ntrace->event_segments = InitList<Vector3f>(a_trajectories, 0);
-            g_anchors_trace = &ntrace->event_segments;
-            g_a_dest_trace = a_trajectories;
-
-            ntrace_prev->next = ntrace;
-            ntrace_prev = ntrace;
-
-            g_trace_prev = {};
-            g_trace_current = {};
-
-        }
-        else {
-            g_do_trace_trajectories = false;
-        }
-
-
-        // trace components
-        Vector3f current = {};
-        Vector3f prev = {};
-        for (s32 i = 0; i < comps.len; ++i) {
-            Component *comp = comps.arr[i];
-            g_t_world_current_comp = comp->transform->t_world;
-
-            // previous local system -> current local system
-            ParticleTransform(comp->t_prev2loc, &n);
-
-            // run trace code
-            TraceComponent(comp, &n, instr);
-
-            // record the state after each comp, because there is no guarantee that the component will call SCATTER
-            trace_state_ext_hook(n.x, n.y, n.z);
-
-            // break iteration of absorbed particles
-            if (n._absorbed) {
-                break;
-            }
-        }
-    }
-
-    return ntrace_head;
-}
-
-void DisplayComponents(MArena *a_dest, Array<Component*> comps) {
-    for (s32 i = 0; i < comps.len; ++i) {
-        Component *comp = comps.arr[i];
-
-        printf("%.*s\n", comp->name.len, comp->name.str);
-        PrintTransform(g_mcdis_t_world);
-
-        McDisplayNext(cbui.ctx->a_pers, Matrix4f_Identity());
-        DisplayComponent(comp);
-
-        comp->display = {};
-        comp->display.type = WFT_SEGMENTS;
-        comp->display.transform = comp->transform->t_world;
-        comp->display.color = ComponentCatToColor(comp->cat);
-        comp->display.segments.arr = g_mcdis_anchors.lst;
-        comp->display.segments.len = g_mcdis_anchors.len;
-        comp->display.segments.max = g_mcdis_anchors.len;
-        comp->display.CalculateAABox();
-    }
-}
-
-void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp, Color trajectory_color) {
-    while (traces) {
-        for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
-            Vector3f a = traces->event_segments.lst[2*i];
-            Vector3f b = traces->event_segments.lst[2*i + 1];
-
-            RenderLineSegment(cbui.image_buffer, TransformGetInverse(view), persp, a, b, cbui.plf.width, cbui.plf.height, trajectory_color);
-        }
-
-        traces = traces->next;
-    }
-}
-
-void RenderWireframes(Array<Wireframe> objs, Matrix4f view, Perspective persp) {
-    for (s32 i = 0; i < objs.len; ++i) {
-        RenderWireframe(cbui.image_buffer, view, persp, cbui.plf.width, cbui.plf.height, objs.arr[i]);
-    }
-}
-
-Component *RenderMonitors(Array<Monitor> monitors) {
-    UI_LayoutVertical();
-    UI_SpaceV(10);
-    UI_LayoutHorizontal();
-    UI_SpaceH(10);
-
-    s32 plot_area_width = 128;
-    s32 plot_area_height = 128;
-
-    Component *result_clicked = NULL;
-
-    // labels
-    for (u32 i = 0; i < monitors.len; ++i) {
-        Monitor mon = monitors.arr[i];
-
-        if (mon.mon_tpe == MT_2D) {
-            Widget *l = WidgetGetCached( (const char*) StrZ(StrCat(mon.comp_name, "_pnl")) );
-            WidgetTreeBranch(l);
-            l->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
-            l->SetFlag(WF_CAN_COLLIDE);
-            l->SetFlag(WF_LAYOUT_VERTICAL);
-            l->SetFlag(WF_ALIGN_CENTER);
-            l->sz_border = 1;
-            l->col_border = COLOR_BLACK;
-            l->col_bckgrnd = COLOR_WHITE;
-            l->w = plot_area_height * 1.4;
-            l->h = plot_area_width * 1.4;
-            if (l->hot) {
-                l->col_border = COLOR_RED;
-            }
-            if (l->clicked) {
-                result_clicked = (Component*) mon.comp;
-            }
-
-            Widget *lbl = UI_Label( (const char*) StrZ(StrCat(mon.comp_name, " ")) );
-            lbl->sz_font = FS_18;
-            UI_SpaceV(10);
-
-            Widget *w = WidgetGetCached( (const char*) StrZ(StrCat(mon.comp_name, "_plot")) );
-            w->features_flg |= WF_DRAW_BACKGROUND_AND_BORDER;
-            w->w = plot_area_width;
-            w->h = plot_area_height;
-            w->sz_border = 0;
-            w->col_bckgrnd = COLOR_WHITE;
-            w->col_bckgrnd.a = 0;
-            w->col_border = ColorGray(0.7f);
-            WidgetTreeSibling(w);
-
-            // TODO: we want to express this as a sprite, which will then get properly blitted during FrameEnd
-            //
-            // jg-250922: This can be done by pushing a sprite with SpriteBufferPush().
-            //      However, we still need a way to push it to the "top" of the stack.
-            //      This also works with a "texture" that has a "texture id". This means registering textures,
-            //      per-frame or persistently. It is fine to put it on the appropriate lifescale areana, but 
-            //      we also need to register the texture with an ID in a persistent hashmap; How should it be
-            //      de-registered, then?
-            //
-            //      Temporary hack: We store the widget in our Monitor and draw it at the right time.
-            MonitorBlit(cbui.ctx->a_tmp, mon, w->x0, w->y0, plot_area_width, plot_area_height, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
-            UI_SpaceV(10);
-
-            UI_Pop();
-            UI_SpaceH(10);
-        }
-    }
-
-    return result_clicked;
-}
-
-Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
-    List<Monitor> monitors = InitList<Monitor>(a_dest, 0);
-    for (s32 i = 0; i < comps.len; ++i) {
-        Component *comp = comps.arr[i];
-
-        g_current_monitor = &comp->monitor;
-        SaveComponent(comp);
-
-        // NOTE: not sure where this should be initialized, probably in the component_create generated function 
-        // TODO: init this field in generated code
-        comp->monitor.comp_name = comp->name;
-        comp->monitor.comp = comp;
-
-        if (comp->monitor.mon_tpe != MT_NOT) {
-            ArenaAlloc(a_dest, sizeof(Monitor));
-            monitors.Add(comp->monitor);
-        }
-    }
-
-    Array<Monitor> result = {};
-    result.arr = monitors.lst;
-    result.len = monitors.len;
-    result.max = monitors.len;
-
-    return result;
-}
-
-
-Vector2f PointToScreen(Vector3f point, Matrix4f view_l2w, Perspective persp, u32 screen_width, u32 screen_height) {
-    Matrix4f view_w2l = TransformGetInverse(view_l2w);
-    Vector3f p_cam = TransformPoint(view_w2l, point);
-    Vector3f p_ndc = TransformPerspective(persp.proj, p_cam);
-
-    Vector2f p_screen = {};
-    p_screen.x = (p_ndc.x + 1) / 2 * screen_width;
-    p_screen.y = (p_ndc.y + 1) / 2 * screen_height;
-
-    return p_screen;
-}
-
-
-void DrawComponentInfoBox(Component *comp) {
-    Widget *w = UI_LayoutVertical();
-    w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
-    w->col_bckgrnd = COLOR_WHITE;
-    w->col_border = COLOR_BLACK;
-    w->sz_border = 1;
-
-    Str line1 = StrCat(comp->name, " (");
-    line1 = StrCat(line1, comp->type_name);
-    line1 = StrCat(line1, ")");
-    
-    UI_Label(StrZ(line1));
-    comp->transform;
-
-    ComponentSharedHeader *hdr = comp->GetHeader();
-
-    char *buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
-    sprintf(buff, "x = %.2f", hdr->position_absolute.x);
-    UI_Label(buff);
-
-    buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
-    sprintf(buff, "y = %.2f", hdr->position_absolute.y);
-    UI_Label(buff);
-
-    buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
-    sprintf(buff, "z = %.2f", hdr->position_absolute.z);
-    UI_Label(buff);
-
-    UI_Pop();
-}
-
-
-void DrawComponentHover(Component *comp) {
-    Widget *w = UI_LayoutVertical();
-    w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
-    w->SetFlag(WF_ABSREL_POSITION);
-    w->col_bckgrnd = COLOR_WHITE;
-    w->col_border = COLOR_BLACK;
-    w->sz_border = 1;
-
-    Vector2f p = CurserPos();
-    w->x0 = p.x + 15;
-    w->y0 = p.y + 15;
-
-    UI_Label(comp->name.str);
-    UI_Pop();
-}
-
-
-
-void DoComponentSelection(McTraceApp *app, Array<Component*> comps, Perspective *persp, OrbitCamera *cam, Array<Wireframe> *scene_objs) {
-    bool collision_this_frame = false;
-    Button lft = MouseLeft();
-
-    for (s32 i = 0; i < comps.len; ++i) {
-        Component *comp = comps.arr[i];
-        comp->collided_this_frame = false;
-        scene_objs->Add(comp->display);
-
-        if (comp->interactable) {
-            Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, comp->display, 0.02f);
-            box.color = MCT_COLOR_SELECTION_BOX;
-
-            Ray mouse_ray = CameraGetRayWorld(cam->view, persp->fov, persp->aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
-            comp->collided_this_frame = BoxCollideSLAB(mouse_ray, box);
-
-            if (comp->collided_this_frame && (collision_this_frame == false)) {
-                collision_this_frame = true;
-
-                if (lft.dblclicked) {
-                    box.style = WFR_FAT;
-                    cam->SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
-                    app->comp_selected = comp;
-                }
-                else if (lft.clicked) {
-                    box.style = WFR_FAT;
-                    app->comp_selected = comp;
-                }
-
-                // draw hover component name
-                DrawComponentHover(comp);
-                scene_objs->Add(box);
-            }
-
-            if (comp == app->comp_selected) {
-                box.style = WFR_FAT;
-                scene_objs->Add(box);
-
-                // draw selected component info box
-                DrawComponentInfoBox(comp);
-            }
-        }
-    }
-
-    // selection off
-    if (collision_this_frame == false && lft.clicked) {
-        app->comp_selected = NULL;
-    }
-}
-
-
-void DoPlotMode(McTraceApp *app, Array<Component*> comps, Array<Monitor> monitors, OrbitCamera *cam, Array<Wireframe> *scene_objs) {
-    Button lft = MouseLeft();
-
-    for (s32 i = 0; i < comps.len; ++i) {
-        Component *comp = comps.arr[i];
-        Wireframe comp_wireframe = comp->display;
-        if (comp->cat == CCAT_monitors) {
-            comp_wireframe.color = MCT_COLOR_MONITOR;
-            comp_wireframe.style = WFR_FAT;
-        }
-        else {
-            comp_wireframe.color = MCT_COLOR_DEFOCUSED;
-        }
-
-        scene_objs->Add(comp_wireframe);
-    }
-
-    Component *monitor_clicked = RenderMonitors(monitors);
-
-    if (monitor_clicked) {
-        app->comp_selected = monitor_clicked;
-    }
-
-    if (app->comp_selected && app->comp_selected->monitor.mon_tpe == MT_2D) {
-
-        Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
-        box.color = MCT_COLOR_SELECTION_BOX;
-        scene_objs->Add(box);
-
-        if (monitor_clicked && lft.dblclicked) {
-            cam->SetRelativeTo(box.transform, box.SizeBallpark() * 2);
-        }
-        else if (monitor_clicked) {
-            cam->SetRelativeTo(box.transform);
-        }
-    }
-}
+#include "src/ui.h"
 
 
 void RunProgram(bool do_fullscreen) {
@@ -439,7 +103,7 @@ void RunProgram(bool do_fullscreen) {
     cam.Update(v_instr_center);
 
     // get DISPLAY/TRACE data and PLOT data pointers
-    DisplayComponents(cbui.ctx->a_pers, config.comps);
+    GetComponentDisplayWireframes(cbui.ctx->a_pers, config.comps);
     NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, config.comps, &config.instr, ncount, 100);
     Array<Monitor> monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, config.comps);
 
@@ -476,7 +140,7 @@ void RunProgram(bool do_fullscreen) {
 
         // component hover / selections
         if (app.mode == MTM_TRACE) {
-            DoComponentSelection(&app, config.comps, &persp, &cam, &scene_objs);
+            DoComponentSelectionAndDrawInfoHover(&app, config.comps, &persp, &cam, &scene_objs);
         }
 
         if (app.mode == MTM_PLOT) {

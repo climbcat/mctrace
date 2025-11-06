@@ -13,6 +13,10 @@
 #define MCT_COLOR_DEFOCUSED             COLOR_GRAY_30
 
 
+//
+//  Types
+
+
 enum McTraceMode {
     MTM_UNDEF,
 
@@ -24,7 +28,6 @@ enum McTraceMode {
     MTM_CNT
 };
 
-
 struct McTraceApp {
     bool draw_rays;
     bool draw_plane;
@@ -33,7 +36,10 @@ struct McTraceApp {
     Component *comp_selected = NULL;
 };
 
-
+struct NeutronTrajectory {
+    NeutronTrajectory *next;
+    List<Vector3f> event_segments; // these are just pairs of vector3, but they could have been events ...
+};
 
 
 inline
@@ -84,6 +90,141 @@ void ParticlePrint(Neutron n) {
 }
 
 
+//
+//  Particle traces
+
+
+NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount, u32 ncount_record_as_trajectories) {
+    g_do_trace_trajectories = true;
+    NeutronTrajectory *ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));;
+    NeutronTrajectory *ntrace_prev = ntrace;
+    NeutronTrajectory *ntrace_head = ntrace;
+
+
+    for (u32 j = 0; j < ncount; ++j) {
+        // This sets vz = 1 and p = 1.
+        // From the legacy generated code, we got:
+        //      particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);
+        // (see mcsetstate in simcore.h).
+        Neutron n = {};
+
+
+        // record trajectories
+        if (j < ncount_record_as_trajectories) {
+            // record trajectories
+            ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
+            ntrace->event_segments = InitList<Vector3f>(a_trajectories, 0);
+            g_anchors_trace = &ntrace->event_segments;
+            g_a_dest_trace = a_trajectories;
+
+            ntrace_prev->next = ntrace;
+            ntrace_prev = ntrace;
+
+            g_trace_prev = {};
+            g_trace_current = {};
+
+        }
+        else {
+            g_do_trace_trajectories = false;
+        }
+
+
+        // trace components
+        Vector3f current = {};
+        Vector3f prev = {};
+        for (s32 i = 0; i < comps.len; ++i) {
+            Component *comp = comps.arr[i];
+            g_t_world_current_comp = comp->transform->t_world;
+
+            // previous local system -> current local system
+            ParticleTransform(comp->t_prev2loc, &n);
+
+            // run trace code
+            TraceComponent(comp, &n, instr);
+
+            // record the state after each comp, because there is no guarantee that the component will call SCATTER
+            trace_state_ext_hook(n.x, n.y, n.z);
+
+            // break iteration of absorbed particles
+            if (n._absorbed) {
+                break;
+            }
+        }
+    }
+
+    return ntrace_head;
+}
+
+void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp, Color trajectory_color) {
+    while (traces) {
+        for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
+            Vector3f a = traces->event_segments.lst[2*i];
+            Vector3f b = traces->event_segments.lst[2*i + 1];
+
+            RenderLineSegment(cbui.image_buffer, TransformGetInverse(view), persp, a, b, cbui.plf.width, cbui.plf.height, trajectory_color);
+        }
+
+        traces = traces->next;
+    }
+}
+
+
+//
+//  Component "display" wireframes
+
+
+void GetComponentDisplayWireframes(MArena *a_dest, Array<Component*> comps) {
+    for (s32 i = 0; i < comps.len; ++i) {
+        Component *comp = comps.arr[i];
+
+        printf("%.*s\n", comp->name.len, comp->name.str);
+        PrintTransform(g_mcdis_t_world);
+
+        McDisplayNext(cbui.ctx->a_pers, Matrix4f_Identity());
+        DisplayComponent(comp);
+
+        comp->display = {};
+        comp->display.type = WFT_SEGMENTS;
+        comp->display.transform = comp->transform->t_world;
+        comp->display.color = ComponentCatToColor(comp->cat);
+        comp->display.segments.arr = g_mcdis_anchors.lst;
+        comp->display.segments.len = g_mcdis_anchors.len;
+        comp->display.segments.max = g_mcdis_anchors.len;
+        comp->display.CalculateAABox();
+    }
+}
+
+
+//
+//  Monitor data / plot
+
+
+Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
+    List<Monitor> monitors = InitList<Monitor>(a_dest, 0);
+    for (s32 i = 0; i < comps.len; ++i) {
+        Component *comp = comps.arr[i];
+
+        g_current_monitor = &comp->monitor;
+        SaveComponent(comp);
+
+        // NOTE: not sure where this should be initialized, probably in the component_create generated function 
+        // TODO: init this field in generated code
+        comp->monitor.comp_name = comp->name;
+        comp->monitor.comp = comp;
+
+        if (comp->monitor.mon_tpe != MT_NOT) {
+            ArenaAlloc(a_dest, sizeof(Monitor));
+            monitors.Add(comp->monitor);
+        }
+    }
+
+    Array<Monitor> result = {};
+    result.arr = monitors.lst;
+    result.len = monitors.len;
+    result.max = monitors.len;
+
+    return result;
+}
 
 
 #endif
