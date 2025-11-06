@@ -79,49 +79,24 @@ void RunProgram(bool do_fullscreen) {
     TimeFunction;
 
     CbuiInit("mctrace", do_fullscreen);
-    Perspective persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
-    OrbitCamera cam = OrbitCameraInit();
 
-    //s32 ncount = 1e6;
+    McTraceApp app = McTraceInit();
+
     s32 ncount = 1e5;
-    InstrumentConfig config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, ncount);
-
-    // scene objects
-    Array<Wireframe> scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
-    Wireframe plane = CreatePlaneDetailed(10, 60, 6);
-
-    Vector3f v_instr_center = { 0, -0.5f, 25 };
-    plane.transform = TransformBuildTranslation( v_instr_center );
-
-    WireframeRawSegments(cbui.ctx->a_pers, &plane);
-    scene_objs.Add(plane);
-
-    v_instr_center.y = 0;
-    cam.radius = v_instr_center.z * 1.5;
-    cam.phi = 0;
-    cam.theta = 25;
-    cam.Update(v_instr_center);
 
     // get DISPLAY/TRACE data and PLOT data pointers
-    GetComponentDisplayWireframes(cbui.ctx->a_pers, config.comps);
-    NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, config.comps, &config.instr, ncount, 100);
-    Array<Monitor> monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, config.comps);
-
-
-    McTraceApp app = {};
-    app.mode = MTM_TRACE;
-    app.draw_plane = true;
-    app.draw_rays = true;
-
+    GetComponentDisplayWireframes(cbui.ctx->a_pers, app.config.comps);
+    NeutronTrajectory *traces_first = TraceParticles(cbui.ctx->a_pers, app.config.comps, &app.config.instr, ncount, 100);
+    Array<Monitor> monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, app.config.comps);
 
     // app display
     while (cbui.running) {
         // frame start
         CbuiFrameStart();
-        PerspectiveSetAspectAndP(&persp, cbui.plf.width, cbui.plf.height);
-        OrbitCameraRotateZoom(&cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
-        OrbitCameraPanInPlane(&cam, persp.fov, persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
-        scene_objs.len = 0;
+        PerspectiveSetAspectAndP(&app.persp, cbui.plf.width, cbui.plf.height);
+        OrbitCameraRotateZoom(&app.cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
+        OrbitCameraPanInPlane(&app.cam, app.persp.fov, app.persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
+        app.scene_objs.len = 0;
         UI_SetFontSize(FS_24);
         Button lft = MouseLeft();
 
@@ -140,23 +115,23 @@ void RunProgram(bool do_fullscreen) {
 
         // component hover / selections
         if (app.mode == MTM_TRACE) {
-            DoComponentSelectionAndDrawInfoHover(&app, config.comps, &persp, &cam, &scene_objs);
+            DoComponentSelectionAndDrawInfoHover(&app, app.config.comps, &app.persp, &app.cam, &app.scene_objs);
         }
 
         if (app.mode == MTM_PLOT) {
-            DoPlotMode(&app, config.comps, monitors, &cam, &scene_objs);
+            DoPlotMode(&app, app.config.comps, monitors, &app.cam, &app.scene_objs);
         }
 
         // render calls
         if (app.draw_rays) {
-            RenderTrajectories(traces_first, cam.view, persp, MCT_COLOR_TRAJECTORY);
+            RenderTrajectories(traces_first, app.cam.view, app.persp, MCT_COLOR_TRAJECTORY);
         }
 
         if (app.draw_plane) {
-            scene_objs.Add(plane);
+            app.scene_objs.Add(app.plane);
         }
 
-        RenderWireframes(scene_objs, cam.view, persp);
+        RenderWireframes(app.scene_objs, app.cam.view, app.persp);
     }
 
     CbuiExit();

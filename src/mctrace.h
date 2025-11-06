@@ -29,12 +29,52 @@ enum McTraceMode {
 };
 
 struct McTraceApp {
+    Perspective persp;
+    OrbitCamera cam;
+    InstrumentConfig config;
+    Array<Wireframe> scene_objs;
+    Wireframe plane;
+
     bool draw_rays;
     bool draw_plane;
 
     McTraceMode mode;
     Component *comp_selected = NULL;
 };
+
+
+McTraceApp McTraceInit() {
+    McTraceApp app = {};
+
+    app.persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
+    app.cam = OrbitCameraInit();
+
+    //s32 ncount = 1e6;
+    s32 ncount = 1e5;
+    app.config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, ncount);
+
+    // scene objects
+    app.scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
+    app.plane = CreatePlaneDetailed(10, 60, 6);
+
+    Vector3f v_instr_center = { 0, -0.5f, 25 };
+    app.plane.transform = TransformBuildTranslation( v_instr_center );
+
+    WireframeRawSegments(cbui.ctx->a_pers, &app.plane);
+    app.scene_objs.Add(app.plane);
+
+    v_instr_center.y = 0;
+    app.cam.radius = v_instr_center.z * 1.5;
+    app.cam.phi = 0;
+    app.cam.theta = 25;
+    app.cam.Update(v_instr_center);
+
+    app.mode = MTM_TRACE;
+    app.draw_plane = true;
+    app.draw_rays = true;
+
+    return app;
+}
 
 struct NeutronTrajectory {
     NeutronTrajectory *next;
