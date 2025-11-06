@@ -47,6 +47,10 @@ struct McTraceApp {
 
     McTraceMode mode;
     Component *comp_selected = NULL;
+
+    Component *comp_hover = NULL;
+    Component *comp_clicked = NULL;
+    Component *comp_dbl_clicked = NULL;
 };
 
 
@@ -82,6 +86,7 @@ McTraceApp McTraceInit() {
 
     return app;
 }
+
 
 inline
 void ParticleTransform(Matrix4f t, Neutron *n) {
@@ -265,6 +270,18 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
     result.max = monitors.len;
 
     return result;
+}
+
+void DoRendering(McTraceApp *app) {
+    if (app->draw_plane) {
+        app->scene_objs.Add(app->plane);
+    }
+
+    if (app->draw_rays) {
+        RenderTrajectories(app->traces_first, app->cam.view, app->persp, MCT_COLOR_TRAJECTORY);
+    }
+
+    RenderWireframes(app->scene_objs, app->cam.view, app->persp);
 }
 
 

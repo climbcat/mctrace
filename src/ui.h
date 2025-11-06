@@ -2,7 +2,6 @@
 #define __MCT_UI_H__
 
 
-
 Component *RenderMonitors(Array<Monitor> monitors) {
     UI_LayoutVertical();
     UI_SpaceV(10);
@@ -72,7 +71,6 @@ Component *RenderMonitors(Array<Monitor> monitors) {
     return result_clicked;
 }
 
-
 void DrawComponentInfoBox(Component *comp) {
     Widget *w = UI_LayoutVertical();
     w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
@@ -108,7 +106,6 @@ void DrawComponentInfoBox(Component *comp) {
     UI_Pop();
 }
 
-
 void DrawComponentHover(Component *comp) {
     Widget *w = UI_LayoutVertical();
     w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
@@ -125,7 +122,6 @@ void DrawComponentHover(Component *comp) {
     UI_Label(comp->name.str);
     UI_Pop();
 }
-
 
 void DoComponentSelectionAndDrawInfoHover(McTraceApp *app, Array<Component*> comps, Perspective *persp, OrbitCamera *cam, Array<Wireframe> *scene_objs) {
     bool collision_this_frame = false;
@@ -177,42 +173,80 @@ void DoComponentSelectionAndDrawInfoHover(McTraceApp *app, Array<Component*> com
     }
 }
 
+void DoUI(McTraceApp *app) {
+    app->scene_objs.len = 0;
+    app->comp_clicked = NULL;
+    app->comp_selected = NULL;
 
-void DoPlotMode(McTraceApp *app, Array<Component*> comps, Array<Monitor> monitors, OrbitCamera *cam, Array<Wireframe> *scene_objs) {
-    Button lft = MouseLeft();
-
-    for (s32 i = 0; i < comps.len; ++i) {
-        Component *comp = comps.arr[i];
-        Wireframe comp_wireframe = comp->display;
-        if (comp->cat == CCAT_monitors) {
-            comp_wireframe.color = MCT_COLOR_MONITOR;
-            comp_wireframe.style = WFR_FAT;
+    // handle input
+    if (GetSpace()) {
+        if (app->mode == MTM_TRACE) {
+            app->mode = MTM_MONITORS;
+        }
+        else if (app->mode == MTM_MONITORS) {
+            app->mode = MTM_PLOT;
         }
         else {
-            comp_wireframe.color = MCT_COLOR_DEFOCUSED;
+            app->mode = MTM_TRACE;
         }
+    }
+    if (GetChar('p')) { app->draw_plane = !app->draw_plane; }
+    if (GetChar('r')) { app->draw_rays = !app->draw_rays; }
 
-        scene_objs->Add(comp_wireframe);
+    UI_SetFontSize(FS_24);
+
+
+    if (app->mode == MTM_TRACE) {
+        app->draw_plane = true;
+        app->draw_rays = true;
+
+        DoComponentSelectionAndDrawInfoHover(app, app->config.comps, &app->persp, &app->cam, &app->scene_objs);
     }
 
-    Component *monitor_clicked = RenderMonitors(monitors);
+    else if (app->mode == MTM_MONITORS) {
+        app->draw_plane = true;
+        app->draw_rays = false;
 
-    if (monitor_clicked) {
-        app->comp_selected = monitor_clicked;
+        Button lft = MouseLeft();
+
+        for (s32 i = 0; i < app->config.comps.len; ++i) {
+            Component *comp = app->config.comps.arr[i];
+            Wireframe comp_wireframe = comp->display;
+            if (comp->cat == CCAT_monitors) {
+                comp_wireframe.color = MCT_COLOR_MONITOR;
+                comp_wireframe.style = WFR_FAT;
+            }
+            else {
+                comp_wireframe.color = MCT_COLOR_DEFOCUSED;
+            }
+
+            app->scene_objs.Add(comp_wireframe);
+        }
+
+        if (app->comp_clicked) {
+            app->comp_selected = app->comp_clicked;
+        }
+
+        if (app->comp_selected && app->comp_selected->monitor.mon_tpe == MT_2D) {
+
+            Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
+            box.color = MCT_COLOR_SELECTION_BOX;
+            app->scene_objs.Add(box);
+
+            if (app->comp_clicked && lft.dblclicked) {
+                app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 2);
+            }
+            else if (app->comp_clicked) {
+                app->cam.SetRelativeTo(box.transform);
+            }
+        }
     }
 
-    if (app->comp_selected && app->comp_selected->monitor.mon_tpe == MT_2D) {
+    if (app->mode == MTM_PLOT) {
+        app->draw_plane = false;
+        app->draw_rays = false;
 
-        Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
-        box.color = MCT_COLOR_SELECTION_BOX;
-        scene_objs->Add(box);
-
-        if (monitor_clicked && lft.dblclicked) {
-            cam->SetRelativeTo(box.transform, box.SizeBallpark() * 2);
-        }
-        else if (monitor_clicked) {
-            cam->SetRelativeTo(box.transform);
-        }
+        Component *monitor_clicked = RenderMonitors(app->monitors);
     }
 }
 
