@@ -39,6 +39,8 @@ struct McTraceApp {
     InstrumentConfig config;
     Array<Wireframe> scene_objs;
     Wireframe plane;
+    Array<Monitor> monitors;
+    NeutronTrajectory *traces_first;
 
     bool draw_rays;
     bool draw_plane;
