@@ -17,6 +17,11 @@
 //  Types
 
 
+struct NeutronTrajectory {
+    NeutronTrajectory *next;
+    List<Vector3f> event_segments; // these are just pairs of vector3, but they could have been events ...
+};
+
 enum McTraceMode {
     MTM_UNDEF,
 
@@ -75,12 +80,6 @@ McTraceApp McTraceInit() {
 
     return app;
 }
-
-struct NeutronTrajectory {
-    NeutronTrajectory *next;
-    List<Vector3f> event_segments; // these are just pairs of vector3, but they could have been events ...
-};
-
 
 inline
 void ParticleTransform(Matrix4f t, Neutron *n) {

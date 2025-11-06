@@ -76,9 +76,13 @@ Component *RenderMonitors(Array<Monitor> monitors) {
 void DrawComponentInfoBox(Component *comp) {
     Widget *w = UI_LayoutVertical();
     w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+    w->SetFlag(WF_ABSREL_POSITION);
     w->col_bckgrnd = COLOR_WHITE;
     w->col_border = COLOR_BLACK;
     w->sz_border = 1;
+    w->padding = 5;
+    w->x0 = 15;
+    w->y0 = 15;
 
     Str line1 = StrCat(comp->name, " (");
     line1 = StrCat(line1, comp->type_name);
@@ -112,6 +116,7 @@ void DrawComponentHover(Component *comp) {
     w->col_bckgrnd = COLOR_WHITE;
     w->col_border = COLOR_BLACK;
     w->sz_border = 1;
+    w->padding = 5;
 
     Vector2f p = CurserPos();
     w->x0 = p.x + 15;
