@@ -40,25 +40,19 @@ MPool PoolCreate(MArena *a_dest, u32 block_size_min, u32 nblocks) {
 
 
 #include "simcore/simcore_types.h"
-
-#include "src/display_hooks.h"
-#include "src/trace_hooks.h"
-#include "src/plot_hooks.h"
-
+#include "simcore/display_hooks.h"
+#include "simcore/trace_hooks.h"
+#include "simcore/plot_hooks.h"
 #include "simcore/simcore.h"
 #include "simcore/simlib.h"
 
+
 #include "src/comps_meta.h"
-#include "src/helpers.h"
-#include "src/PSI_DMC_config.h"
+#include "src/comps_helpers.h"
+#include "src/comps/PSI_DMC_config.h"
 
+#include "src/mctrace.h"
 
-#define MCT_COLOR_SELECTION_BOX         (( Color { 74, 78, 121, 128 } ))
-#define MCT_COLOR_MONITOR               COLOR_RED
-#define MCT_COLOR_TRAJECTORY            COLOR_GRAY_75
-#define MCT_COLOR_OPTICS                COLOR_BLUE
-#define MCT_COLOR_SOURCE_OR_SAMPLE      COLOR_RED
-#define MCT_COLOR_DEFOCUSED             COLOR_GRAY_30
 
 
 struct NeutronTrajectory {
@@ -324,30 +318,6 @@ void DrawComponentHover(Component *comp) {
     UI_Label(comp->name.str);
     UI_Pop();
 }
-
-
-
-
-
-enum McTraceMode {
-    MTM_UNDEF,
-
-    MTM_SIM,
-    MTM_TRACE,
-    MTM_MONITORS,
-    MTM_PLOT,
-
-    MTM_CNT
-};
-
-
-struct McTraceApp {
-    bool draw_rays;
-    bool draw_plane;
-
-    McTraceMode mode;
-    Component *comp_selected = NULL;
-};
 
 
 
