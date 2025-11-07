@@ -5,7 +5,8 @@
 #include "../simcore/simcore_types.h"
 
 
-#define MCT_COLOR_SELECTION_BOX         (( Color { 74, 78, 121, 128 } ))
+//#define MCT_COLOR_SELECTION_BOX         (( Color { 74, 78, 121, 128 } ))
+#define MCT_COLOR_SELECTION_BOX         COLOR_GRAY_75
 #define MCT_COLOR_MONITOR               COLOR_RED
 #define MCT_COLOR_TRAJECTORY            COLOR_GRAY_75
 #define MCT_COLOR_OPTICS                COLOR_BLUE
@@ -33,6 +34,46 @@ enum McTraceMode {
     MTM_CNT
 };
 
+Color ComponentCatToColor(u32 cat) {
+    switch ((CompCategory) cat) {
+        case CCAT_sources: return COLOR_RED;
+        case CCAT_monitors: return COLOR_GREEN_50;
+        case CCAT_contrib: return COLOR_GRAY_50;
+        case CCAT_misc: return COLOR_BLACK;
+        case CCAT_optics: return COLOR_BLUE;
+        case CCAT_samples: return COLOR_RED;
+    }
+
+    return COLOR_BLACK;
+}
+
+struct ColorSheme {
+    Color monitors;
+    Color optics;
+    Color sourcesample;
+    Color selection;
+    Color rays;
+
+    void SetToMode(McTraceMode mode) {
+        if (mode == MTM_MONITORS) {
+            monitors = MCT_COLOR_MONITOR;
+            optics = MCT_COLOR_DEFOCUSED;
+            sourcesample = MCT_COLOR_DEFOCUSED;
+
+            selection = MCT_COLOR_DEFOCUSED;
+            rays = MCT_COLOR_TRAJECTORY;
+        }
+        else {
+            monitors = ComponentCatToColor(CCAT_monitors);
+            optics = ComponentCatToColor(CCAT_optics);
+            sourcesample = ComponentCatToColor(CCAT_sources);
+
+            selection = MCT_COLOR_DEFOCUSED;
+            rays = MCT_COLOR_TRAJECTORY;
+        }
+    }
+};
+
 struct McTraceApp {
     Perspective persp;
     OrbitCamera cam;
@@ -46,8 +87,9 @@ struct McTraceApp {
     bool draw_plane;
 
     McTraceMode mode;
-    Component *comp_selected = NULL;
+    ColorSheme colors;
 
+    Component *comp_selected = NULL;
     Component *comp_hover = NULL;
     Component *comp_clicked = NULL;
     Component *comp_dbl_clicked = NULL;
@@ -83,6 +125,8 @@ McTraceApp McTraceInit() {
     app.mode = MTM_TRACE;
     app.draw_plane = true;
     app.draw_rays = true;
+
+    app.colors.SetToMode(app.mode);
 
     return app;
 }
@@ -201,19 +245,6 @@ NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comp
     return ntrace_head;
 }
 
-void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp, Color trajectory_color) {
-    while (traces) {
-        for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
-            Vector3f a = traces->event_segments.lst[2*i];
-            Vector3f b = traces->event_segments.lst[2*i + 1];
-
-            RenderLineSegment(cbui.image_buffer, TransformGetInverse(view), persp, a, b, cbui.plf.width, cbui.plf.height, trajectory_color);
-        }
-
-        traces = traces->next;
-    }
-}
-
 
 //
 //  Component "display" wireframes
@@ -270,6 +301,19 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
     result.max = monitors.len;
 
     return result;
+}
+
+void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp, Color trajectory_color) {
+    while (traces) {
+        for (u32 i = 0; i < traces->event_segments.len / 2; ++i) {
+            Vector3f a = traces->event_segments.lst[2*i];
+            Vector3f b = traces->event_segments.lst[2*i + 1];
+
+            RenderLineSegment(cbui.image_buffer, TransformGetInverse(view), persp, a, b, cbui.plf.width, cbui.plf.height, trajectory_color);
+        }
+
+        traces = traces->next;
+    }
 }
 
 void DoRendering(McTraceApp *app) {

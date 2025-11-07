@@ -2,19 +2,6 @@
 #define __MCT_COMPS_HELPERS__
 
 
-Color ComponentCatToColor(u32 cat) {
-    switch ((CompCategory) cat) {
-        case CCAT_sources: return COLOR_RED;
-        case CCAT_monitors: return COLOR_GREEN_50;
-        case CCAT_contrib: return COLOR_GRAY_50;
-        case CCAT_misc: return COLOR_BLACK;
-        case CCAT_optics: return COLOR_BLUE;
-        case CCAT_samples: return COLOR_RED;
-    }
-
-    return COLOR_BLACK;
-}
-
 struct InstrumentConfig {
     Instrument instr;
     Array<Component*> comps;
