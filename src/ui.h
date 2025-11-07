@@ -123,7 +123,7 @@ void DrawComponentHover(Component *comp) {
     UI_Pop();
 }
 
-void DoComponentSelection(McTraceApp *app) {
+void DoComponentSelection(McTraceApp *app, bool fat_monitors) {
     Array<Component*> comps = app->config.comps;
 
     bool collision_this_frame = false;
@@ -143,10 +143,10 @@ void DoComponentSelection(McTraceApp *app) {
         }
         else if (comp->cat == CCAT_monitors) {
             comp_wireframe.color = app->colors.monitors;
-            comp_wireframe.style = WFR_FAT;
+            if (fat_monitors) { comp_wireframe.style = WFR_FAT; }
         }
 
-        if (comp->interactable) {
+        if (comp->interactable_this_frame) {
             Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, comp->display, 0.02f);
 
             Ray mouse_ray = CameraGetRayWorld(app->cam.view, app->persp.fov, app->persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
@@ -206,23 +206,14 @@ void OnSwitchToMode(McTraceApp *app) {
         for (s32 i = 0; i < app->config.comps.len; ++i) {
             Component *comp = app->config.comps.arr[i];
 
-            if (comp->cat == CCAT_contrib
-                || comp->cat == CCAT_optics
-                || comp->cat == CCAT_samples
-                || comp->cat == CCAT_sources )
-            {
-                comp->interactable = true;
-            }
-            else {
-                comp->interactable = false;
-            }
+            comp->interactable_this_frame = comp->interactable;
         }
     }
     else if (app->mode == MTM_MONITORS) {
         for (s32 i = 0; i < app->config.comps.len; ++i) {
             Component *comp = app->config.comps.arr[i];
 
-            comp->interactable = comp->cat == CCAT_monitors;
+            comp->interactable_this_frame = comp->cat == CCAT_monitors;
         }
     }
 }
@@ -253,20 +244,18 @@ void DoUI(McTraceApp *app) {
 
     UI_SetFontSize(FS_24);
 
-
     if (app->mode == MTM_TRACE) {
         app->draw_plane = true;
         app->draw_rays = true;
 
-        DoComponentSelection(app);
-
+        DoComponentSelection(app, false);
     }
 
     else if (app->mode == MTM_MONITORS) {
         app->draw_plane = true;
         app->draw_rays = false;
 
-        DoComponentSelection(app);
+        DoComponentSelection(app, true);
 
         if (app->comp_selected) {
             RenderMonitors( Array<Monitor> { &app->comp_selected->monitor, 1, 1 } );

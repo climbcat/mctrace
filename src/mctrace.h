@@ -95,6 +95,7 @@ struct McTraceApp {
     Component *comp_dbl_clicked = NULL;
 };
 
+void OnSwitchToMode(McTraceApp *app);
 
 McTraceApp McTraceInit() {
     McTraceApp app = {};
@@ -126,7 +127,7 @@ McTraceApp McTraceInit() {
     app.draw_plane = true;
     app.draw_rays = true;
 
-    app.colors.SetToMode(app.mode);
+    OnSwitchToMode(&app);
 
     return app;
 }
