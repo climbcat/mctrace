@@ -2,73 +2,117 @@
 #define __MCT_UI_H__
 
 
-Component *RenderMonitors(Array<Monitor> monitors) {
-    UI_LayoutVertical();
-    UI_SpaceV(10);
-    UI_LayoutHorizontal();
-    UI_SpaceH(10);
+struct GridLayout {
+    f32 w;
+    f32 h;
+    f32 c;
+    f32 cols;
+    f32 rows;
 
-    s32 plot_area_width = 128;
-    s32 plot_area_height = 128;
+    void Print() {
+        printf("w: %.2f, h: %.2f, c: %.2f, cols: %.2f, rows: %.2f\n", w, h, c, cols, rows);
+    }
+};
 
-    Component *result_clicked = NULL;
+GridLayout GridCalculate(f32 w = 640, f32 h = 480, f32 N = 20) {
+    GridLayout lay = {};
+    if (w == 0 || h == 0 || w <= 0 || h <= 0) {
+        return lay;
+    }
+    
+    f32 c = 0;
+    f32 rows = 0;
+    f32 cols = 0;
 
-    // labels
-    for (u32 i = 0; i < monitors.len; ++i) {
-        Monitor mon = monitors.arr[i];
+    f32 cols_min = sqrt( w * N / h );
+    f32 cols_0 = ceil(cols_min);
+    f32 cols_i = 0;
+    f32 rows_i = 0;
 
-        if (mon.mon_tpe == MT_2D) {
-            Widget *l = WidgetGetCached( (const char*) StrZ(StrCat(mon.comp_name, "_pnl")) );
-            WidgetTreeBranch(l);
-            l->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
-            l->SetFlag(WF_CAN_COLLIDE);
-            l->SetFlag(WF_LAYOUT_VERTICAL);
-            l->SetFlag(WF_ALIGN_CENTER);
-            l->sz_border = 1;
-            l->col_border = COLOR_BLACK;
-            l->col_bckgrnd = COLOR_WHITE;
-            l->w = plot_area_height * 1.4;
-            l->h = plot_area_width * 1.4;
-            if (l->hot) {
-                l->col_border = COLOR_RED;
-            }
-            if (l->clicked) {
-                result_clicked = (Component*) mon.comp;
-            }
 
-            Widget *lbl = UI_Label( (const char*) StrZ(StrCat(mon.comp_name, " ")) );
-            lbl->sz_font = FS_18;
-            UI_SpaceV(10);
+    s32 i = 0;
+    while (true) {
+        cols_i = cols_0 + i;
+        c = (s32) w / (s32) cols_i;
+        rows_i = floor( h / c );
 
-            Widget *w = WidgetGetCached( (const char*) StrZ(StrCat(mon.comp_name, "_plot")) );
-            w->features_flg |= WF_DRAW_BACKGROUND_AND_BORDER;
-            w->w = plot_area_width;
-            w->h = plot_area_height;
-            w->sz_border = 0;
-            w->col_bckgrnd = COLOR_WHITE;
-            w->col_bckgrnd.a = 0;
-            w->col_border = ColorGray(0.7f);
-            WidgetTreeSibling(w);
-
-            // TODO: we want to express this as a sprite, which will then get properly blitted during FrameEnd
-            //
-            // jg-250922: This can be done by pushing a sprite with SpriteBufferPush().
-            //      However, we still need a way to push it to the "top" of the stack.
-            //      This also works with a "texture" that has a "texture id". This means registering textures,
-            //      per-frame or persistently. It is fine to put it on the appropriate lifescale areana, but 
-            //      we also need to register the texture with an ID in a persistent hashmap; How should it be
-            //      de-registered, then?
-            //
-            //      Temporary hack: We store the widget in our Monitor and draw it at the right time.
-            MonitorBlit(cbui.ctx->a_tmp, mon, w->x0, w->y0, plot_area_width, plot_area_height, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
-            UI_SpaceV(10);
-
-            UI_Pop();
-            UI_SpaceH(10);
+        if (rows_i * cols_i >= N) {
+            rows = rows_i;
+            cols = cols_i;
+            break;
         }
+        i++;
     }
 
-    return result_clicked;
+    lay.w = w;
+    lay.h = h;
+    lay.c = c;
+    lay.cols = cols;
+    lay.rows = rows;
+
+    return lay;
+}
+
+Component *RenderAllMonitors(Array<Monitor> monitors) {
+    Component *result = NULL;
+
+    // TODO: why is this wrapper widget needed?
+    //      Without it, we flicker as 'p' below gets removed bi-framely
+    UI_Center();
+
+    Widget *p = WidgetGetCached( (const char*) "grid_pnl" );
+    WidgetTreeBranch(p);
+    p->SetFlag(WF_LAYOUT_CENTER);
+    p->SetFlag(WF_EXPAND_VERTICAL);
+    p->SetFlag(WF_EXPAND_HORIZONTAL);
+    p->col_border = COLOR_BLACK;
+    p->sz_border = 1;
+
+    f32 grid_w = p->rect.x1 - p->rect.x0 - p->padding * 2;
+    f32 grid_h = p->rect.y1 - p->rect.y0 - p->padding * 2;
+    GridLayout grid = GridCalculate(grid_w, grid_h, monitors.len);
+
+    s32 n = 0;
+    s32 idx = 0;
+    for (s32 j = 0; j < grid.rows; ++j) {
+        for (s32 i = 0; i < grid.cols; ++i) {
+            if (n++ < monitors.len) {
+                char buff[50];
+                _memzero(&buff[0], 50);
+                sprintf(buff, "mongrid_%d", idx);
+
+                Widget *w = WidgetGetCached( StrZ(StrL(buff)));
+                WidgetTreeSibling(w);
+                w->SetFlag(WF_ABSREL_POSITION);
+                w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+                w->SetFlag(WF_CAN_COLLIDE);
+                w->col_bckgrnd = COLOR_WHITE;
+                w->col_border = COLOR_BLACK;
+                w->sz_border = 1;
+                w->w = grid.c;
+                w->h = grid.c;
+                w->x0 = i * grid.c;
+                w->y0 = j * grid.c;
+
+                if (w->hot) {
+                    w->col_border = COLOR_RED;
+                }
+                if (w->hot && MouseLeft().clicked) {
+                    result = (Component *) (monitors.arr + idx)->comp;
+                }
+
+                idx++;
+            }
+        }
+    }
+    UI_Pop();
+    UI_Pop();
+
+    if (GetSpace()) {
+        grid.Print();
+    }
+
+    return result;
 }
 
 void DrawComponentInfoBox(Component *comp) {
@@ -79,13 +123,12 @@ void DrawComponentInfoBox(Component *comp) {
     w->col_border = COLOR_BLACK;
     w->sz_border = 1;
     w->padding = 5;
-    w->x0 = 15;
     w->y0 = 15;
 
     Str line1 = StrCat(comp->name, " (");
     line1 = StrCat(line1, comp->type_name);
     line1 = StrCat(line1, ")");
-    
+
     UI_Label(StrZ(line1));
     comp->transform;
 
@@ -120,6 +163,7 @@ void DrawComponentHover(Component *comp) {
     w->y0 = p.y + 15;
 
     UI_Label(comp->name.str);
+
     UI_Pop();
 }
 
@@ -218,6 +262,13 @@ void OnSwitchToMode(McTraceApp *app) {
     }
 }
 
+
+bool tab_sim = false;
+bool tab_trace = true;
+bool tab_monitors = false;
+bool tab_plot = false;
+
+
 void DoUI(McTraceApp *app) {
     app->scene_objs.len = 0;
     app->comp_hover = NULL;
@@ -226,24 +277,49 @@ void DoUI(McTraceApp *app) {
 
     // handle input
     if (GetSpace()) {
-        app->comp_selected = NULL;
         if (app->mode == MTM_TRACE) {
+            app->comp_selected = NULL;
+            tab_sim = false; tab_monitors = true; tab_trace = false; tab_plot = false;
             app->mode = MTM_MONITORS;
+            OnSwitchToMode(app);
         }
         else if (app->mode == MTM_MONITORS) {
-            app->mode = MTM_PLOT;
-        }
-        else {
+            app->comp_selected = NULL;
+            tab_sim = false; tab_monitors = false; tab_trace = true; tab_plot = false;
             app->mode = MTM_TRACE;
+            OnSwitchToMode(app);
         }
-
-        OnSwitchToMode(app);
     }
     if (GetChar('p')) { app->draw_plane = !app->draw_plane; }
     if (GetChar('r')) { app->draw_rays = !app->draw_rays; }
 
+    // UI
     UI_SetFontSize(FS_24);
 
+    // tab menu frame
+    s32 padding_1 = 20;
+    s32 padding_2 = 10;
+    {
+        Widget *m2 = UI_Center();
+        m2->sz_border = 1;
+        m2->padding = padding_1;
+
+        Widget *p = UI_LayoutVertical();
+        p->SetFlag(WF_EXPAND_VERTICAL);
+        p->SetFlag(WF_EXPAND_HORIZONTAL);
+        p->padding = padding_2;
+        if (app->mode == MTM_SIM || app->mode == MTM_PLOT) {
+            p->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER); // TODO: what if we had a WF_DRAW_BORDER flag, ignoring the fill
+            p->col_bckgrnd = COLOR_WHITE;
+            p->col_border = COLOR_BLACK;
+            p->sz_border = 1;
+        }
+
+        UI_SetFontSize(FS_18);
+        UI_SpaceV(10);
+    }
+
+    // tab contents
     if (app->mode == MTM_TRACE) {
         app->draw_plane = true;
         app->draw_rays = true;
@@ -258,7 +334,9 @@ void DoUI(McTraceApp *app) {
         DoComponentSelection(app, true);
 
         if (app->comp_selected) {
-            RenderMonitors( Array<Monitor> { &app->comp_selected->monitor, 1, 1 } );
+            // TODO: show the monitor blit
+
+            //RenderMonitors( Array<Monitor> { &app->comp_selected->monitor, 1, 1 } );
         }
     }
 
@@ -266,7 +344,45 @@ void DoUI(McTraceApp *app) {
         app->draw_plane = false;
         app->draw_rays = false;
 
-        Component *monitor_clicked = RenderMonitors(app->monitors);
+        Component *monitor_clicked = RenderAllMonitors(app->monitors);
+        if (monitor_clicked) {
+            app->mode = MTM_MONITORS;
+            tab_sim = false; tab_monitors = true; tab_trace = false; tab_plot = false;
+            OnSwitchToMode(app);
+            app->comp_selected = monitor_clicked;
+            Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
+            app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
+        }
+    }
+
+    // tab menu
+    {
+        Widget *menu_align = UI_LayoutVertical(0);
+        menu_align->SetFlag(WF_ABSREL_POSITION);
+        menu_align->SetFlag(WF_EXPAND_HORIZONTAL);
+        menu_align->y0 = - (padding_1 + padding_2) + 5;
+        Widget *menu_2 = UI_LayoutHorizontal();
+        menu_2->padding = padding_2;
+        if (UI_ToggleTabButton(" Simulate ", &tab_sim)) {
+            tab_sim = true; tab_monitors = false; tab_trace = false; tab_plot = false;
+            app->mode = MTM_SIM;
+            OnSwitchToMode(app);
+        }
+        if (UI_ToggleTabButton("   Trace  ", &tab_trace)) {
+            tab_sim = false; tab_monitors = false; tab_trace = true; tab_plot = false;
+            app->mode = MTM_TRACE;
+            OnSwitchToMode(app);
+        }
+        if (UI_ToggleTabButton(" Monitors ", &tab_monitors)) {
+            tab_sim = false; tab_monitors = true; tab_trace = false; tab_plot = false;
+            app->mode = MTM_MONITORS;
+            OnSwitchToMode(app);
+        }
+        if (UI_ToggleTabButton("   Plot   ", &tab_plot)) {
+            tab_sim = false; tab_monitors = false; tab_trace = false; tab_plot = true;
+            app->mode = MTM_PLOT;
+            OnSwitchToMode(app);
+        }
     }
 }
 

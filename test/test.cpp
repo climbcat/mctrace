@@ -77,7 +77,7 @@ void TestMainLayout() {
     printf("TestMainLayout\n\n");
 
 
-    CbuiInit("insert_project_name", false);
+    CbuiInit("TestMainLayout", false);
 
     // TODO: init
 
@@ -176,8 +176,71 @@ void TestMainLayout() {
 
 }
 
+void TestGridLayoutCalculations() {
+    printf("TestGridLayoutCalculations\n");
+
+    CbuiInit("TestGridLayoutCalculations", false);
+    while (cbui.running) {
+        CbuiFrameStart();
+
+        // basic layout
+        Widget *m2 = UI_Center();
+        m2->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+        m2->col_bckgrnd = COLOR_GREEN;
+        m2->col_border = COLOR_BLACK;
+        m2->sz_border = 1;
+        m2->padding = 5;
+
+        Widget *p = WidgetGetCached( (const char*) "grid_container_pnl" );
+        WidgetTreeBranch(p);
+        p->SetFlag(WF_LAYOUT_VERTICAL);
+        p->SetFlag(WF_EXPAND_VERTICAL);
+        p->SetFlag(WF_EXPAND_HORIZONTAL);
+        p->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER); // TODO: what if we had a WF_DRAW_BORDER flag, ignoring the fill
+        p->features_flg |= WF_CAN_COLLIDE;
+        p->col_bckgrnd = COLOR_BLUE;
+        p->col_border = COLOR_BLACK;
+        p->sz_border = 1;
+        p->padding = 5;
+        p->DBG_tag = StrL("V");
+        UI_SetFontSize(FS_18);
+        UI_SpaceV(10);
+
+        f32 grid_w = p->rect.x1 - p->rect.x0 - p->padding * 2;
+        f32 grid_h = p->rect.y1 - p->rect.y0 - p->padding * 2;
+        GridLayout grid = GridCalculate(grid_w, grid_h, 20);
+
+        s32 n = 0;
+        for (s32 j = 0; j < grid.rows; ++j) {
+            for (s32 i = 0; i < grid.cols; ++i) {
+                if (n++ < 20) {
+                    Widget *w = UI_LayoutHorizontal();
+                    w->SetFlag(WF_ABSREL_POSITION);
+                    w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+                    w->col_bckgrnd = COLOR_WHITE;
+                    w->col_border = COLOR_BLACK;
+                    w->sz_border = 1;
+                    w->w = grid.c;
+                    w->h = grid.c;
+                    w->x0 = i * grid.c;
+                    w->y0 = j * grid.c;
+
+                    UI_Pop();
+                }
+            }
+        }
+
+
+        if (GetSpace()) {
+            grid.Print();
+        }
+    }
+    CbuiExit();
+}
+
 
 void Test() {
     //TestComponentFuncitonsRun();
-    TestMainLayout();
+    //TestMainLayout();
+    TestGridLayoutCalculations();
 }

@@ -110,6 +110,7 @@ McTraceApp McTraceInit() {
     // scene objects
     app.scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
     app.plane = CreatePlaneDetailed(10, 60, 6);
+    app.plane.color = MCT_COLOR_TRAJECTORY;
 
     Vector3f v_instr_center = { 0, -0.5f, 25 };
     app.plane.transform = TransformBuildTranslation( v_instr_center );
