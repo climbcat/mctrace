@@ -134,17 +134,22 @@ void DrawComponentInfoBox(Component *comp) {
     comp->transform;
 
     ComponentSharedHeader *hdr = comp->GetHeader();
+    if (comp->type == CT_Guide) {
+        MArena *a_tmp = cbui.ctx->a_tmp;
+        Array<CompPar> parameters = Parameters_Guide(a_tmp, (Guide*) comp->comp);
 
-    char *buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
-    sprintf(buff, "x = %.2f", hdr->position_absolute.x);
-    UI_Label(buff);
+        for (s32 i = 0; i < parameters.len; ++i) {
+            CompPar par = parameters.arr[i];
+            Str lbl = {};
+            lbl = StrCat(lbl, par.name);
+            lbl = StrCat(lbl, " = ");
+            lbl = StrCat(lbl, par.ValueAsString(a_tmp));
+            UI_Label(StrZ(lbl));
+        }
+    }
 
-    buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
-    sprintf(buff, "y = %.2f", hdr->position_absolute.y);
-    UI_Label(buff);
-
-    buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 16);
-    sprintf(buff, "z = %.2f", hdr->position_absolute.z);
+    char *buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 200);
+    sprintf(buff, "AT (%.2f, %.2f, %.2f) ROTATED (rx, ry, rz)", hdr->position_absolute.x, hdr->position_absolute.y, hdr->position_absolute.z);
     UI_Label(buff);
 
     UI_Pop();

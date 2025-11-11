@@ -32,6 +32,75 @@ struct Guide {
     int table_present;
 };
 
+
+enum CompParType {
+    CPT_STRING,
+    CPT_FLOAT,
+    CPT_VECTOR,
+
+    CPT_CNT
+};
+
+struct CompPar {
+    const char* name;
+    CompParType tpe;
+    void* value;
+
+    Str ValueAsString(MArena *a_dest) {
+        if (tpe == CPT_STRING) {
+            if (value) {
+                return Str{ (char*) value, (u32) strlen((char*) value) };
+            }
+            else {
+                return { (char*) "NULL", 0 };
+            }
+        }
+        else if (tpe == CPT_FLOAT) {
+            Str result = {};
+
+            char buff[32] = {};
+            f32 val = *((double*) value);
+            //_memzero(buff, 16);
+            sprintf(buff, "%.2f", val);
+
+            result.len = strlen(buff);
+            result.str = (char*) ArenaPush(a_dest, buff, result.len);
+            return result;
+        }
+        else {
+            return StrL("(vector value)");
+        }
+    }
+};
+
+void CompParRegister(Array<CompPar> *pars, CompParType tpe, const char* name, void *value) {
+    CompPar par;
+    par = {};
+    par.name = name;
+    par.tpe = tpe;
+    par.value = value;
+    pars->Add(par);
+}
+
+Array<CompPar> Parameters_Guide(MArena *a_dest, Guide *comp) {
+    Array<CompPar> pars = InitArray<CompPar>(a_dest, 11);
+
+    CompParRegister(&pars, CPT_STRING, "reflect", comp->reflect);
+    CompParRegister(&pars, CPT_FLOAT, "w1", &comp->w1);
+    CompParRegister(&pars, CPT_FLOAT, "h1", &comp->h1);
+    CompParRegister(&pars, CPT_FLOAT, "w2", &comp->w2);
+    CompParRegister(&pars, CPT_FLOAT, "h2", &comp->h2);
+    CompParRegister(&pars, CPT_FLOAT, "l", &comp->l);
+    CompParRegister(&pars, CPT_FLOAT, "R0", &comp->R0);
+    CompParRegister(&pars, CPT_FLOAT, "Qc", &comp->Qc);
+    CompParRegister(&pars, CPT_FLOAT, "alpha", &comp->alpha);
+    CompParRegister(&pars, CPT_FLOAT, "m", &comp->m);
+    CompParRegister(&pars, CPT_FLOAT, "W", &comp->W);
+
+    return pars;
+}
+
+
 Guide Create_Guide(s32 index, char *name) {
     Guide _comp = {};
     Guide *comp = &_comp;
