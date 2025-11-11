@@ -21,14 +21,11 @@ GridLayout GridCalculate(f32 w = 640, f32 h = 480, f32 N = 20) {
     }
     
     f32 c = 0;
-    f32 rows = 0;
-    f32 cols = 0;
 
     f32 cols_min = sqrt( w * N / h );
     f32 cols_0 = ceil(cols_min);
     f32 cols_i = 0;
     f32 rows_i = 0;
-
 
     s32 i = 0;
     while (true) {
@@ -37,8 +34,8 @@ GridLayout GridCalculate(f32 w = 640, f32 h = 480, f32 N = 20) {
         rows_i = floor( h / c );
 
         if (rows_i * cols_i >= N) {
-            rows = rows_i;
-            cols = cols_i;
+            lay.rows = rows_i;
+            lay.cols = cols_i;
             break;
         }
         i++;
@@ -47,13 +44,11 @@ GridLayout GridCalculate(f32 w = 640, f32 h = 480, f32 N = 20) {
     lay.w = w;
     lay.h = h;
     lay.c = c;
-    lay.cols = cols;
-    lay.rows = rows;
 
     return lay;
 }
 
-Component *RenderAllMonitors(Array<Monitor> monitors) {
+Component *RenderMonitorGrid(Array<Monitor> monitors) {
     Component *result = NULL;
 
     // TODO: why is this wrapper widget needed?
@@ -93,6 +88,12 @@ Component *RenderAllMonitors(Array<Monitor> monitors) {
                 w->h = grid.c;
                 w->x0 = i * grid.c;
                 w->y0 = j * grid.c;
+
+                Monitor mon = monitors.arr[idx];
+                if (mon.mon_tpe == MT_2D) {
+                    //MonitorBlit(cbui.ctx->a_tmp, mon, w->x0, w->y0, grid.c, grid.c, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
+                    MonitorBlit(cbui.ctx->a_tmp, mon, w->rect.x0, w->rect.y0, grid.c, grid.c, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
+                }
 
                 if (w->hot) {
                     w->col_border = COLOR_RED;
@@ -294,7 +295,7 @@ void DoUI(McTraceApp *app) {
     if (GetChar('r')) { app->draw_rays = !app->draw_rays; }
 
     // UI
-    UI_SetFontSize(FS_24);
+    UI_SetFontSize(FS_18);
 
     // tab menu frame
     s32 padding_1 = 20;
@@ -344,7 +345,7 @@ void DoUI(McTraceApp *app) {
         app->draw_plane = false;
         app->draw_rays = false;
 
-        Component *monitor_clicked = RenderAllMonitors(app->monitors);
+        Component *monitor_clicked = RenderMonitorGrid(app->monitors);
         if (monitor_clicked) {
             app->mode = MTM_MONITORS;
             tab_sim = false; tab_monitors = true; tab_trace = false; tab_plot = false;
