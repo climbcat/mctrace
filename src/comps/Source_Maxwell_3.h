@@ -1,7 +1,9 @@
 #ifndef __Source_Maxwell_3__
 #define __Source_Maxwell_3__
 
+
 // share block
+
 
 
     /* A normalised Maxwellian distribution : Integral over all l = 1 */
@@ -56,6 +58,30 @@ Source_Maxwell_3 Create_Source_Maxwell_3(s32 index, char *name) {
     comp->index = index;
 
     return _comp;
+}
+
+int GetParameterCount_Source_Maxwell_3() {
+    return 17;
+}
+
+void GetParameters_Source_Maxwell_3(Array<CompPar> *pars, Source_Maxwell_3 *comp) {
+    pars->Add( CompPar { CPT_FLOAT, "size", &comp->size } );
+    pars->Add( CompPar { CPT_FLOAT, "yheight", &comp->yheight } );
+    pars->Add( CompPar { CPT_FLOAT, "xwidth", &comp->xwidth } );
+    pars->Add( CompPar { CPT_FLOAT, "Lmin", &comp->Lmin } );
+    pars->Add( CompPar { CPT_FLOAT, "Lmax", &comp->Lmax } );
+    pars->Add( CompPar { CPT_FLOAT, "dist", &comp->dist } );
+    pars->Add( CompPar { CPT_FLOAT, "focus_xw", &comp->focus_xw } );
+    pars->Add( CompPar { CPT_FLOAT, "focus_yh", &comp->focus_yh } );
+    pars->Add( CompPar { CPT_FLOAT, "T1", &comp->T1 } );
+    pars->Add( CompPar { CPT_FLOAT, "T2", &comp->T2 } );
+    pars->Add( CompPar { CPT_FLOAT, "T3", &comp->T3 } );
+    pars->Add( CompPar { CPT_FLOAT, "I1", &comp->I1 } );
+    pars->Add( CompPar { CPT_FLOAT, "I2", &comp->I2 } );
+    pars->Add( CompPar { CPT_FLOAT, "I3", &comp->I3 } );
+    pars->Add( CompPar { CPT_FLOAT, "target_index", &comp->target_index } );
+    pars->Add( CompPar { CPT_FLOAT, "lambda0", &comp->lambda0 } );
+    pars->Add( CompPar { CPT_FLOAT, "dlambda", &comp->dlambda } );
 }
 
 void Init_Source_Maxwell_3(Source_Maxwell_3 *comp, Instrument *instrument) {
@@ -183,19 +209,19 @@ void Trace_Source_Maxwell_3(Source_Maxwell_3 *comp, Neutron *particle, Instrumen
     ////////////////////////////////////////////////////////////////
 
 
-    double v, tau_l, E, lambda, k, r, xf, yf, dx, dy, w_focus;
-    t = 0;
-    z = 0;
+    double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus;
+    t=0;
+    z=0;
     x = 0.5*w_source*randpm1();
     y = 0.5*h_source*randpm1();         /* Choose initial position */
 
     randvec_target_rect_real(&xf, &yf, &r, &w_focus, 0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
 
-    dx = xf - x;
-    dy = yf - y;
-    r = sqrt(dx*dx + dy*dy + dist*dist);
+    dx = xf-x;
+    dy = yf-y;
+    r = sqrt(dx*dx+dy*dy+dist*dist);
 
-    lambda = Lmin + l_range*rand01();    /* Choose from uniform distribution */
+    lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
     k = 2*PI/lambda;
     v = K2V*k;
 
@@ -209,8 +235,8 @@ void Trace_Source_Maxwell_3(Source_Maxwell_3 *comp, Neutron *particle, Instrumen
     printf("l %g, w_focus %g \n", lambda, w_focus);
     */
 
-    p *= w_mult * w_focus;    /* Correct for target focusing etc */
-    p *= I1 * SM3_Maxwell(lambda, T1) + I2 * SM3_Maxwell(lambda, T2) + I3 * SM3_Maxwell(lambda, T3); /* Calculate true intensity */
+    p *= w_mult*w_focus;    /* Correct for target focusing etc */
+    p *= I1*SM3_Maxwell(lambda,T1)+I2*SM3_Maxwell(lambda,T2)+I3*SM3_Maxwell(lambda,T3); /* Calculate true intensity */
 
 
     ////////////////////////////////////////////////////////////////
@@ -347,5 +373,6 @@ void Display_Source_Maxwell_3(Source_Maxwell_3 *comp) {
     #undef cone
     #undef sphere
 }
+
 
 #endif

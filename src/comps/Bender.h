@@ -1,8 +1,8 @@
 #ifndef __Bender__
 #define __Bender__
 
-// share block
 
+// share block
 
 
 struct Bender {
@@ -51,6 +51,35 @@ Bender Create_Bender(s32 index, char *name) {
     comp->index = index;
 
     return _comp;
+}
+
+int GetParameterCount_Bender() {
+    return 22;
+}
+
+void GetParameters_Bender(Array<CompPar> *pars, Bender *comp) {
+    pars->Add( CompPar { CPT_FLOAT, "w", &comp->w } );
+    pars->Add( CompPar { CPT_FLOAT, "h", &comp->h } );
+    pars->Add( CompPar { CPT_FLOAT, "r", &comp->r } );
+    pars->Add( CompPar { CPT_FLOAT, "Win", &comp->Win } );
+    pars->Add( CompPar { CPT_FLOAT, "k", &comp->k } );
+    pars->Add( CompPar { CPT_FLOAT, "d", &comp->d } );
+    pars->Add( CompPar { CPT_FLOAT, "l", &comp->l } );
+    pars->Add( CompPar { CPT_FLOAT, "R0a", &comp->R0a } );
+    pars->Add( CompPar { CPT_FLOAT, "Qca", &comp->Qca } );
+    pars->Add( CompPar { CPT_FLOAT, "alphaa", &comp->alphaa } );
+    pars->Add( CompPar { CPT_FLOAT, "ma", &comp->ma } );
+    pars->Add( CompPar { CPT_FLOAT, "Wa", &comp->Wa } );
+    pars->Add( CompPar { CPT_FLOAT, "R0i", &comp->R0i } );
+    pars->Add( CompPar { CPT_FLOAT, "Qci", &comp->Qci } );
+    pars->Add( CompPar { CPT_FLOAT, "alphai", &comp->alphai } );
+    pars->Add( CompPar { CPT_FLOAT, "mi", &comp->mi } );
+    pars->Add( CompPar { CPT_FLOAT, "Wi", &comp->Wi } );
+    pars->Add( CompPar { CPT_FLOAT, "R0s", &comp->R0s } );
+    pars->Add( CompPar { CPT_FLOAT, "Qcs", &comp->Qcs } );
+    pars->Add( CompPar { CPT_FLOAT, "alphas", &comp->alphas } );
+    pars->Add( CompPar { CPT_FLOAT, "ms", &comp->ms } );
+    pars->Add( CompPar { CPT_FLOAT, "Ws", &comp->Ws } );
 }
 
 void Init_Bender(Bender *comp, Instrument *instrument) {
@@ -470,5 +499,6 @@ void Display_Bender(Bender *comp) {
     #undef cone
     #undef sphere
 }
+
 
 #endif

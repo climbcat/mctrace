@@ -38,4 +38,13 @@ void UpdateLegacyTransforms(Array<Component*> comps) {
 }
 
 
+// NOTE: supposed to be (roll pitch yaw), no exactly (x, y, z)
+
+
+void RotationToEulerAnglesDegs(Rotation rot, double *rot_x, double *rot_y, double *rot_z) {
+    *rot_x = -asin(rot[2][0]) * rad2deg;
+    *rot_y = atan2(rot[2][1], rot[2][2]) * rad2deg;
+    *rot_z = atan2(rot[1][0], rot[0][0]) * rad2deg;
+}
+
 #endif

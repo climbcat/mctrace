@@ -126,30 +126,37 @@ void DrawComponentInfoBox(Component *comp) {
     w->padding = 5;
     w->y0 = 15;
 
-    Str line1 = StrCat(comp->name, " (");
+    Str line1 = StrCat(comp->name, " = ");
     line1 = StrCat(line1, comp->type_name);
-    line1 = StrCat(line1, ")");
+    line1 = StrCat(line1, "(");
 
     UI_Label(StrZ(line1));
     comp->transform;
 
     ComponentSharedHeader *hdr = comp->GetHeader();
-    if (comp->type == CT_Guide) {
+    //if (comp->type == CT_Guide) {
         MArena *a_tmp = cbui.ctx->a_tmp;
-        Array<CompPar> parameters = Parameters_Guide(a_tmp, (Guide*) comp->comp);
 
-        for (s32 i = 0; i < parameters.len; ++i) {
-            CompPar par = parameters.arr[i];
+        for (s32 i = 0; i < comp->parameters.len; ++i) {
+            CompPar par = comp->parameters.arr[i];
+            //Str lbl = { "    ", 4 };
+            //Str lbl = { (char*) "  ", 2 };
             Str lbl = {};
             lbl = StrCat(lbl, par.name);
             lbl = StrCat(lbl, " = ");
             lbl = StrCat(lbl, par.ValueAsString(a_tmp));
+            if (i + 1 == comp->parameters.len) {
+                lbl = StrCat(lbl, ")");
+            }
             UI_Label(StrZ(lbl));
         }
-    }
+    //}
+
+    double rot_x, rot_y, rot_z;
+    RotationToEulerAnglesDegs(hdr->rotation_absolute, &rot_y, &rot_x, &rot_z);
 
     char *buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 200);
-    sprintf(buff, "AT (%.2f, %.2f, %.2f) ROTATED (rx, ry, rz)", hdr->position_absolute.x, hdr->position_absolute.y, hdr->position_absolute.z);
+    sprintf(buff, "AT (%.2f, %.2f, %.2f) ROTATED (%.2f, %.2f, %.2f)", hdr->position_absolute.x, hdr->position_absolute.y, hdr->position_absolute.z, rot_x, rot_y, rot_z);
     UI_Label(buff);
 
     UI_Pop();

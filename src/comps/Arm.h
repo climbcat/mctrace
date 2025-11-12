@@ -1,8 +1,8 @@
 #ifndef __Arm__
 #define __Arm__
 
-// share block
 
+// share block
 
 
 struct Arm {
@@ -27,6 +27,13 @@ Arm Create_Arm(s32 index, char *name) {
     comp->index = index;
 
     return _comp;
+}
+
+int GetParameterCount_Arm() {
+    return 0;
+}
+
+void GetParameters_Arm(Array<CompPar> *pars, Arm *comp) {
 }
 
 void Init_Arm(Arm *comp, Instrument *instrument) {
@@ -118,5 +125,6 @@ void Display_Arm(Arm *comp) {
     #undef cone
     #undef sphere
 }
+
 
 #endif

@@ -1,8 +1,8 @@
 #ifndef __PSD_monitor__
 #define __PSD_monitor__
 
-// share block
 
+// share block
 
 
 struct PSD_monitor {
@@ -41,6 +41,24 @@ PSD_monitor Create_PSD_monitor(s32 index, char *name) {
     comp->index = index;
 
     return _comp;
+}
+
+int GetParameterCount_PSD_monitor() {
+    return 11;
+}
+
+void GetParameters_PSD_monitor(Array<CompPar> *pars, PSD_monitor *comp) {
+    pars->Add( CompPar { CPT_FLOAT, "nx", &comp->nx } );
+    pars->Add( CompPar { CPT_FLOAT, "ny", &comp->ny } );
+    pars->Add( CompPar { CPT_STRING, "filename", comp->filename } );
+    pars->Add( CompPar { CPT_FLOAT, "xmin", &comp->xmin } );
+    pars->Add( CompPar { CPT_FLOAT, "xmax", &comp->xmax } );
+    pars->Add( CompPar { CPT_FLOAT, "ymin", &comp->ymin } );
+    pars->Add( CompPar { CPT_FLOAT, "ymax", &comp->ymax } );
+    pars->Add( CompPar { CPT_FLOAT, "xwidth", &comp->xwidth } );
+    pars->Add( CompPar { CPT_FLOAT, "yheight", &comp->yheight } );
+    pars->Add( CompPar { CPT_FLOAT, "restore_neutron", &comp->restore_neutron } );
+    pars->Add( CompPar { CPT_FLOAT, "nowritefile", &comp->nowritefile } );
 }
 
 void Init_PSD_monitor(PSD_monitor *comp, Instrument *instrument) {
@@ -343,5 +361,6 @@ void Display_PSD_monitor(PSD_monitor *comp) {
     #undef cone
     #undef sphere
 }
+
 
 #endif

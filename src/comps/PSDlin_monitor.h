@@ -1,8 +1,8 @@
 #ifndef __PSDlin_monitor__
 #define __PSDlin_monitor__
 
-// share block
 
+// share block
 
 
 struct PSDlin_monitor {
@@ -41,6 +41,24 @@ PSDlin_monitor Create_PSDlin_monitor(s32 index, char *name) {
     comp->index = index;
 
     return _comp;
+}
+
+int GetParameterCount_PSDlin_monitor() {
+    return 11;
+}
+
+void GetParameters_PSDlin_monitor(Array<CompPar> *pars, PSDlin_monitor *comp) {
+    pars->Add( CompPar { CPT_FLOAT, "nbins", &comp->nbins } );
+    pars->Add( CompPar { CPT_STRING, "filename", comp->filename } );
+    pars->Add( CompPar { CPT_FLOAT, "xmin", &comp->xmin } );
+    pars->Add( CompPar { CPT_FLOAT, "xmax", &comp->xmax } );
+    pars->Add( CompPar { CPT_FLOAT, "ymin", &comp->ymin } );
+    pars->Add( CompPar { CPT_FLOAT, "ymax", &comp->ymax } );
+    pars->Add( CompPar { CPT_FLOAT, "nowritefile", &comp->nowritefile } );
+    pars->Add( CompPar { CPT_FLOAT, "xwidth", &comp->xwidth } );
+    pars->Add( CompPar { CPT_FLOAT, "yheight", &comp->yheight } );
+    pars->Add( CompPar { CPT_FLOAT, "restore_neutron", &comp->restore_neutron } );
+    pars->Add( CompPar { CPT_FLOAT, "vertical", &comp->vertical } );
 }
 
 void Init_PSDlin_monitor(PSDlin_monitor *comp, Instrument *instrument) {
@@ -216,7 +234,7 @@ void Save_PSDlin_monitor(PSDlin_monitor *comp) {
     if (!nowritefile) {
         if (!vertical) {
             DETECTOR_OUT_1D(
-                "Linear PSD monitor", "x-Position [m]", "Intensity", "x", xmin, xmax, nbins,
+                "Linear PSD monitor","x-Position [m]","Intensity","x", xmin, xmax, nbins,
                 &PSDlin_N[0],&PSDlin_p[0],&PSDlin_p2[0],filename);
         }
         else {
@@ -356,5 +374,6 @@ void Display_PSDlin_monitor(PSDlin_monitor *comp) {
     #undef cone
     #undef sphere
 }
+
 
 #endif

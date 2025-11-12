@@ -1,8 +1,8 @@
 #ifndef __Beamstop__
 #define __Beamstop__
 
-// share block
 
+// share block
 
 
 struct Beamstop {
@@ -34,6 +34,20 @@ Beamstop Create_Beamstop(s32 index, char *name) {
     comp->index = index;
 
     return _comp;
+}
+
+int GetParameterCount_Beamstop() {
+    return 7;
+}
+
+void GetParameters_Beamstop(Array<CompPar> *pars, Beamstop *comp) {
+    pars->Add( CompPar { CPT_FLOAT, "xmin", &comp->xmin } );
+    pars->Add( CompPar { CPT_FLOAT, "xmax", &comp->xmax } );
+    pars->Add( CompPar { CPT_FLOAT, "ymin", &comp->ymin } );
+    pars->Add( CompPar { CPT_FLOAT, "ymax", &comp->ymax } );
+    pars->Add( CompPar { CPT_FLOAT, "xwidth", &comp->xwidth } );
+    pars->Add( CompPar { CPT_FLOAT, "yheight", &comp->yheight } );
+    pars->Add( CompPar { CPT_FLOAT, "radius", &comp->radius } );
 }
 
 void Init_Beamstop(Beamstop *comp, Instrument *instrument) {
@@ -196,5 +210,6 @@ void Display_Beamstop(Beamstop *comp) {
     #undef cone
     #undef sphere
 }
+
 
 #endif

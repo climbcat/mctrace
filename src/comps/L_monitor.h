@@ -44,6 +44,25 @@ L_monitor Create_L_monitor(s32 index, char *name) {
     return _comp;
 }
 
+int GetParameterCount_L_monitor() {
+    return 12;
+}
+
+void GetParameters_L_monitor(Array<CompPar> *pars, L_monitor *comp) {
+    pars->Add( CompPar { CPT_FLOAT, "nL", &comp->nL } );
+    pars->Add( CompPar { CPT_STRING, "filename", comp->filename } );
+    pars->Add( CompPar { CPT_FLOAT, "nowritefile", &comp->nowritefile } );
+    pars->Add( CompPar { CPT_FLOAT, "xmin", &comp->xmin } );
+    pars->Add( CompPar { CPT_FLOAT, "xmax", &comp->xmax } );
+    pars->Add( CompPar { CPT_FLOAT, "ymin", &comp->ymin } );
+    pars->Add( CompPar { CPT_FLOAT, "ymax", &comp->ymax } );
+    pars->Add( CompPar { CPT_FLOAT, "xwidth", &comp->xwidth } );
+    pars->Add( CompPar { CPT_FLOAT, "yheight", &comp->yheight } );
+    pars->Add( CompPar { CPT_FLOAT, "Lmin", &comp->Lmin } );
+    pars->Add( CompPar { CPT_FLOAT, "Lmax", &comp->Lmax } );
+    pars->Add( CompPar { CPT_FLOAT, "restore_neutron", &comp->restore_neutron } );
+}
+
 void Init_L_monitor(L_monitor *comp, Instrument *instrument) {
 
     #define nL comp->nL
@@ -351,5 +370,6 @@ void Display_L_monitor(L_monitor *comp) {
     #undef cone
     #undef sphere
 }
+
 
 #endif

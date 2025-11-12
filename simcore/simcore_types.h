@@ -135,6 +135,46 @@ struct Monitor {
 };
 
 
+enum CompParType {
+    CPT_STRING,
+    CPT_FLOAT,
+    CPT_VECTOR,
+
+    CPT_CNT
+};
+
+struct CompPar {
+    CompParType tpe;
+    char name[64];
+    void* value;
+
+    Str ValueAsString(MArena *a_dest) {
+        if (tpe == CPT_STRING) {
+            if (value) {
+                return Str{ (char*) value, (u32) strlen((char*) value) };
+            }
+            else {
+                return { (char*) "NULL", 0 };
+            }
+        }
+        else if (tpe == CPT_FLOAT) {
+            Str result = {};
+
+            char buff[32] = {};
+            f32 val = *((double*) value);
+            sprintf(buff, "%.2f", val);
+
+            result.len = strlen(buff);
+            result.str = (char*) ArenaPush(a_dest, buff, result.len);
+            return result;
+        }
+        else {
+            return StrL("(vector value)");
+        }
+    }
+};
+
+
 // NOTE: The abstract / base type wrapper used by all high-level functionality (the specific 
 //      component classes are only used under-the-hood, e.g. by the legacy simcore engine).
 struct Component {
@@ -155,6 +195,7 @@ struct Component {
 
     // pointer to the underlying component
     void *comp;
+    Array<CompPar> parameters;
 
     ComponentSharedHeader *GetHeader() {
         return (ComponentSharedHeader*) comp;

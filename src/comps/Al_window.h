@@ -1,7 +1,9 @@
 #ifndef __Al_window__
 #define __Al_window__
 
+
 // share block
+
 
 
 /* ToDo: Should be component local names. */
@@ -47,6 +49,14 @@ Al_window Create_Al_window(s32 index, char *name) {
     comp->index = index;
 
     return _comp;
+}
+
+int GetParameterCount_Al_window() {
+    return 1;
+}
+
+void GetParameters_Al_window(Array<CompPar> *pars, Al_window *comp) {
+    pars->Add( CompPar { CPT_FLOAT, "thickness", &comp->thickness } );
 }
 
 void Init_Al_window(Al_window *comp, Instrument *instrument) {
@@ -161,5 +171,6 @@ void Display_Al_window(Al_window *comp) {
     #undef cone
     #undef sphere
 }
+
 
 #endif

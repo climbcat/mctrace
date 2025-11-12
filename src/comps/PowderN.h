@@ -1,7 +1,9 @@
 #ifndef __PowderN__
 #define __PowderN__
 
+
 // share block
+
 
 
 
@@ -471,6 +473,41 @@ PowderN Create_PowderN(s32 index, char *name) {
     comp->index = index;
 
     return _comp;
+}
+
+int GetParameterCount_PowderN() {
+    return 28;
+}
+
+void GetParameters_PowderN(Array<CompPar> *pars, PowderN *comp) {
+    pars->Add( CompPar { CPT_STRING, "reflections", comp->reflections } );
+    pars->Add( CompPar { CPT_STRING, "geometry", comp->geometry } );
+    pars->Add( CompPar { CPT_FLOAT, "format", &comp->format } );
+    pars->Add( CompPar { CPT_FLOAT, "radius", &comp->radius } );
+    pars->Add( CompPar { CPT_FLOAT, "yheight", &comp->yheight } );
+    pars->Add( CompPar { CPT_FLOAT, "xwidth", &comp->xwidth } );
+    pars->Add( CompPar { CPT_FLOAT, "zdepth", &comp->zdepth } );
+    pars->Add( CompPar { CPT_FLOAT, "thickness", &comp->thickness } );
+    pars->Add( CompPar { CPT_FLOAT, "pack", &comp->pack } );
+    pars->Add( CompPar { CPT_FLOAT, "Vc", &comp->Vc } );
+    pars->Add( CompPar { CPT_FLOAT, "sigma_abs", &comp->sigma_abs } );
+    pars->Add( CompPar { CPT_FLOAT, "sigma_inc", &comp->sigma_inc } );
+    pars->Add( CompPar { CPT_FLOAT, "delta_d_d", &comp->delta_d_d } );
+    pars->Add( CompPar { CPT_FLOAT, "p_inc", &comp->p_inc } );
+    pars->Add( CompPar { CPT_FLOAT, "p_transmit", &comp->p_transmit } );
+    pars->Add( CompPar { CPT_FLOAT, "DW", &comp->DW } );
+    pars->Add( CompPar { CPT_FLOAT, "nb_atoms", &comp->nb_atoms } );
+    pars->Add( CompPar { CPT_FLOAT, "d_omega", &comp->d_omega } );
+    pars->Add( CompPar { CPT_FLOAT, "d_phi", &comp->d_phi } );
+    pars->Add( CompPar { CPT_FLOAT, "tth_sign", &comp->tth_sign } );
+    pars->Add( CompPar { CPT_FLOAT, "p_interact", &comp->p_interact } );
+    pars->Add( CompPar { CPT_FLOAT, "concentric", &comp->concentric } );
+    pars->Add( CompPar { CPT_FLOAT, "density", &comp->density } );
+    pars->Add( CompPar { CPT_FLOAT, "weight", &comp->weight } );
+    pars->Add( CompPar { CPT_FLOAT, "barns", &comp->barns } );
+    pars->Add( CompPar { CPT_FLOAT, "Strain", &comp->Strain } );
+    pars->Add( CompPar { CPT_FLOAT, "focus_flip", &comp->focus_flip } );
+    pars->Add( CompPar { CPT_FLOAT, "target_index", &comp->target_index } );
 }
 
 void Init_PowderN(PowderN *comp, Instrument *instrument) {
@@ -1519,5 +1556,6 @@ void Display_PowderN(PowderN *comp) {
     #undef cone
     #undef sphere
 }
+
 
 #endif

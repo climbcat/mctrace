@@ -1,7 +1,9 @@
 #ifndef __Monochromator_2foc__
 #define __Monochromator_2foc__
 
+
 // share block
+
 
 
 #ifndef DIV_CUTOFF
@@ -54,6 +56,30 @@ Monochromator_2foc Create_Monochromator_2foc(s32 index, char *name) {
     comp->index = index;
 
     return _comp;
+}
+
+int GetParameterCount_Monochromator_2foc() {
+    return 17;
+}
+
+void GetParameters_Monochromator_2foc(Array<CompPar> *pars, Monochromator_2foc *comp) {
+    pars->Add( CompPar { CPT_STRING, "reflect", comp->reflect } );
+    pars->Add( CompPar { CPT_FLOAT, "zwidth", &comp->zwidth } );
+    pars->Add( CompPar { CPT_FLOAT, "yheight", &comp->yheight } );
+    pars->Add( CompPar { CPT_FLOAT, "gap", &comp->gap } );
+    pars->Add( CompPar { CPT_FLOAT, "NH", &comp->NH } );
+    pars->Add( CompPar { CPT_FLOAT, "NV", &comp->NV } );
+    pars->Add( CompPar { CPT_FLOAT, "mosaich", &comp->mosaich } );
+    pars->Add( CompPar { CPT_FLOAT, "mosaicv", &comp->mosaicv } );
+    pars->Add( CompPar { CPT_FLOAT, "r0", &comp->r0 } );
+    pars->Add( CompPar { CPT_FLOAT, "Q", &comp->Q } );
+    pars->Add( CompPar { CPT_FLOAT, "RV", &comp->RV } );
+    pars->Add( CompPar { CPT_FLOAT, "RH", &comp->RH } );
+    pars->Add( CompPar { CPT_FLOAT, "DM", &comp->DM } );
+    pars->Add( CompPar { CPT_FLOAT, "mosaic", &comp->mosaic } );
+    pars->Add( CompPar { CPT_FLOAT, "width", &comp->width } );
+    pars->Add( CompPar { CPT_FLOAT, "height", &comp->height } );
+    pars->Add( CompPar { CPT_FLOAT, "verbose", &comp->verbose } );
 }
 
 void Init_Monochromator_2foc(Monochromator_2foc *comp, Instrument *instrument) {
@@ -489,5 +515,6 @@ void Display_Monochromator_2foc(Monochromator_2foc *comp) {
     #undef cone
     #undef sphere
 }
+
 
 #endif
