@@ -48,6 +48,41 @@ GridLayout GridCalculate(f32 w = 640, f32 h = 480, f32 N = 20) {
     return lay;
 }
 
+
+Sprite MonitorUpdateTexture(MArena *a_dest, Monitor *mon, f32 sprite_x0, f32 sprite_y0, s32 dest_width, s32 dest_height) {
+    if (mon->mon_tpe != MT_2D) {
+        return {};
+    }
+
+    mon->texture_2d.tpe = TT_RGBA;
+    mon->texture_2d.width = mon->binm_x;
+    mon->texture_2d.height = mon->binn_y;
+    mon->texture_2d.px_sz = 1;
+    mon->texture_2d.data = (u8*) MonitorDataBuffer(a_dest, mon->binm_x, mon->binn_y, mon->N);
+
+    // TODO: how the feck to we remove that texture from the registration?
+
+    u64 key = HashStringValue(mon->comp_name);
+    MapPut(&cbui.map_textures, key, &mon->texture_2d);
+
+    // construct the corresponding sprite
+    Sprite s = {};
+    s.tex_id = key;
+
+    s.w = dest_width;
+    s.h = dest_height;
+    s.x0 = sprite_x0;
+    s.y0 = sprite_y0;
+    s.u0 = 0;
+    s.u1 = 1;
+    s.v0 = 0;
+    s.v1 = 1;
+
+    return s;
+}
+
+
+
 Component *RenderMonitorGrid(Array<Monitor> monitors) {
     Component *result = NULL;
 
@@ -67,6 +102,8 @@ Component *RenderMonitorGrid(Array<Monitor> monitors) {
     f32 grid_h = p->rect.y1 - p->rect.y0 - p->padding * 2;
     GridLayout grid = GridCalculate(grid_w, grid_h, monitors.len);
 
+    MArena *a_tmp = cbui.ctx->a_tmp;
+
     s32 n = 0;
     s32 idx = 0;
     for (s32 j = 0; j < grid.rows; ++j) {
@@ -76,7 +113,7 @@ Component *RenderMonitorGrid(Array<Monitor> monitors) {
                 _memzero(&buff[0], 50);
                 sprintf(buff, "mongrid_%d", idx);
 
-                Widget *w = WidgetGetCached( StrZ(StrL(buff)));
+                Widget *w = WidgetGetCached( StrZ(StrL(buff)) );
                 WidgetTreeSibling(w);
                 w->SetFlag(WF_ABSREL_POSITION);
                 w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
@@ -89,10 +126,10 @@ Component *RenderMonitorGrid(Array<Monitor> monitors) {
                 w->x0 = i * grid.c;
                 w->y0 = j * grid.c;
 
-                Monitor mon = monitors.arr[idx];
-                if (mon.mon_tpe == MT_2D) {
-                    //MonitorBlit(cbui.ctx->a_tmp, mon, w->x0, w->y0, grid.c, grid.c, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
-                    MonitorBlit(cbui.ctx->a_tmp, mon, w->rect.x0, w->rect.y0, grid.c, grid.c, cbui.plf.width, cbui.plf.height, (Color*) cbui.image_buffer);
+                Monitor *mon = monitors.arr + idx;
+                if (mon->mon_tpe == MT_2D) {
+                    Sprite s = MonitorUpdateTexture(a_tmp, mon, w->rect.x0, w->rect.y0, grid.c, grid.c);
+                    SpriteBufferPush(s);
                 }
 
                 if (w->hot) {
@@ -116,7 +153,7 @@ Component *RenderMonitorGrid(Array<Monitor> monitors) {
     return result;
 }
 
-void DrawComponentInfoBox(Component *comp) {
+Widget *DrawComponentInfoBox(Component *comp) {
     Widget *w = UI_LayoutVertical();
     w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
     w->SetFlag(WF_ABSREL_POSITION);
@@ -134,23 +171,18 @@ void DrawComponentInfoBox(Component *comp) {
     comp->transform;
 
     ComponentSharedHeader *hdr = comp->GetHeader();
-    //if (comp->type == CT_Guide) {
-        MArena *a_tmp = cbui.ctx->a_tmp;
-
-        for (s32 i = 0; i < comp->parameters.len; ++i) {
-            CompPar par = comp->parameters.arr[i];
-            //Str lbl = { "    ", 4 };
-            //Str lbl = { (char*) "  ", 2 };
-            Str lbl = {};
-            lbl = StrCat(lbl, par.name);
-            lbl = StrCat(lbl, " = ");
-            lbl = StrCat(lbl, par.ValueAsString(a_tmp));
-            if (i + 1 == comp->parameters.len) {
-                lbl = StrCat(lbl, ")");
-            }
-            UI_Label(StrZ(lbl));
+    MArena *a_tmp = cbui.ctx->a_tmp;
+    for (s32 i = 0; i < comp->parameters.len; ++i) {
+        CompPar par = comp->parameters.arr[i];
+        Str lbl = {};
+        lbl = StrCat(lbl, par.name);
+        lbl = StrCat(lbl, " = ");
+        lbl = StrCat(lbl, par.ValueAsString(a_tmp));
+        if (i + 1 == comp->parameters.len) {
+            lbl = StrCat(lbl, ")");
         }
-    //}
+        UI_Label(StrZ(lbl));
+    }
 
     double rot_x, rot_y, rot_z;
     RotationToEulerAnglesDegs(hdr->rotation_absolute, &rot_y, &rot_x, &rot_z);
@@ -160,6 +192,9 @@ void DrawComponentInfoBox(Component *comp) {
     UI_Label(buff);
 
     UI_Pop();
+
+    // return the layout, in case someone wants to add to that
+    return w;
 }
 
 void DrawComponentHover(Component *comp) {
@@ -180,7 +215,7 @@ void DrawComponentHover(Component *comp) {
     UI_Pop();
 }
 
-void DoComponentSelection(McTraceApp *app, bool fat_monitors) {
+Widget *DoComponentSelection(McTraceApp *app, bool fat_monitors) {
     Array<Component*> comps = app->config.comps;
 
     bool collision_this_frame = false;
@@ -225,6 +260,8 @@ void DoComponentSelection(McTraceApp *app, bool fat_monitors) {
         app->scene_objs.Add(comp_wireframe);
     }
 
+    Widget *w = NULL;
+
     // hover / click  / double-click
     if (app->comp_hover) {
         DrawComponentHover(app->comp_hover);
@@ -247,13 +284,16 @@ void DoComponentSelection(McTraceApp *app, bool fat_monitors) {
         box.style = WFR_FAT;
         box.color = MCT_COLOR_DEFOCUSED;
         app->scene_objs.Add(box);
-        DrawComponentInfoBox(app->comp_selected);
+        w = DrawComponentInfoBox(app->comp_selected);
     }
 
     // selection off
     if (app->comp_clicked == NULL && MouseLeft().clicked) {
         app->comp_selected = NULL;
     }
+
+    // return the infobox's main layout, if used
+    return w;
 }
 
 void OnSwitchToMode(McTraceApp *app) {
@@ -344,12 +384,28 @@ void DoUI(McTraceApp *app) {
         app->draw_plane = true;
         app->draw_rays = false;
 
-        DoComponentSelection(app, true);
+        Widget *info_box = DoComponentSelection(app, true);
 
         if (app->comp_selected) {
-            // TODO: show the monitor blit
+            // display the monitor blit
 
-            //RenderMonitors( Array<Monitor> { &app->comp_selected->monitor, 1, 1 } );
+            Monitor *mon = &app->comp_selected->monitor;
+
+            assert(info_box != NULL);
+            g_w_layout = info_box;
+
+            UI_SpaceV(10);
+
+            Widget *w = WidgetGetCached("monitor_selection_blit_area");
+            WidgetTreeSibling(w);
+            w->w = 128;
+            w->h = 128;
+            w->col_bckgrnd = COLOR_BLUE;
+
+            Sprite s = MonitorUpdateTexture(cbui.ctx->a_tmp, mon, w->rect.x0, w->rect.y0, 128, 128);
+            SpriteBufferPush(s);
+
+            UI_Pop();
         }
     }
 

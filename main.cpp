@@ -99,6 +99,8 @@ void RunProgram(bool do_fullscreen) {
 
         DoUI(&app);
         DoRendering(&app);
+
+        CbuiFrameEnd();
     }
 
     CbuiExit();

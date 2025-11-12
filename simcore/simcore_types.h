@@ -114,6 +114,8 @@ struct Monitor {
     CompMonitorType mon_tpe;
     void *comp;
 
+    Texture texture_2d;
+
     Str comp_name;
     Str title;
     Str xlabel;

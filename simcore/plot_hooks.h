@@ -133,5 +133,29 @@ void MonitorBlit(MArena *a_tmp, Monitor monitor, s32 mon_left, s32 mon_top, s32 
     Blit32Bit(sprite_width, sprite_height, left, top, u0, u1, v0, v1, src_width, src_height, src_colbuff, dest_width, dest_height, dest_buffer);
 }
 
+void *MonitorDataBuffer(MArena *a_tmp, s32 src_width, s32 src_height, double *src_buffer) {
+    Color *src_colbuff = (Color*) ArenaAlloc(a_tmp, sizeof(Color) * src_width * src_height);
+
+    f32 max_value = 0;
+    for (s32 i = 0; i < src_width; ++i) {
+        for (s32 j = 0; j < src_width; ++j) {
+            f32 src_value = src_buffer[i*src_width + j];
+            max_value = MaxF32(max_value, src_value);
+        }
+    }
+
+    for (s32 i = 0; i < src_width; ++i) {
+        for (s32 j = 0; j < src_width; ++j) {
+            f32 src_value = src_buffer[i*src_width + j];
+
+            if (src_value > 0) {
+                src_colbuff[i*src_width + j] = ColorMapGet(src_value / max_value, colormap_paletted_jet);
+            }
+        }
+    }
+
+    return src_colbuff;
+}
+
 
 #endif
