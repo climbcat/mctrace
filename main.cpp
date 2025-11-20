@@ -71,6 +71,7 @@ Vector2f PointToScreen(Vector3f point, Matrix4f view_l2w, Perspective persp, u32
 #include "src/comps_helpers.h"
 #include "src/comps/PSI_DMC_config.h"
 
+#include "src/simbox.h"
 #include "src/mctrace.h"
 #include "src/ui.h"
 
@@ -85,8 +86,8 @@ void RunProgram(bool do_fullscreen) {
     s32 ncount = 1e5;
 
     // get DISPLAY/TRACE data and PLOT data pointers
-    GetComponentDisplayWireframes(cbui.ctx->a_pers, app.config.comps);
-    app.traces_first = TraceParticles(cbui.ctx->a_pers, app.config.comps, &app.config.instr, ncount, 100);
+    GetComponentDisplayWireframes(cbui.ctx->a_pers, app.config.comps);    
+    TraceParticles(cbui.ctx->a_pers, &app.container, app.config.comps, &app.config.instr, ncount, 100);
     app.monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, app.config.comps);
 
     // app display

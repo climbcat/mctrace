@@ -5,7 +5,7 @@
 struct GridLayout {
     f32 w;
     f32 h;
-    f32 c;
+    f32 c; // cell size (quadratic)
     f32 cols;
     f32 rows;
 

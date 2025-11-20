@@ -3,6 +3,7 @@
 
 
 static MArena *g_a_dest_trace;
+static List<Vector3f> _g_anchors_trace;
 static List<Vector3f> *g_anchors_trace;
 static Matrix4f g_t_world_current_comp; //  <--  NOTE: this var could be shared
 
