@@ -155,6 +155,7 @@ Component *RenderMonitorGrid(Array<Monitor> monitors) {
 
 Widget *DrawComponentInfoBox(Component *comp) {
     Widget *w = UI_LayoutVertical();
+    w->SetFlag(WF_LAYOUT_VERTICAL);
     w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
     w->SetFlag(WF_ABSREL_POSITION);
     w->col_bckgrnd = COLOR_WHITE;
@@ -427,9 +428,11 @@ void DoUI(McTraceApp *app) {
     // tab menu
     {
         Widget *menu_align = UI_LayoutVertical(0);
+
         menu_align->SetFlag(WF_ABSREL_POSITION);
         menu_align->SetFlag(WF_EXPAND_HORIZONTAL);
         menu_align->y0 = - (padding_1 + padding_2) + 5;
+
         Widget *menu_2 = UI_LayoutHorizontal();
         menu_2->padding = padding_2;
         if (UI_ToggleTabButton(" Simulate ", &tab_sim)) {
@@ -451,6 +454,43 @@ void DoUI(McTraceApp *app) {
             tab_sim = false; tab_monitors = false; tab_trace = false; tab_plot = true;
             app->mode = MTM_PLOT;
             OnSwitchToMode(app);
+        }
+        UI_Pop();
+
+
+        if (app->mode == MTM_TRACE || app->mode == MTM_MONITORS) {
+            UI_LayoutHorizontal();
+
+            Widget *btn = NULL;
+            bool clicked = false;
+
+            clicked = UI_Button("<", &btn);
+            if (clicked) {
+
+                // DBG
+
+                printf("<\n");
+                app->comp_selected = app->config.comps.Last();
+                app->comp_clicked = app->comp_selected;
+            }
+            btn->w = 40;
+            btn->h = 20;
+
+            UI_SpaceH(10);
+
+            clicked = UI_Button(">", &btn);
+            if (clicked) {
+
+                // DBG
+
+                printf(">\n");
+                app->comp_selected = app->config.comps.First();
+                app->comp_clicked = app->comp_selected;
+            }
+            btn->w = 40;
+            btn->h = 20;
+
+            UI_Pop();
         }
     }
 }
