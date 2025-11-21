@@ -82,11 +82,10 @@ void RunProgram(bool do_fullscreen) {
     CbuiInit("mctrace", do_fullscreen);
 
     McTraceApp app = McTraceInit();
-    s32 ncount = 1e6;
 
     // get DISPLAY/TRACE data and PLOT data pointers
     GetComponentDisplayWireframes(cbui.ctx->a_pers, app.config.comps);
-    TraceParticles(cbui.ctx->a_pers, &app.container, app.config.comps, &app.config.instr, ncount);
+    TraceParticles(cbui.ctx->a_pers, &app.container, app.config.comps, &app.config.instr, app.ncount_init);
     app.monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, app.config.comps);
 
     // app display
@@ -101,9 +100,8 @@ void RunProgram(bool do_fullscreen) {
         DoRendering(&app);
 
         if (GetEnter()) {
-            app.container.PrintOccupancy();
+            app.container.PrintOccupancy(true);
         }
-
 
         CbuiFrameEnd();
     }

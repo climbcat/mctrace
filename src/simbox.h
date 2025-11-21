@@ -129,7 +129,7 @@ bool PushTrajectory(TrajBundle *bundle, Traj traj) {
     }
 }
 
-bool PushTrajectory(TrajContainer *container, Traj traj) {
+bool PushTrajectory_OLD(TrajContainer *container, Traj traj) {
     u32 bundles_cnt = container->bundles_ptrs.len;
     assert(traj.comp_idx_max <= bundles_cnt && "Traj container initialization problem"); 
 
@@ -170,6 +170,43 @@ bool PushTrajectory(TrajContainer *container, Traj traj) {
         }
 
         return did_push;
+    }
+}
+
+bool PushTrajectory(TrajContainer *container, Traj traj) {
+    u32 bundles_cnt = container->bundles_ptrs.len;
+    assert(traj.comp_idx_max <= bundles_cnt && "Traj container initialization problem"); 
+
+    if (container->full == true) {
+        return false;
+    }
+
+    else {
+        TrajBundle* bundle = container->bundles_ptrs.arr[container->current_idx];
+        if (bundle->full && (container->current_idx < bundles_cnt -1)) {
+            container->current_idx++;
+
+            bundle = container->bundles_ptrs.arr[container->current_idx];
+        }
+        else if (bundle->full && (container->current_idx == (bundles_cnt - 1))) {
+            container->CheckIfFull();
+            if (container->full) {
+                return false;
+            }
+        }
+        assert(bundle->full == false && "sanity check the current fill-strategy");
+
+        if (traj.comp_idx_max < container->current_idx) {
+            return false;
+        }
+
+        bool could_push = PushTrajectory(bundle, traj);
+        if (could_push) {
+            container->events_cnt += traj.events.len; 
+            container->traj_cnt += 1;
+        }
+
+        return could_push;
     }
 }
 

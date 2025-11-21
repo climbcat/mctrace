@@ -76,11 +76,12 @@ struct McTraceApp {
     Wireframe plane;
     Array<Monitor> monitors;
 
-    //NeutronTrajectory *traces_first;
+    u32 ncount_init;
     TrajContainer container;
 
     bool draw_rays;
     bool draw_plane;
+    u32 draw_rays_limit;
 
     McTraceMode mode;
     ColorSheme colors;
@@ -99,9 +100,8 @@ McTraceApp McTraceInit() {
     app.persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
     app.cam = OrbitCameraInit();
 
-    //s32 ncount = 1e6;
-    s32 ncount = 1e5;
-    app.config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, ncount);
+    app.ncount_init = 1e6;
+    app.config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, app.ncount_init);
 
     // scene objects
     app.scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
@@ -109,13 +109,14 @@ McTraceApp McTraceInit() {
     app.plane.color = MCT_COLOR_TRAJECTORY;
 
     Vector3f v_instr_center = { 0, -0.5f, 25 };
-    app.plane.transform = TransformBuildTranslation( v_instr_center );
+    app.plane.transform = TransformBuildTranslation( v_instr_center);
 
     WireframeRawSegments(cbui.ctx->a_pers, &app.plane);
     app.scene_objs.Add(app.plane);
 
     //
-    app.container = InitTrajectoryContainer(cbui.ctx->a_pers, app.config.comps.len);
+    app.container = InitTrajectoryContainer(cbui.ctx->a_pers, app.config.comps.len, 256 * KILOBYTE);
+    app.draw_rays_limit = 300;
 
     v_instr_center.y = 0;
     app.cam.radius = v_instr_center.z * 1.5;
@@ -242,6 +243,7 @@ void TraceParticles(MArena *a_trajectories, TrajContainer *container, Array<Comp
             t.events = g_anchors_trace;
 
             PushTrajectory(container, t);
+            g_anchors_trace.len = 0;
         }
     }
 }
@@ -287,6 +289,7 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
 
         // NOTE: not sure where this should be initialized, probably in the component_create generated function 
         // TODO: init this field in generated code
+    
         comp->monitor.comp_name = comp->name;
         comp->monitor.comp = comp;
 
@@ -304,7 +307,8 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
     return result;
 }
 
-void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp, Color trajectory_color) {
+u32 RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp, Color trajectory_color, u32 max_trajectories) {
+    u32 trajectories_rendered = 0;
 
     while (traces) {
         for (u32 i = 0; i < traces->events.len - 1; ++i) {
@@ -314,8 +318,14 @@ void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective pe
             RenderLineSegment(cbui.image_buffer, TransformGetInverse(view), persp, a, b, cbui.plf.width, cbui.plf.height, trajectory_color);
         }
 
+        trajectories_rendered++;
+        if ((max_trajectories > 0) && (trajectories_rendered >= max_trajectories)) {
+            break;
+        }
+
         traces = traces->next;
     }
+    return trajectories_rendered;
 }
 
 void DoRendering(McTraceApp *app) {
@@ -323,19 +333,23 @@ void DoRendering(McTraceApp *app) {
         app->scene_objs.Add(app->plane);
     }
 
-    if (app->draw_rays) {
-        if (app->comp_selected) {
-            for (s32 i = app->comp_selected->GetHeader()->index; i < app->container.bundles_ptrs.len; ++i) {
+    if (app->draw_rays && app->draw_rays_limit > 0) {
 
-                Traj *first_at_comp_idx = app->container.bundles_ptrs.arr[i]->head;
-                RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, MCT_COLOR_TRAJECTORY );
-            }
+        if (app->comp_selected) {
+            u32 selected_idx = app->comp_selected->GetHeader()->index;
+
+            Traj *first_at_comp_idx = app->container.bundles_ptrs.arr[selected_idx]->head;
+            RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, MCT_COLOR_TRAJECTORY, app->draw_rays_limit);
         }
         else {
+            u32 trajs_rendered = 0;
             for (s32 i = 0; i < app->container.bundles_ptrs.len; ++i) {
+                if (trajs_rendered >= app->draw_rays_limit) {
+                    break;
+                }
 
                 Traj *first_at_comp_idx = app->container.bundles_ptrs.arr[i]->head;
-                RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, MCT_COLOR_TRAJECTORY );
+                trajs_rendered += RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, MCT_COLOR_TRAJECTORY, 0);
             }
         }
     }
