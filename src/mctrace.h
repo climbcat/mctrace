@@ -5,7 +5,6 @@
 #include "../simcore/simcore_types.h"
 
 
-//#define MCT_COLOR_SELECTION_BOX         (( Color { 74, 78, 121, 128 } ))
 #define MCT_COLOR_SELECTION_BOX         COLOR_GRAY_75
 #define MCT_COLOR_MONITOR               COLOR_RED
 #define MCT_COLOR_TRAJECTORY            COLOR_GRAY_75
@@ -186,7 +185,7 @@ void ParticlePrint(Neutron n) {
 //  Particle traces
 
 
-void TraceParticles(MArena *a_trajectories, TrajContainer *container, Array<Component*> comps, Instrument *instr, u32 ncount, u32 ncount_record_as_trajectories) {
+void TraceParticles(MArena *a_trajectories, TrajContainer *container, Array<Component*> comps, Instrument *instr, u32 ncount) {
     g_do_trace_trajectories = true;
 
     for (u32 j = 0; j < ncount; ++j) {
@@ -199,7 +198,7 @@ void TraceParticles(MArena *a_trajectories, TrajContainer *container, Array<Comp
         u32 compo_idx_max = 0;
 
         // record trajectories
-        if (j < ncount_record_as_trajectories) {
+        if (container->full == false) {
             u32 idx = container->current_idx;
             TrajBundle *bundle = container->bundles_ptrs.arr[idx];
 

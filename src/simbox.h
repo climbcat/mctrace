@@ -24,8 +24,38 @@ struct TrajContainer {
     Array<TrajBundle*> bundles_ptrs;
     u32 events_cnt;
     u32 traj_cnt;
-
     u32 current_idx;
+    bool full;
+
+    bool CheckIfFull() {
+        // NOTE: check at strategic times to close it
+
+        for (s32 i = 0; i < bundles_ptrs.len; ++i) {
+            if (bundles_ptrs.arr[i]->full == false) {
+                return false;
+            }
+        }
+        full = true;
+        return true;
+    }
+
+    void PrintOccupancy(bool verbose = false) {
+        printf("Container: %d events, %d rays", events_cnt, traj_cnt);
+        if (full) {
+            printf(" - FULL");
+        }
+        printf("\n");
+
+        if (verbose == true) {
+            for (s32 i = 0; i < bundles_ptrs.len; ++i) {
+                printf("    Bundle %d: %d events, %d rays", i, bundles_ptrs.arr[i]->event_cnt, bundles_ptrs.arr[i]->traj_cnt);
+                if (bundles_ptrs.arr[i]->full) {
+                    printf(" - FULL");
+                }
+                printf("\n");
+            }
+        }
+    }
 };
 
 MArena ArenaSubInit(MArena *a_dest, u64 size) {
@@ -47,12 +77,12 @@ TrajBundle *InitTrajBundle(MArena *a_dest, u32 block_size, u32 comp_idx) {
     return bundle;
 }
 
-TrajContainer InitTrajectoryContainer(MArena *a_dest, u32 bundle_count) {
+TrajContainer InitTrajectoryContainer(MArena *a_dest, u32 bundle_count, u32 block_size = 64 * KILOBYTE) {
     TrajContainer container = {};
     container.bundles_ptrs = InitArray<TrajBundle*>(a_dest, bundle_count);
 
     for (u32 i = 0; i < bundle_count; ++i) {
-        TrajBundle *bundle = InitTrajBundle(a_dest, 16 * KILOBYTE, i);
+        TrajBundle *bundle = InitTrajBundle(a_dest, block_size, i);
         container.bundles_ptrs.Add(bundle);
     }
 
@@ -66,7 +96,6 @@ bool ArenaHasEnoughSpace(MArena *a, u64 requested) {
         return is;
     }
     else {
-        // TODO: this won't be good enough for large arenas (they are notinfinite, after all)
         return true;
     }
 }
@@ -95,17 +124,53 @@ bool PushTrajectory(TrajBundle *bundle, Traj traj) {
         return true;
     }
     else {
+        bundle->full = true;
         return false;
     }
 }
 
 bool PushTrajectory(TrajContainer *container, Traj traj) {
-    assert(traj.comp_idx_max <= container->bundles_ptrs.len && "Traj container initialization problem"); 
+    u32 bundles_cnt = container->bundles_ptrs.len;
+    assert(traj.comp_idx_max <= bundles_cnt && "Traj container initialization problem"); 
 
-    TrajBundle* bundle = container->bundles_ptrs.arr[traj.comp_idx_max];
-    bool did_push = PushTrajectory(bundle, traj);
+    if (container->full == true) {
+        return false;
+    }
 
-    return did_push;
+    else {
+        u32 bundle_idx_to_push = traj.comp_idx_max;
+        TrajBundle* bundle = container->bundles_ptrs.arr[bundle_idx_to_push];
+
+        while (bundle->full == true) {
+            if (bundle_idx_to_push == (bundles_cnt - 1) && bundle->full == true) {
+                container->CheckIfFull();
+                if (container->full) {
+                    return false;
+                }
+            }
+
+            if (bundle_idx_to_push > 0) {
+                bundle_idx_to_push--;
+            }
+
+            else {
+                // discard thsi trajectory
+
+                assert(traj.comp_idx_max < bundles_cnt && "sanity check the CheckIfFull() logics above");
+                return false;
+            }
+
+            bundle = container->bundles_ptrs.arr[bundle_idx_to_push];
+        }
+        bool did_push = PushTrajectory(bundle, traj);
+
+        if (did_push) {
+            container->events_cnt += traj.events.len; 
+            container->traj_cnt += 1;
+        }
+
+        return did_push;
+    }
 }
 
 
