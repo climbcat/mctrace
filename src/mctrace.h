@@ -186,79 +186,9 @@ void ParticlePrint(Neutron n) {
 //  Particle traces
 
 
-/*
-NeutronTrajectory *TraceParticles(MArena *a_trajectories, Array<Component*> comps, Instrument *instr, u32 ncount, u32 ncount_record_as_trajectories) {
-    g_do_trace_trajectories = true;
-
-    NeutronTrajectory *ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));;
-    NeutronTrajectory *ntrace_prev = ntrace;
-    NeutronTrajectory *ntrace_head = ntrace;
-
-    for (u32 j = 0; j < ncount; ++j) {
-        // This sets vz = 1 and p = 1.
-        // From the legacy generated code, we got:
-        //      particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);
-        // (see mcsetstate in simcore.h).
-        Neutron n = {};
-
-
-        // TODO: re-implement
-
-
-        // record trajectories
-        if (j < ncount_record_as_trajectories) {
-            // record trajectories
-            ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
-            ntrace->event_segments = InitList<Vector3f>(a_trajectories, 0);
-            g_anchors_trace = &ntrace->event_segments;
-            g_a_dest_trace = a_trajectories;
-
-            ntrace_prev->next = ntrace;
-            ntrace_prev = ntrace;
-
-            g_trace_prev = {};
-            g_trace_current = {};
-        }
-        else {
-            g_do_trace_trajectories = false;
-        }
-
-
-        // trace components
-        Vector3f current = {};
-        Vector3f prev = {};
-        for (s32 i = 0; i < comps.len; ++i) {
-            Component *comp = comps.arr[i];
-            g_t_world_current_comp = comp->transform->t_world;
-
-            // previous local system -> current local system
-            ParticleTransform(comp->t_prev2loc, &n);
-
-            // run trace code
-            TraceComponent(comp, &n, instr);
-
-            // record the state after each comp, because there is no guarantee that the component will call SCATTER
-            trace_state_ext_hook(n.x, n.y, n.z);
-
-            // break iteration of absorbed particles
-            if (n._absorbed) {
-                break;
-            }
-        }
-    }
-
-    return ntrace_head;
-}
-*/
-
-
 void TraceParticles(MArena *a_trajectories, TrajContainer *container, Array<Component*> comps, Instrument *instr, u32 ncount, u32 ncount_record_as_trajectories) {
     g_do_trace_trajectories = true;
 
-    //NeutronTrajectory *ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));;
-    //NeutronTrajectory *ntrace_prev = ntrace;
-    //NeutronTrajectory *ntrace_head = ntrace;
-
     for (u32 j = 0; j < ncount; ++j) {
         // This sets vz = 1 and p = 1.
         // From the legacy generated code, we got:
@@ -266,26 +196,16 @@ void TraceParticles(MArena *a_trajectories, TrajContainer *container, Array<Comp
         // (see mcsetstate in simcore.h).
         Neutron n = {};
 
-
-        u32 idx_max = 0;
+        u32 compo_idx_max = 0;
 
         // record trajectories
         if (j < ncount_record_as_trajectories) {
-            // record trajectories
-            //ntrace = (NeutronTrajectory*) ArenaAlloc(a_trajectories, sizeof(NeutronTrajectory));
-            //ntrace->event_segments = InitList<Vector3f>(a_trajectories, 0);
-
             u32 idx = container->current_idx;
             TrajBundle *bundle = container->bundles_ptrs.arr[idx];
 
-            _g_anchors_trace = InitList<Vector3f>(cbui.ctx->a_tmp, 0);
-            g_anchors_trace = &_g_anchors_trace;
+            g_anchors_trace = InitList<Vector3f>(cbui.ctx->a_tmp, 0);
             g_a_dest_trace = cbui.ctx->a_tmp;
 
-            //ntrace_prev->next = ntrace;
-            //ntrace_prev = ntrace;
-
-            g_trace_prev = {};
             g_trace_current = {};
         }
         else {
@@ -297,7 +217,7 @@ void TraceParticles(MArena *a_trajectories, TrajContainer *container, Array<Comp
         Vector3f current = {};
         Vector3f prev = {};
         for (s32 i = 0; i < comps.len; ++i) {
-            idx_max = i;
+            compo_idx_max = i;
 
             Component *comp = comps.arr[i];
             g_t_world_current_comp = comp->transform->t_world;
@@ -317,17 +237,13 @@ void TraceParticles(MArena *a_trajectories, TrajContainer *container, Array<Comp
             }
         }
 
-
         if (g_do_trace_trajectories) {
             Traj t = {};
-            t.comp_idx_max = idx_max;
-            t.events = *g_anchors_trace;
+            t.comp_idx_max = compo_idx_max;
+            t.events = g_anchors_trace;
 
-            //PushTrajectory(container, t);
-            PushTrajectory2(container, t);
+            PushTrajectory(container, t);
         }
-
-
     }
 }
 
@@ -389,10 +305,6 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps) {
     return result;
 }
 
-
-// TODO: re-implement
-
-
 void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective persp, Color trajectory_color) {
 
     while (traces) {
@@ -407,31 +319,26 @@ void RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective pe
     }
 }
 
-
 void DoRendering(McTraceApp *app) {
     if (app->draw_plane) {
         app->scene_objs.Add(app->plane);
     }
 
-    // TODO: re-implement
     if (app->draw_rays) {
-
         if (app->comp_selected) {
-            printf("from %d:\n", app->comp_selected->GetHeader()->index);
             for (s32 i = app->comp_selected->GetHeader()->index; i < app->container.bundles_ptrs.len; ++i) {
 
                 Traj *first_at_comp_idx = app->container.bundles_ptrs.arr[i]->head;
-                RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, COLOR_BLACK /*MCT_COLOR_TRAJECTORY*/ );
+                RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, MCT_COLOR_TRAJECTORY );
             }
         }
         else {
             for (s32 i = 0; i < app->container.bundles_ptrs.len; ++i) {
 
                 Traj *first_at_comp_idx = app->container.bundles_ptrs.arr[i]->head;
-                RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, COLOR_BLACK /*MCT_COLOR_TRAJECTORY*/ );
+                RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, MCT_COLOR_TRAJECTORY );
             }
         }
-
     }
 
     RenderWireframes(app->scene_objs, app->cam.view, app->persp);

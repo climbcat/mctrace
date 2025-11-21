@@ -102,39 +102,8 @@ bool PushTrajectory(TrajBundle *bundle, Traj traj) {
 bool PushTrajectory(TrajContainer *container, Traj traj) {
     assert(traj.comp_idx_max <= container->bundles_ptrs.len && "Traj container initialization problem"); 
 
-    u32 idx = MinU32(traj.comp_idx_max, container->current_idx);
-
-    TrajBundle* bundle = container->bundles_ptrs.arr[idx];
-
+    TrajBundle* bundle = container->bundles_ptrs.arr[traj.comp_idx_max];
     bool did_push = PushTrajectory(bundle, traj);
-
-    // increment the target bundle index
-    if (did_push == false && traj.comp_idx_max > container->current_idx) {
-        container->current_idx++;
-        PushTrajectory(bundle, traj);
-    }
-
-    return did_push;
-}
-
-
-bool PushTrajectory2(TrajContainer *container, Traj traj) {
-    assert(traj.comp_idx_max <= container->bundles_ptrs.len && "Traj container initialization problem"); 
-
-    //u32 idx = MinU32(traj.comp_idx_max, container->current_idx);
-    u32 idx = traj.comp_idx_max;
-
-    TrajBundle* bundle = container->bundles_ptrs.arr[idx];
-
-    bool did_push = PushTrajectory(bundle, traj);
-
-    /*
-    // increment the target bundle index
-    if (did_push == false && traj.comp_idx_max > container->current_idx) {
-        container->current_idx++;
-        PushTrajectory(bundle, traj);
-    }
-    */
 
     return did_push;
 }
