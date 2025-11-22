@@ -94,9 +94,12 @@ void RunProgram(bool do_fullscreen) {
     while (cbui.running) {
         // frame start
         CbuiFrameStart();
-        PerspectiveSetAspectAndP(&app.persp, cbui.plf.width, cbui.plf.height);
-        OrbitCameraRotateZoom(&app.cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
-        OrbitCameraPanInPlane(&app.cam, app.persp.fov, app.persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
+
+        if (g_mouse_coolided_last_frame == false) {
+            PerspectiveSetAspectAndP(&app.persp, cbui.plf.width, cbui.plf.height);
+            OrbitCameraRotateZoom(&app.cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
+            OrbitCameraPanInPlane(&app.cam, app.persp.fov, app.persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
+        }
 
         DoUI(&app);
         DoRendering(&app);

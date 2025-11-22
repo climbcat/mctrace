@@ -265,11 +265,14 @@ Widget *DoComponentSelection(McTraceApp *app, bool fat_monitors) {
 
     // hover / click  / double-click
     if (app->comp_hover) {
-        DrawComponentHover(app->comp_hover);
+        if (g_mouse_coolided_last_frame == false) {
+            DrawComponentHover(app->comp_hover);
+        }
         Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_hover->display, 0.02f);
         box.color = app->colors.selection;
         app->scene_objs.Add(box);
     }
+
     if (app->comp_dbl_clicked) {
         Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_dbl_clicked->display, 0.02f);
         app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
@@ -285,12 +288,18 @@ Widget *DoComponentSelection(McTraceApp *app, bool fat_monitors) {
         box.style = WFR_FAT;
         box.color = MCT_COLOR_DEFOCUSED;
         app->scene_objs.Add(box);
-        w = DrawComponentInfoBox(app->comp_selected);
+        
     }
 
-    // selection off
-    if (app->comp_clicked == NULL && MouseLeft().clicked) {
-        app->comp_selected = NULL;
+    if (g_mouse_coolided_last_frame == false) {
+        // selection off
+        if (app->comp_clicked == NULL && MouseLeft().clicked && true ) {
+            app->comp_selected = NULL;
+        }
+    }
+
+    if (app->comp_selected) {
+        w = DrawComponentInfoBox(app->comp_selected);
     }
 
     // return the infobox's main layout, if used
@@ -465,32 +474,87 @@ void DoUI(McTraceApp *app) {
             bool clicked = false;
 
             clicked = UI_Button("<", &btn);
-            if (clicked) {
-
-                // DBG
-
-                printf("<\n");
-                app->comp_selected = app->config.comps.Last();
-                app->comp_clicked = app->comp_selected;
-            }
+            btn->y0 -= 1;
             btn->w = 40;
             btn->h = 20;
-
             UI_SpaceH(10);
 
-            clicked = UI_Button(">", &btn);
             if (clicked) {
+                s32 idx = 0;
 
-                // DBG
+                Component *to_select = NULL;
+                if (app->comp_selected) {
+                    idx = app->comp_selected->GetHeader()->index;
+                    if (idx > 0) {
+                        idx--;
+                    }
+                }
+                to_select = app->config.comps.arr[idx];
 
-                printf(">\n");
-                app->comp_selected = app->config.comps.First();
-                app->comp_clicked = app->comp_selected;
+                if (idx == 0) {
+                    while (to_select->interactable == false && idx < app->config.comps.len - 1) {
+                        idx++;
+                        to_select = app->config.comps.arr[idx];
+                    }
+                }
+                else {
+                    while (to_select->interactable == false && idx > 0) {
+                        idx--;
+                        to_select = app->config.comps.arr[idx];
+                    }
+                }
+
+                if (to_select->interactable == true) { 
+                    app->comp_selected = to_select;
+                    app->comp_clicked = app->comp_selected;
+                    app->comp_dbl_clicked = app->comp_selected;
+
+                    Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_dbl_clicked->display, 0.02f);
+                    app->cam.Update( TransformGetTranslation( box.transform ) );
+                }
             }
+
+            clicked = UI_Button(">", &btn);
+            btn->y0 -= 1;
             btn->w = 40;
             btn->h = 20;
-
             UI_Pop();
+
+            if (clicked) {
+                s32 idx = app->config.comps.len - 1;
+
+                Component *to_select = NULL;
+                if (app->comp_selected) {
+                    idx = app->comp_selected->GetHeader()->index;
+                    if (idx < app->config.comps.len - 1) {
+                        idx++;
+                    }
+                }
+                to_select = app->config.comps.arr[idx];
+
+                if (idx == app->config.comps.len - 1) {
+                    while (to_select->interactable == false && idx > 0) {
+                        idx--;
+                        to_select = app->config.comps.arr[idx];
+                    }
+                }
+                else {
+                    while (to_select->interactable == false && idx < app->config.comps.len - 1) {
+                        to_select = app->config.comps.arr[idx];
+                        idx++;
+                    }
+                }
+
+                if (to_select->interactable == true) { 
+                    app->comp_selected = to_select;
+                    app->comp_clicked = app->comp_selected;
+                    app->comp_dbl_clicked = app->comp_selected;
+
+                    Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_dbl_clicked->display, 0.02f);
+                    app->cam.Update( TransformGetTranslation( box.transform ) );
+
+                }
+            }
         }
     }
 }
