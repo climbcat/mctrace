@@ -304,13 +304,14 @@ Widget *DoComponentSelectionActions(McTraceApp *app) {
         
     }
 
+    // selection off
     if (g_mouse_coolided_last_frame == false) {
-        // selection off
         if (app->comp_clicked == NULL && MouseLeft().clicked && true ) {
             app->comp_selected = NULL;
         }
     }
 
+    // info box
     if (app->comp_selected) {
         w = DrawComponentInfoBox(app->comp_selected);
     }
@@ -320,6 +321,7 @@ Widget *DoComponentSelectionActions(McTraceApp *app) {
 
 void OnSwitchToMode(McTraceApp *app) {
     app->colors.SetToMode(app->mode);
+    app->comp_selected = NULL;
 
     if (app->mode == MTM_TRACE) {
         for (s32 i = 0; i < app->config.comps.len; ++i) {
@@ -336,11 +338,6 @@ void OnSwitchToMode(McTraceApp *app) {
         }
     }
 }
-
-bool tab_sim = false;
-bool tab_trace = true;
-bool tab_monitors = false;
-bool tab_plot = false;
 
 Component *_SelectPrevComponent(Array<Component*> comps, Component *selected, bool filter_monitors) {
     s32 idx = 0;
@@ -370,65 +367,105 @@ Component *_SelectPrevComponent(Array<Component*> comps, Component *selected, bo
     return to_select;
 }
 
-s32 IdxClamp(s32 idx, s32 start, s32 end) {
-    s32 min = MinS32(start, end);
-    s32 max = MaxS32(start, end);
+s32 FirstTrue(Array<bool> selector) {
+    for (s32 i = 0; i < selector.len; ++i) {
+        if (selector.arr[i]) {
+            return i;
+        }
+    }
+    return -1;
+}
 
-    idx = MinS32(idx, max);
-    idx = MaxS32(idx, min);
-    return idx;
+s32 LastTrue(Array<bool> selector) {
+    for (s32 i = selector.len - 1; i >= 0; --i) {
+        if (selector.arr[i]) {
+            return i;
+        }
+    }
+    return -1;
 }
-bool IdxBefore(s32 idx, s32 start, s32 end) {
-    s32 min = MinS32(start, end);
-    s32 max = MaxS32(start, end);
-    return idx < max;
-}
-bool IdxAfter(s32 idx, s32 start, s32 end) {
-    s32 min = MinS32(start, end);
-    s32 max = MaxS32(start, end);
-    return idx > min;
-}
-bool FilterIsInteractiblaOrIsMonitor(Component *comp, bool filter_monitor) {
-    if (filter_monitor) {
-        bool is_monitor = (comp->monitor.mon_tpe == MT_2D) || (comp->monitor.mon_tpe == MT_1D) || (comp->monitor.mon_tpe == MT_0D);
-        return is_monitor;
+
+s32 NextTrue(Array<bool> selector, s32 initial) {
+    assert(initial < selector.len);
+
+    if (initial < selector.len) {
+        for (s32 i = initial + 1; i < selector.len; ++i) {
+            if (selector.arr[i]) {
+                return i;
+            }
+        }
+    }
+
+    if (selector.arr[initial]) {
+        return initial;
     }
     else {
-        return comp->interactable;
+        return -1;
     }
 }
-Component *_SelectPrevOrNextComponent(Array<Component*> comps, Component *selected, s32 idx_start, s32 idx_end, bool filter_monitors) {
-    s32 idx = idx_end;
-    s32 sign = 1;
-    if (idx_start > idx_end) {
-        sign = -1;
-    }
 
-    Component *to_select = NULL;
-    if (selected) {
-        idx = selected->GetHeader()->index;
-        idx = IdxClamp(idx + sign, idx_start, idx_end);
-    }
-    to_select = comps.arr[idx];
+s32 PrevTrue(Array<bool> selector, s32 initial) {
+    assert(initial < selector.len);
 
-    if (FilterIsInteractiblaOrIsMonitor(to_select, filter_monitors) == false) {
-        if (idx == idx_end) {
-            while (FilterIsInteractiblaOrIsMonitor(to_select, filter_monitors) == false && IdxBefore(idx, idx_start, idx_end)) {
-                idx = IdxClamp(idx - sign, idx_start, idx_end);
-                to_select = comps.arr[idx];
-            }
-        }
-        else {
-            while (FilterIsInteractiblaOrIsMonitor(to_select, filter_monitors) == false && IdxAfter(idx, idx_start, idx_end)) {
-                idx = IdxClamp(idx + sign, idx_start, idx_end);
-                to_select = comps.arr[idx];
+    if (initial > 0) {
+        for (s32 i = initial - 1; i >= 0; --i) {
+            if (selector.arr[i]) {
+                return i;
             }
         }
     }
 
-    return to_select;
+    if (selector.arr[initial]) {
+        return initial;
+    }
+    else {
+        return -1;
+    }
 }
-void DoScrollBtn(McTraceApp *app, const char* btn_label, s32 direction) {
+
+void SelectorPrint(Array<bool> selector) {
+    for (s32 i = 0; i < selector.len; ++i) {
+        if ((i > 0) && (i % 4 == 0)) {
+            printf(" ");
+        }
+        printf("%d", selector.arr[i]);
+    }
+    printf("\n");
+}
+
+
+static bool tab_state[4] = { false, true, false, false };
+
+void DoEnableTabButton(McTraceMode mode) {
+    if (mode == MTM_SIM) {
+        tab_state[0] = true;
+        tab_state[1] = false;
+        tab_state[2] = false;
+        tab_state[3] = false;
+    }
+    else if (mode == MTM_TRACE) {
+        tab_state[0] = false;
+        tab_state[1] = true;
+        tab_state[2] = false;
+        tab_state[3] = false;
+    }
+    else if (mode == MTM_MONITORS) {
+        tab_state[0] = false;
+        tab_state[1] = false;
+        tab_state[2] = true;
+        tab_state[3] = false;
+    }
+    else if (mode == MTM_PLOT) {
+        tab_state[0] = false;
+        tab_state[1] = false;
+        tab_state[2] = false;
+        tab_state[3] = true;
+    }
+}
+
+void DoScrollBtn(McTraceApp *app, const char* btn_label, s32 direction, Array<bool> selector) {
+    assert(direction == -1 || direction == 1);
+
     Widget *btn = NULL;
     bool clicked = false;
 
@@ -439,21 +476,32 @@ void DoScrollBtn(McTraceApp *app, const char* btn_label, s32 direction) {
     UI_SpaceH(10);
 
     if (clicked) {
-        s32 idx_start = 0;
-        s32 idx_end = app->config.comps.len - 1;
-        if (direction == -1) {
-            idx_start = idx_end;
-            idx_end = 0;
+        s32 idx = -1;
+        if (app->comp_selected) {
+            idx = app->comp_selected->GetHeader()->index;
+            if (direction == 1) {
+                idx = NextTrue(selector, idx);
+            }
+            else if (direction == -1) {
+                idx = PrevTrue(selector, idx);
+            }
+        }
+        else {
+            if (direction == 1) {
+                idx = LastTrue(selector);
+            }
+            else if (direction == -1) {
+                idx = FirstTrue(selector);
+            }
         }
 
-        Component *to_select = _SelectPrevOrNextComponent(app->config.comps, app->comp_selected, idx_start, idx_end, app->mode == MTM_MONITORS);
+        if (idx >= 0) { 
+            Component *to_select = app->config.comps.arr[idx];
 
-        if (to_select) { 
             app->comp_selected = to_select;
             app->comp_clicked = app->comp_selected;
-            app->comp_dbl_clicked = app->comp_selected;
 
-            Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_dbl_clicked->display, 0.02f);
+            Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
             app->cam.Update( TransformGetTranslation( box.transform ) );
         }
     }
@@ -496,23 +544,23 @@ void DoTabMenu(McTraceApp *app) {
 
         Widget *menu_2 = UI_LayoutHorizontal();
         menu_2->padding = padding_2;
-        if (UI_ToggleTabButton(" Simulate ", &tab_sim)) {
-            tab_sim = true; tab_monitors = false; tab_trace = false; tab_plot = false;
+        if (UI_ToggleTabButton(" Simulate ", &tab_state[0])) {
+            DoEnableTabButton(MTM_SIM);
             app->mode = MTM_SIM;
             OnSwitchToMode(app);
         }
-        if (UI_ToggleTabButton("   Trace  ", &tab_trace)) {
-            tab_sim = false; tab_monitors = false; tab_trace = true; tab_plot = false;
+        if (UI_ToggleTabButton("   Trace  ", &tab_state[1])) {
+            DoEnableTabButton(MTM_TRACE);
             app->mode = MTM_TRACE;
             OnSwitchToMode(app);
         }
-        if (UI_ToggleTabButton(" Monitors ", &tab_monitors)) {
-            tab_sim = false; tab_monitors = true; tab_trace = false; tab_plot = false;
+        if (UI_ToggleTabButton(" Monitors ", &tab_state[2])) {
+            DoEnableTabButton(MTM_MONITORS);
             app->mode = MTM_MONITORS;
             OnSwitchToMode(app);
         }
-        if (UI_ToggleTabButton("   Plot   ", &tab_plot)) {
-            tab_sim = false; tab_monitors = false; tab_trace = false; tab_plot = true;
+        if (UI_ToggleTabButton("   Plot   ", &tab_state[3])) {
+            DoEnableTabButton(MTM_PLOT);
             app->mode = MTM_PLOT;
             OnSwitchToMode(app);
         }
@@ -521,11 +569,11 @@ void DoTabMenu(McTraceApp *app) {
 
 }
 
-void DoLeftRightButtons(McTraceApp *app) {
+void DoLeftRightButtons(McTraceApp *app, Array<bool> selector) {
     UI_LayoutHorizontal();
 
-    DoScrollBtn(app, "<", -1);
-    DoScrollBtn(app, ">", 1);
+    DoScrollBtn(app, "<", -1, selector);
+    DoScrollBtn(app, ">", 1, selector);
 
     UI_Pop();
 }
@@ -540,13 +588,13 @@ void DoUI(McTraceApp *app) {
     if (GetSpace()) {
         if (app->mode == MTM_TRACE) {
             app->comp_selected = NULL;
-            tab_sim = false; tab_monitors = true; tab_trace = false; tab_plot = false;
+            DoEnableTabButton(MTM_TRACE);
             app->mode = MTM_MONITORS;
             OnSwitchToMode(app);
         }
         else if (app->mode == MTM_MONITORS) {
             app->comp_selected = NULL;
-            tab_sim = false; tab_monitors = false; tab_trace = true; tab_plot = false;
+            DoEnableTabButton(MTM_MONITORS);
             app->mode = MTM_TRACE;
             OnSwitchToMode(app);
         }
@@ -564,7 +612,7 @@ void DoUI(McTraceApp *app) {
         app->draw_plane = true;
         app->draw_rays = true;
 
-        DoLeftRightButtons(app);
+        DoLeftRightButtons(app, app->config.comps_interactible);
         DoComponentSelectionAnnotations(app, false);
         DoComponentSelectionActions(app);
     }
@@ -573,7 +621,7 @@ void DoUI(McTraceApp *app) {
         app->draw_plane = true;
         app->draw_rays = false;
 
-        DoLeftRightButtons(app);
+        DoLeftRightButtons(app, app->config.comps_monitors);
         DoComponentSelectionAnnotations(app, true);
         Widget *info_box = DoComponentSelectionActions(app);
 
@@ -607,7 +655,7 @@ void DoUI(McTraceApp *app) {
         Component *monitor_clicked = RenderMonitorGrid(app->monitors);
         if (monitor_clicked) {
             app->mode = MTM_MONITORS;
-            tab_sim = false; tab_monitors = true; tab_trace = false; tab_plot = false;
+            DoEnableTabButton(MTM_MONITORS);
             OnSwitchToMode(app);
             app->comp_selected = monitor_clicked;
             Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);

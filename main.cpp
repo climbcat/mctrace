@@ -85,10 +85,7 @@ void RunProgram(bool do_fullscreen) {
     app.draw_rays_limit = 100;
     app.ncount_init = 1e6;
 
-    // get DISPLAY/TRACE data and PLOT data pointers
-    GetComponentDisplayWireframes(cbui.ctx->a_pers, app.config.comps);
     TraceParticles(cbui.ctx->a_pers, &app.container, app.config.comps, &app.config.instr, app.ncount_init);
-    app.monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, app.config.comps);
 
     // app display
     while (cbui.running) {
@@ -110,7 +107,6 @@ void RunProgram(bool do_fullscreen) {
 
         CbuiFrameEnd();
     }
-
     CbuiExit();
 }
 

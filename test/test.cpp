@@ -241,9 +241,41 @@ void TestGridLayoutCalculations() {
     CbuiExit();
 }
 
+void TestIndexSelector() {
+    printf("TestIndexSelector\n");
+
+    MArena *a_tmp = InitBaselayer()->a_tmp;
+
+    s32 len = 16;
+    Array<bool> selector = InitArray<bool>(a_tmp, len);
+
+    for (s32 i = 0; i < len; ++i) {
+        if ((i > 0) && (i % 4 == 0)) {
+            printf(" ");
+        }
+
+        selector.Add(RandMinMaxI(0, 1));
+        printf("%d", selector.arr[i]);
+        
+    }
+    printf("\n");
+
+    s32 first = FirstTrue(selector);
+    s32 last = LastTrue(selector);
+
+
+    s32 idx = 5;
+    s32 prev = PrevTrue(selector, idx);
+    s32 next = NextTrue(selector, idx);
+
+    printf("idx_first: %d, idx_last: %d\n", first, last);
+    printf("idx_prev: %d << at idx: %d >> idx_next: %d\n", prev, idx, next);
+
+}
 
 void Test() {
     //TestComponentFuncitonsRun();
-    TestMainLayout();
+    //TestMainLayout();
     //TestGridLayoutCalculations();
+    TestIndexSelector();
 }

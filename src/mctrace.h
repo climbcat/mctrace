@@ -93,6 +93,8 @@ struct McTraceApp {
 };
 
 void OnSwitchToMode(McTraceApp *app);
+Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps);
+void GetComponentDisplayWireframes(MArena *a_dest, Array<Component*> comps);
 
 McTraceApp McTraceInit() {
     McTraceApp app = {};
@@ -114,9 +116,27 @@ McTraceApp McTraceInit() {
     WireframeRawSegments(cbui.ctx->a_pers, &app.plane);
     app.scene_objs.Add(app.plane);
 
-    //
+    // trajectories
     app.container = InitTrajectoryContainer(cbui.ctx->a_pers, app.config.comps.len, 256 * KILOBYTE);
     app.draw_rays_limit = 300;
+
+    // monitors
+    // get DISPLAY/TRACE data and PLOT data pointers
+    app.monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, app.config.comps);
+    GetComponentDisplayWireframes(cbui.ctx->a_pers, app.config.comps);
+
+    s32 ncomps = app.config.comps.len;
+    Array<bool> is_interactible = InitArray<bool>(cbui.ctx->a_pers, ncomps);
+    Array<bool> is_monitors = InitArray<bool>(cbui.ctx->a_pers, ncomps);
+    for (s32 i = 0; i < ncomps; ++i) {
+        is_interactible.Add(app.config.comps.arr[i]->interactable);
+    }
+    for (s32 i = 0; i < ncomps; ++i) {
+        CompMonitorType montpe = app.config.comps.arr[i]->monitor.mon_tpe;
+        is_monitors.Add(montpe != MT_NOT);
+    }
+    app.config.comps_interactible = is_interactible;
+    app.config.comps_monitors = is_monitors;
 
     v_instr_center.y = 0;
     app.cam.radius = v_instr_center.z * 1.5;
