@@ -164,6 +164,8 @@ Widget *DrawComponentInfoBox(Component *comp) {
     w->padding = 5;
     w->y0 = 15;
 
+    UI_Label("COMPONENT");
+
     Str line1 = StrCat(comp->name, " = ");
     line1 = StrCat(line1, comp->type_name);
     line1 = StrCat(line1, "(");
@@ -171,11 +173,14 @@ Widget *DrawComponentInfoBox(Component *comp) {
     UI_Label(StrZ(line1));
     comp->transform;
 
+    s32 space_paragraph = 10;
+    UI_SpaceV(space_paragraph);
+
     ComponentSharedHeader *hdr = comp->GetHeader();
     MArena *a_tmp = cbui.ctx->a_tmp;
     for (s32 i = 0; i < comp->parameters.len; ++i) {
         CompPar par = comp->parameters.arr[i];
-        Str lbl = {};
+        Str lbl = { (char*) "  ", 2};
         lbl = StrCat(lbl, par.name);
         lbl = StrCat(lbl, " = ");
         lbl = StrCat(lbl, par.ValueAsString(a_tmp));
@@ -188,8 +193,14 @@ Widget *DrawComponentInfoBox(Component *comp) {
     double rot_x, rot_y, rot_z;
     RotationToEulerAnglesDegs(hdr->rotation_absolute, &rot_y, &rot_x, &rot_z);
 
+    UI_SpaceV(space_paragraph);
+
     char *buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 200);
-    sprintf(buff, "AT (%.2f, %.2f, %.2f) ROTATED (%.2f, %.2f, %.2f)", hdr->position_absolute.x, hdr->position_absolute.y, hdr->position_absolute.z, rot_x, rot_y, rot_z);
+    sprintf(buff, "AT (%.2f, %.2f, %.2f)", hdr->position_absolute.x, hdr->position_absolute.y, hdr->position_absolute.z);
+    UI_Label(buff);
+
+    buff = (char*) ArenaAlloc(cbui.ctx->a_tmp, 200);
+    sprintf(buff, "ROTATED (%.2f, %.2f, %.2f)", rot_x, rot_y, rot_z);
     UI_Label(buff);
 
     UI_Pop();
@@ -216,7 +227,7 @@ void DrawComponentHover(Component *comp) {
     UI_Pop();
 }
 
-Widget *DoComponentSelection(McTraceApp *app, bool fat_monitors) {
+void DoComponentSelectionAnnotations(McTraceApp *app, bool fat_monitors) {
     Array<Component*> comps = app->config.comps;
 
     bool collision_this_frame = false;
@@ -260,7 +271,9 @@ Widget *DoComponentSelection(McTraceApp *app, bool fat_monitors) {
 
         app->scene_objs.Add(comp_wireframe);
     }
+}
 
+Widget *DoComponentSelectionActions(McTraceApp *app) {
     Widget *w = NULL;
 
     // hover / click  / double-click
@@ -302,7 +315,6 @@ Widget *DoComponentSelection(McTraceApp *app, bool fat_monitors) {
         w = DrawComponentInfoBox(app->comp_selected);
     }
 
-    // return the infobox's main layout, if used
     return w;
 }
 
@@ -325,12 +337,198 @@ void OnSwitchToMode(McTraceApp *app) {
     }
 }
 
-
 bool tab_sim = false;
 bool tab_trace = true;
 bool tab_monitors = false;
 bool tab_plot = false;
 
+Component *_SelectPrevComponent(Array<Component*> comps, Component *selected, bool filter_monitors) {
+    s32 idx = 0;
+
+    Component *to_select = NULL;
+    if (selected) {
+        idx = selected->GetHeader()->index;
+        if (idx > 0) {
+            idx--;
+        }
+    }
+    to_select = comps.arr[idx];
+
+    if (idx == 0) {
+        while (to_select->interactable == false && idx < comps.len - 1) {
+            idx++;
+            to_select = comps.arr[idx];
+        }
+    }
+    else {
+        while (to_select->interactable == false && idx > 0) {
+            idx--;
+            to_select = comps.arr[idx];
+        }
+    }
+
+    return to_select;
+}
+
+s32 IdxClamp(s32 idx, s32 start, s32 end) {
+    s32 min = MinS32(start, end);
+    s32 max = MaxS32(start, end);
+
+    idx = MinS32(idx, max);
+    idx = MaxS32(idx, min);
+    return idx;
+}
+bool IdxBefore(s32 idx, s32 start, s32 end) {
+    s32 min = MinS32(start, end);
+    s32 max = MaxS32(start, end);
+    return idx < max;
+}
+bool IdxAfter(s32 idx, s32 start, s32 end) {
+    s32 min = MinS32(start, end);
+    s32 max = MaxS32(start, end);
+    return idx > min;
+}
+bool FilterIsInteractiblaOrIsMonitor(Component *comp, bool filter_monitor) {
+    if (filter_monitor) {
+        bool is_monitor = (comp->monitor.mon_tpe == MT_2D) || (comp->monitor.mon_tpe == MT_1D) || (comp->monitor.mon_tpe == MT_0D);
+        return is_monitor;
+    }
+    else {
+        return comp->interactable;
+    }
+}
+Component *_SelectPrevOrNextComponent(Array<Component*> comps, Component *selected, s32 idx_start, s32 idx_end, bool filter_monitors) {
+    s32 idx = idx_end;
+    s32 sign = 1;
+    if (idx_start > idx_end) {
+        sign = -1;
+    }
+
+    Component *to_select = NULL;
+    if (selected) {
+        idx = selected->GetHeader()->index;
+        idx = IdxClamp(idx + sign, idx_start, idx_end);
+    }
+    to_select = comps.arr[idx];
+
+    if (FilterIsInteractiblaOrIsMonitor(to_select, filter_monitors) == false) {
+        if (idx == idx_end) {
+            while (FilterIsInteractiblaOrIsMonitor(to_select, filter_monitors) == false && IdxBefore(idx, idx_start, idx_end)) {
+                idx = IdxClamp(idx - sign, idx_start, idx_end);
+                to_select = comps.arr[idx];
+            }
+        }
+        else {
+            while (FilterIsInteractiblaOrIsMonitor(to_select, filter_monitors) == false && IdxAfter(idx, idx_start, idx_end)) {
+                idx = IdxClamp(idx + sign, idx_start, idx_end);
+                to_select = comps.arr[idx];
+            }
+        }
+    }
+
+    return to_select;
+}
+void DoScrollBtn(McTraceApp *app, const char* btn_label, s32 direction) {
+    Widget *btn = NULL;
+    bool clicked = false;
+
+    clicked = UI_Button(btn_label, &btn);
+    btn->y0 -= 1;
+    btn->w = 40;
+    btn->h = 20;
+    UI_SpaceH(10);
+
+    if (clicked) {
+        s32 idx_start = 0;
+        s32 idx_end = app->config.comps.len - 1;
+        if (direction == -1) {
+            idx_start = idx_end;
+            idx_end = 0;
+        }
+
+        Component *to_select = _SelectPrevOrNextComponent(app->config.comps, app->comp_selected, idx_start, idx_end, app->mode == MTM_MONITORS);
+
+        if (to_select) { 
+            app->comp_selected = to_select;
+            app->comp_clicked = app->comp_selected;
+            app->comp_dbl_clicked = app->comp_selected;
+
+            Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_dbl_clicked->display, 0.02f);
+            app->cam.Update( TransformGetTranslation( box.transform ) );
+        }
+    }
+}
+
+void DoTabMenu(McTraceApp *app) {
+    UI_SetFontSize(FS_18);
+
+    // frame
+    {
+        Widget *m2 = UI_Center();
+        m2->sz_border = 1;
+        m2->padding = 20;
+
+        Widget *p = UI_LayoutVertical();
+        p->SetFlag(WF_EXPAND_VERTICAL);
+        p->SetFlag(WF_EXPAND_HORIZONTAL);
+        p->padding = 10;
+        if (app->mode == MTM_SIM || app->mode == MTM_PLOT) {
+            p->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER); // TODO: what if we had a WF_DRAW_BORDER flag, ignoring the fill
+            p->col_bckgrnd = COLOR_WHITE;
+            p->col_border = COLOR_BLACK;
+            p->sz_border = 1;
+        }
+
+        UI_SetFontSize(FS_18);
+        UI_SpaceV(10);
+    }
+
+    // tabs
+    {
+        Widget *menu_align = UI_LayoutVertical(0);
+
+        s32 padding_1 = 20;
+        s32 padding_2 = 10;
+
+        menu_align->SetFlag(WF_ABSREL_POSITION);
+        menu_align->SetFlag(WF_EXPAND_HORIZONTAL);
+        menu_align->y0 = - (padding_1 + padding_2) + 5;
+
+        Widget *menu_2 = UI_LayoutHorizontal();
+        menu_2->padding = padding_2;
+        if (UI_ToggleTabButton(" Simulate ", &tab_sim)) {
+            tab_sim = true; tab_monitors = false; tab_trace = false; tab_plot = false;
+            app->mode = MTM_SIM;
+            OnSwitchToMode(app);
+        }
+        if (UI_ToggleTabButton("   Trace  ", &tab_trace)) {
+            tab_sim = false; tab_monitors = false; tab_trace = true; tab_plot = false;
+            app->mode = MTM_TRACE;
+            OnSwitchToMode(app);
+        }
+        if (UI_ToggleTabButton(" Monitors ", &tab_monitors)) {
+            tab_sim = false; tab_monitors = true; tab_trace = false; tab_plot = false;
+            app->mode = MTM_MONITORS;
+            OnSwitchToMode(app);
+        }
+        if (UI_ToggleTabButton("   Plot   ", &tab_plot)) {
+            tab_sim = false; tab_monitors = false; tab_trace = false; tab_plot = true;
+            app->mode = MTM_PLOT;
+            OnSwitchToMode(app);
+        }
+        UI_Pop();
+    }
+
+}
+
+void DoLeftRightButtons(McTraceApp *app) {
+    UI_LayoutHorizontal();
+
+    DoScrollBtn(app, "<", -1);
+    DoScrollBtn(app, ">", 1);
+
+    UI_Pop();
+}
 
 void DoUI(McTraceApp *app) {
     app->scene_objs.len = 0;
@@ -357,46 +555,29 @@ void DoUI(McTraceApp *app) {
     if (GetChar('r')) { app->draw_rays = !app->draw_rays; }
 
     // UI
-    UI_SetFontSize(FS_18);
 
-    // tab menu frame
-    s32 padding_1 = 20;
-    s32 padding_2 = 10;
-    {
-        Widget *m2 = UI_Center();
-        m2->sz_border = 1;
-        m2->padding = padding_1;
+    DoTabMenu(app);
 
-        Widget *p = UI_LayoutVertical();
-        p->SetFlag(WF_EXPAND_VERTICAL);
-        p->SetFlag(WF_EXPAND_HORIZONTAL);
-        p->padding = padding_2;
-        if (app->mode == MTM_SIM || app->mode == MTM_PLOT) {
-            p->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER); // TODO: what if we had a WF_DRAW_BORDER flag, ignoring the fill
-            p->col_bckgrnd = COLOR_WHITE;
-            p->col_border = COLOR_BLACK;
-            p->sz_border = 1;
-        }
-
-        UI_SetFontSize(FS_18);
-        UI_SpaceV(10);
-    }
 
     // tab contents
     if (app->mode == MTM_TRACE) {
         app->draw_plane = true;
         app->draw_rays = true;
 
-        DoComponentSelection(app, false);
+        DoLeftRightButtons(app);
+        DoComponentSelectionAnnotations(app, false);
+        DoComponentSelectionActions(app);
     }
 
     else if (app->mode == MTM_MONITORS) {
         app->draw_plane = true;
         app->draw_rays = false;
 
-        Widget *info_box = DoComponentSelection(app, true);
+        DoLeftRightButtons(app);
+        DoComponentSelectionAnnotations(app, true);
+        Widget *info_box = DoComponentSelectionActions(app);
 
-        if (app->comp_selected) {
+        if (app->comp_selected && app->comp_selected->monitor.mon_tpe != MT_NOT) {
             // display the monitor blit
 
             Monitor *mon = &app->comp_selected->monitor;
@@ -434,129 +615,6 @@ void DoUI(McTraceApp *app) {
         }
     }
 
-    // tab menu
-    {
-        Widget *menu_align = UI_LayoutVertical(0);
-
-        menu_align->SetFlag(WF_ABSREL_POSITION);
-        menu_align->SetFlag(WF_EXPAND_HORIZONTAL);
-        menu_align->y0 = - (padding_1 + padding_2) + 5;
-
-        Widget *menu_2 = UI_LayoutHorizontal();
-        menu_2->padding = padding_2;
-        if (UI_ToggleTabButton(" Simulate ", &tab_sim)) {
-            tab_sim = true; tab_monitors = false; tab_trace = false; tab_plot = false;
-            app->mode = MTM_SIM;
-            OnSwitchToMode(app);
-        }
-        if (UI_ToggleTabButton("   Trace  ", &tab_trace)) {
-            tab_sim = false; tab_monitors = false; tab_trace = true; tab_plot = false;
-            app->mode = MTM_TRACE;
-            OnSwitchToMode(app);
-        }
-        if (UI_ToggleTabButton(" Monitors ", &tab_monitors)) {
-            tab_sim = false; tab_monitors = true; tab_trace = false; tab_plot = false;
-            app->mode = MTM_MONITORS;
-            OnSwitchToMode(app);
-        }
-        if (UI_ToggleTabButton("   Plot   ", &tab_plot)) {
-            tab_sim = false; tab_monitors = false; tab_trace = false; tab_plot = true;
-            app->mode = MTM_PLOT;
-            OnSwitchToMode(app);
-        }
-        UI_Pop();
-
-
-        if (app->mode == MTM_TRACE || app->mode == MTM_MONITORS) {
-            UI_LayoutHorizontal();
-
-            Widget *btn = NULL;
-            bool clicked = false;
-
-            clicked = UI_Button("<", &btn);
-            btn->y0 -= 1;
-            btn->w = 40;
-            btn->h = 20;
-            UI_SpaceH(10);
-
-            if (clicked) {
-                s32 idx = 0;
-
-                Component *to_select = NULL;
-                if (app->comp_selected) {
-                    idx = app->comp_selected->GetHeader()->index;
-                    if (idx > 0) {
-                        idx--;
-                    }
-                }
-                to_select = app->config.comps.arr[idx];
-
-                if (idx == 0) {
-                    while (to_select->interactable == false && idx < app->config.comps.len - 1) {
-                        idx++;
-                        to_select = app->config.comps.arr[idx];
-                    }
-                }
-                else {
-                    while (to_select->interactable == false && idx > 0) {
-                        idx--;
-                        to_select = app->config.comps.arr[idx];
-                    }
-                }
-
-                if (to_select->interactable == true) { 
-                    app->comp_selected = to_select;
-                    app->comp_clicked = app->comp_selected;
-                    app->comp_dbl_clicked = app->comp_selected;
-
-                    Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_dbl_clicked->display, 0.02f);
-                    app->cam.Update( TransformGetTranslation( box.transform ) );
-                }
-            }
-
-            clicked = UI_Button(">", &btn);
-            btn->y0 -= 1;
-            btn->w = 40;
-            btn->h = 20;
-            UI_Pop();
-
-            if (clicked) {
-                s32 idx = app->config.comps.len - 1;
-
-                Component *to_select = NULL;
-                if (app->comp_selected) {
-                    idx = app->comp_selected->GetHeader()->index;
-                    if (idx < app->config.comps.len - 1) {
-                        idx++;
-                    }
-                }
-                to_select = app->config.comps.arr[idx];
-
-                if (idx == app->config.comps.len - 1) {
-                    while (to_select->interactable == false && idx > 0) {
-                        idx--;
-                        to_select = app->config.comps.arr[idx];
-                    }
-                }
-                else {
-                    while (to_select->interactable == false && idx < app->config.comps.len - 1) {
-                        to_select = app->config.comps.arr[idx];
-                        idx++;
-                    }
-                }
-
-                if (to_select->interactable == true) { 
-                    app->comp_selected = to_select;
-                    app->comp_clicked = app->comp_selected;
-                    app->comp_dbl_clicked = app->comp_selected;
-
-                    Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_dbl_clicked->display, 0.02f);
-                    app->cam.Update( TransformGetTranslation( box.transform ) );
-
-                }
-            }
-        }
-    }
 }
 
 

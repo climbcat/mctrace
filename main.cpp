@@ -83,7 +83,7 @@ void RunProgram(bool do_fullscreen) {
 
     McTraceApp app = McTraceInit();
     app.draw_rays_limit = 100;
-    app.ncount_init = 1e5;
+    app.ncount_init = 1e6;
 
     // get DISPLAY/TRACE data and PLOT data pointers
     GetComponentDisplayWireframes(cbui.ctx->a_pers, app.config.comps);

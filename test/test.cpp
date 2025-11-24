@@ -120,6 +120,21 @@ void TestMainLayout() {
             UI_SpaceV(10);
         }
 
+        // tab menu
+        {
+            Widget *menu_align = UI_LayoutVertical(0);
+            menu_align->SetFlag(WF_ABSREL_POSITION);
+            menu_align->SetFlag(WF_EXPAND_HORIZONTAL);
+            menu_align->y0 = - (padding_1 + padding_2) + 5;
+            Widget *menu_2 = UI_LayoutHorizontal();
+            menu_2->padding = padding_2;
+            if (UI_ToggleTabButton(" Simulate ", &tab_sim)) { tab_sim = true; tab_monitors = false; tab_trace = false; tab_plot = false; }
+            if (UI_ToggleTabButton("   Trace  ", &tab_trace)) { tab_sim = false; tab_monitors = false; tab_trace = true; tab_plot = false; }
+            if (UI_ToggleTabButton(" Monitors ", &tab_monitors)) { tab_sim = false; tab_monitors = true; tab_trace = false; tab_plot = false; }
+            if (UI_ToggleTabButton("   Plot   ", &tab_plot)) { tab_sim = false; tab_monitors = false; tab_trace = false; tab_plot = true; }
+            UI_Pop();
+            UI_Pop();
+        }
 
         // tab contents
         if (tab_sim)
@@ -135,21 +150,6 @@ void TestMainLayout() {
         }
         else if (tab_plot) {
             UI_Label("Plot");
-        }
-
-
-        // tab menu
-        {
-            Widget *menu_align = UI_LayoutVertical(0);
-            menu_align->SetFlag(WF_ABSREL_POSITION);
-            menu_align->SetFlag(WF_EXPAND_HORIZONTAL);
-            menu_align->y0 = - (padding_1 + padding_2) + 5;
-            Widget *menu_2 = UI_LayoutHorizontal();
-            menu_2->padding = padding_2;
-            if (UI_ToggleTabButton(" Simulate ", &tab_sim)) { tab_sim = true; tab_monitors = false; tab_trace = false; tab_plot = false; }
-            if (UI_ToggleTabButton("   Trace  ", &tab_trace)) { tab_sim = false; tab_monitors = false; tab_trace = true; tab_plot = false; }
-            if (UI_ToggleTabButton(" Monitors ", &tab_monitors)) { tab_sim = false; tab_monitors = true; tab_trace = false; tab_plot = false; }
-            if (UI_ToggleTabButton("   Plot   ", &tab_plot)) { tab_sim = false; tab_monitors = false; tab_trace = false; tab_plot = true; }
         }
 
 
@@ -171,6 +171,8 @@ void TestMainLayout() {
                 padding_2 = 0;
             }
         }
+
+        CbuiFrameEnd();
     }
     CbuiExit();
 
@@ -230,10 +232,11 @@ void TestGridLayoutCalculations() {
             }
         }
 
-
         if (GetSpace()) {
             grid.Print();
         }
+
+        CbuiFrameEnd();
     }
     CbuiExit();
 }
@@ -241,6 +244,6 @@ void TestGridLayoutCalculations() {
 
 void Test() {
     //TestComponentFuncitonsRun();
-    //TestMainLayout();
-    TestGridLayoutCalculations();
+    TestMainLayout();
+    //TestGridLayoutCalculations();
 }
