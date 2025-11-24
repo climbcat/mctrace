@@ -566,7 +566,6 @@ void DoTabMenu(McTraceApp *app) {
         }
         UI_Pop();
     }
-
 }
 
 void DoLeftRightButtons(McTraceApp *app, Array<bool> selector) {
@@ -604,11 +603,14 @@ void DoUI(McTraceApp *app) {
 
     // UI
 
-    DoTabMenu(app);
+    if (app->mode == MTM_SIM) {
+        DoTabMenu(app);
 
+    }
 
-    // tab contents
-    if (app->mode == MTM_TRACE) {
+    else if (app->mode == MTM_TRACE) {
+        DoTabMenu(app);
+
         app->draw_plane = true;
         app->draw_rays = true;
 
@@ -618,6 +620,8 @@ void DoUI(McTraceApp *app) {
     }
 
     else if (app->mode == MTM_MONITORS) {
+        DoTabMenu(app);
+
         app->draw_plane = true;
         app->draw_rays = false;
 
@@ -648,7 +652,11 @@ void DoUI(McTraceApp *app) {
         }
     }
 
-    if (app->mode == MTM_PLOT) {
+    else if (app->mode == MTM_PLOT) {
+        DoTabMenu(app);
+
+        UI_Pop();
+
         app->draw_plane = false;
         app->draw_rays = false;
 
@@ -661,8 +669,8 @@ void DoUI(McTraceApp *app) {
             Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
             app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
         }
-    }
 
+    }
 }
 
 
