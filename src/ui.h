@@ -277,11 +277,10 @@ Widget *DoComponentSelectionActions(McTraceApp *app) {
     Widget *w = NULL;
 
     // hover / click  / double-click
-    if (g_mouse_coolided_last_frame == false) {
+    if (UI_DidCollide() == false) {
         if (app->comp_hover) {
-            if (g_mouse_coolided_last_frame == false) {
-                DrawComponentHover(app->comp_hover);
-            }
+            DrawComponentHover(app->comp_hover);
+
             Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_hover->display, 0.02f);
             box.color = app->colors.selection;
             app->scene_objs.Add(box);

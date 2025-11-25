@@ -129,50 +129,6 @@ bool PushTrajectory(TrajBundle *bundle, Traj traj) {
     }
 }
 
-bool PushTrajectory_OLD(TrajContainer *container, Traj traj) {
-    u32 bundles_cnt = container->bundles_ptrs.len;
-    assert(traj.comp_idx_max <= bundles_cnt && "Traj container initialization problem"); 
-
-    if (container->full == true) {
-        return false;
-    }
-
-    else {
-        u32 bundle_idx_to_push = traj.comp_idx_max;
-        TrajBundle* bundle = container->bundles_ptrs.arr[bundle_idx_to_push];
-
-        while (bundle->full == true) {
-            if (bundle_idx_to_push == (bundles_cnt - 1) && bundle->full == true) {
-                container->CheckIfFull();
-                if (container->full) {
-                    return false;
-                }
-            }
-
-            if (bundle_idx_to_push > 0) {
-                bundle_idx_to_push--;
-            }
-
-            else {
-                // discard thsi trajectory
-
-                assert(traj.comp_idx_max < bundles_cnt && "sanity check the CheckIfFull() logics above");
-                return false;
-            }
-
-            bundle = container->bundles_ptrs.arr[bundle_idx_to_push];
-        }
-        bool did_push = PushTrajectory(bundle, traj);
-
-        if (did_push) {
-            container->events_cnt += traj.events.len; 
-            container->traj_cnt += 1;
-        }
-
-        return did_push;
-    }
-}
-
 bool PushTrajectory(TrajContainer *container, Traj traj) {
     u32 bundles_cnt = container->bundles_ptrs.len;
     assert(traj.comp_idx_max <= bundles_cnt && "Traj container initialization problem"); 
