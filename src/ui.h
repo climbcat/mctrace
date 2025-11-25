@@ -277,42 +277,37 @@ Widget *DoComponentSelectionActions(McTraceApp *app) {
     Widget *w = NULL;
 
     // hover / click  / double-click
-    if (app->comp_hover) {
-        if (g_mouse_coolided_last_frame == false) {
-            DrawComponentHover(app->comp_hover);
-        }
-        Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_hover->display, 0.02f);
-        box.color = app->colors.selection;
-        app->scene_objs.Add(box);
-    }
-
-    if (app->comp_dbl_clicked) {
-        Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_dbl_clicked->display, 0.02f);
-        app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
-        app->comp_selected = app->comp_dbl_clicked;
-    }
-    else if (app->comp_clicked) {
-        app->comp_selected = app->comp_clicked;
-    }
-
-    // selection exists
-    if (app->comp_selected) {
-        Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
-        box.style = WFR_FAT;
-        box.color = MCT_COLOR_DEFOCUSED;
-        app->scene_objs.Add(box);
-        
-    }
-
-    // selection off
     if (g_mouse_coolided_last_frame == false) {
+        if (app->comp_hover) {
+            if (g_mouse_coolided_last_frame == false) {
+                DrawComponentHover(app->comp_hover);
+            }
+            Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_hover->display, 0.02f);
+            box.color = app->colors.selection;
+            app->scene_objs.Add(box);
+        }
+
+        if (app->comp_dbl_clicked) {
+            Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_dbl_clicked->display, 0.02f);
+            app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
+            app->comp_selected = app->comp_dbl_clicked;
+        }
+        else if (app->comp_clicked) {
+            app->comp_selected = app->comp_clicked;
+        }
+
         if (app->comp_clicked == NULL && MouseLeft().clicked && true ) {
             app->comp_selected = NULL;
         }
     }
 
-    // info box
+    // selection bounding- and info box
     if (app->comp_selected) {
+        Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
+        box.style = WFR_FAT;
+        box.color = MCT_COLOR_DEFOCUSED;
+        app->scene_objs.Add(box);
+
         w = DrawComponentInfoBox(app->comp_selected);
     }
 
@@ -339,34 +334,7 @@ void OnSwitchToMode(McTraceApp *app) {
     }
 }
 
-Component *_SelectPrevComponent(Array<Component*> comps, Component *selected, bool filter_monitors) {
-    s32 idx = 0;
-
-    Component *to_select = NULL;
-    if (selected) {
-        idx = selected->GetHeader()->index;
-        if (idx > 0) {
-            idx--;
-        }
-    }
-    to_select = comps.arr[idx];
-
-    if (idx == 0) {
-        while (to_select->interactable == false && idx < comps.len - 1) {
-            idx++;
-            to_select = comps.arr[idx];
-        }
-    }
-    else {
-        while (to_select->interactable == false && idx > 0) {
-            idx--;
-            to_select = comps.arr[idx];
-        }
-    }
-
-    return to_select;
-}
-
+inline
 s32 FirstTrue(Array<bool> selector) {
     for (s32 i = 0; i < selector.len; ++i) {
         if (selector.arr[i]) {
@@ -375,7 +343,7 @@ s32 FirstTrue(Array<bool> selector) {
     }
     return -1;
 }
-
+inline
 s32 LastTrue(Array<bool> selector) {
     for (s32 i = selector.len - 1; i >= 0; --i) {
         if (selector.arr[i]) {
@@ -384,7 +352,7 @@ s32 LastTrue(Array<bool> selector) {
     }
     return -1;
 }
-
+inline
 s32 NextTrue(Array<bool> selector, s32 initial) {
     assert(initial < selector.len);
 
@@ -403,7 +371,7 @@ s32 NextTrue(Array<bool> selector, s32 initial) {
         return -1;
     }
 }
-
+inline
 s32 PrevTrue(Array<bool> selector, s32 initial) {
     assert(initial < selector.len);
 
