@@ -206,10 +206,17 @@ void ParticlePrint(Neutron n) {
 //  Particle traces
 
 
-void TraceParticles(MArena *a_trajectories, TrajContainer *container, Array<Component*> comps, Instrument *instr, u32 ncount) {
+void TraceParticles(TrajContainer *container, Array<Component*> comps, Instrument *instr, u32 ncount) {
+    MArena a_thread = ArenaCreate();
+    g_a_dest_trace = &a_thread;
     g_do_trace_trajectories = true;
 
+
     for (u32 j = 0; j < ncount; ++j) {
+        if (cbui.running == false) {
+            break;
+        }
+
         // This sets vz = 1 and p = 1.
         // From the legacy generated code, we got:
         //      particle = mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, mcgravitation, NULL, mcallowbackprop);
@@ -223,8 +230,7 @@ void TraceParticles(MArena *a_trajectories, TrajContainer *container, Array<Comp
             u32 idx = container->current_idx;
             TrajBundle *bundle = container->bundles_ptrs.arr[idx];
 
-            g_anchors_trace = InitList<Vector3f>(cbui.ctx->a_tmp, 0);
-            g_a_dest_trace = cbui.ctx->a_tmp;
+            g_anchors_trace = InitList<Vector3f>(&a_thread, 0);
 
             g_trace_current = {};
         }

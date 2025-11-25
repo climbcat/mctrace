@@ -83,9 +83,8 @@ void RunProgram(bool do_fullscreen) {
 
     McTraceApp app = McTraceInit();
     app.draw_rays_limit = 100;
-    app.ncount_init = 1e6;
-
-    TraceParticles(cbui.ctx->a_pers, &app.container, app.config.comps, &app.config.instr, app.ncount_init);
+    app.ncount_init = 1e9;
+    std::thread trace_worker = std::thread(TraceParticles, &app.container, app.config.comps, &app.config.instr, app.ncount_init);
 
     // app display
     while (cbui.running) {
@@ -108,6 +107,8 @@ void RunProgram(bool do_fullscreen) {
         CbuiFrameEnd();
     }
     CbuiExit();
+
+    trace_worker.join();
 }
 
 

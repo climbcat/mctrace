@@ -108,6 +108,8 @@ bool PushTrajectory(TrajBundle *bundle, Traj traj) {
 
     if (ArenaHasEnoughSpace(&bundle->mem, traj_size)) {
         Traj *tpushed = (Traj *) ArenaPush(&bundle->mem, &traj, sizeof(Traj));
+
+        // NOTE: the len should not be set until the copy is done; how can we ensure this?
         tpushed->events.lst = (Vector3f*) ArenaPush(&bundle->mem, traj.events.lst, sizeof(Vector3f) * traj.events.len);
         tpushed->events.len = traj.events.len;
 
@@ -167,23 +169,24 @@ bool PushTrajectory(TrajContainer *container, Traj traj) {
 }
 
 
-/*
 #include <thread>
 
 struct SimBox {
 
 };
 
-void RunSimulationContinuously(bool *active) {
-    std::thread thread = std::thread( [active] () {
+void RunSimulationContinuously(TrajContainer *container, bool *active) {
+    std::thread worker = std::thread( 
+        [active, container] 
+        () 
+    {
         while (*active == true) {
 
 
 
         }
-    } );
+    });
 }
-*/
 
 
 #endif
