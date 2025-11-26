@@ -237,17 +237,17 @@ void DoComponentSelectionAnnotations(McTraceApp *app, bool fat_monitors) {
         Component *comp = comps.arr[i];
         comp->collided_this_frame = false;
 
-        Wireframe comp_wireframe = comp->display;
-        comp_wireframe.color = MCT_COLOR_DEFOCUSED;
+        Wireframe display = comp->display;
+        display.color = MCT_COLOR_DEFOCUSED;
         if (comp->cat == CCAT_samples || comp->cat == CCAT_sources) {
-            comp_wireframe.color = app->colors.sourcesample;
+            display.color = app->colors.sourcesample;
         }
         else if (comp->cat == CCAT_optics) {
-            comp_wireframe.color = app->colors.optics;
+            display.color = app->colors.optics;
         }
         else if (comp->cat == CCAT_monitors) {
-            comp_wireframe.color = app->colors.monitors;
-            if (fat_monitors) { comp_wireframe.style = WFR_FAT; }
+            display.color = app->colors.monitors;
+            if (fat_monitors) { display.style = WFR_FAT; }
         }
 
         if (comp->interactable_this_frame) {
@@ -269,7 +269,7 @@ void DoComponentSelectionAnnotations(McTraceApp *app, bool fat_monitors) {
             }
         }
 
-        app->scene_objs.Add(comp_wireframe);
+        app->scene_objs.Add(display);
     }
 }
 
@@ -300,14 +300,14 @@ Widget *DoComponentSelectionActions(McTraceApp *app) {
         }
     }
 
-    // selection bounding- and info box
+    // selection bounding-box
     if (app->comp_selected) {
         Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
         box.style = WFR_FAT;
         box.color = MCT_COLOR_DEFOCUSED;
         app->scene_objs.Add(box);
 
-        w = DrawComponentInfoBox(app->comp_selected);
+        //w = DrawComponentInfoBox(app->comp_selected);
     }
 
     return w;
@@ -584,6 +584,10 @@ void DoUI(McTraceApp *app) {
         DoLeftRightButtons(app, app->config.comps_interactible);
         DoComponentSelectionAnnotations(app, false);
         DoComponentSelectionActions(app);
+
+        if (app->comp_selected) {
+            DrawComponentInfoBox(app->comp_selected);
+        }
     }
 
     else if (app->mode == MTM_MONITORS) {
@@ -594,15 +598,16 @@ void DoUI(McTraceApp *app) {
 
         DoLeftRightButtons(app, app->config.comps_monitors);
         DoComponentSelectionAnnotations(app, true);
-        Widget *info_box = DoComponentSelectionActions(app);
+        DoComponentSelectionActions(app);
 
         if (app->comp_selected && app->comp_selected->monitor.mon_tpe != MT_NOT) {
             // display the monitor blit
+            Widget *info_box_panel = DrawComponentInfoBox(app->comp_selected);
 
             Monitor *mon = &app->comp_selected->monitor;
 
-            assert(info_box != NULL);
-            g_w_layout = info_box;
+            assert(info_box_panel != NULL);
+            g_w_layout = info_box_panel;
 
             UI_SpaceV(10);
 

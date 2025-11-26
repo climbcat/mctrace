@@ -91,7 +91,7 @@ void RunProgram(bool do_fullscreen) {
         // frame start
         CbuiFrameStart();
 
-        if (g_mouse_coolided_last_frame == false) {
+        if (UI_DidCollide() == false) {
             PerspectiveSetAspectAndP(&app.persp, cbui.plf.width, cbui.plf.height);
             OrbitCameraRotateZoom(&app.cam, cbui.plf.cursorpos.dx, cbui.plf.cursorpos.dy, cbui.plf.left.ended_down, cbui.plf.scroll.yoffset_acc);
             OrbitCameraPanInPlane(&app.cam, app.persp.fov, app.persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac, MouseRight().pushed, MouseRight().released);
@@ -99,10 +99,6 @@ void RunProgram(bool do_fullscreen) {
 
         DoUI(&app);
         DoRendering(&app);
-
-        if (GetEnter()) {
-            app.container.PrintOccupancy(true);
-        }
 
         CbuiFrameEnd();
     }
