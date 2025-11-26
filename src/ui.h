@@ -230,8 +230,12 @@ void DrawComponentHover(Component *comp) {
 void DoComponentSelectionAnnotations(McTraceApp *app, bool fat_monitors) {
     Array<Component*> comps = app->config.comps;
 
-    bool collision_this_frame = false;
     Button lft = MouseLeft();
+
+    Ray mouse_ray = CameraGetRayWorld(app->cam.view, app->persp.fov, app->persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
+    Vector3f cam_at = app->cam.Position();
+    f32 mouse_ray_hit_dist = INFINITY;
+    Component * comp_hover = NULL;
 
     for (s32 i = 0; i < comps.len; ++i) {
         Component *comp = comps.arr[i];
@@ -253,23 +257,30 @@ void DoComponentSelectionAnnotations(McTraceApp *app, bool fat_monitors) {
         if (comp->interactable_this_frame) {
             Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, comp->display, 0.02f);
 
-            Ray mouse_ray = CameraGetRayWorld(app->cam.view, app->persp.fov, app->persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
-            comp->collided_this_frame = BoxCollideSLAB(mouse_ray, box);
+            Vector3f hit;
+            comp->collided_this_frame = BoxCollideSLAB(mouse_ray, box, &hit);
 
-            if (comp->collided_this_frame && (collision_this_frame == false)) {
-                collision_this_frame = true;
-                app->comp_hover = comp;
-
-                if (lft.clicked) {
-                    app->comp_clicked = comp;
-                }
-                if (lft.dblclicked) {
-                    app->comp_dbl_clicked = comp;
+            if (comp->collided_this_frame) {
+                f32 dist = (hit - cam_at).Norm();
+                if (dist < mouse_ray_hit_dist) {
+                    mouse_ray_hit_dist = dist;
+                    comp_hover = comp;
                 }
             }
         }
 
         app->scene_objs.Add(display);
+    }
+
+    if (comp_hover) {
+        app->comp_hover = comp_hover;
+
+        if (lft.clicked) {
+            app->comp_clicked = comp_hover;
+        }
+        if (lft.dblclicked) {
+            app->comp_dbl_clicked = comp_hover;
+        }
     }
 }
 
