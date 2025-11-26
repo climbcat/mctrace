@@ -53,7 +53,9 @@ void destroy_darr3d(DArray3d a);
 
 void mcset_ncount(unsigned long long count);    /* wrapper to get mcncount */
 unsigned long long int mcget_ncount(void);            /* wrapper to set mcncount */
-unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:mcncount-1 */
+
+// jg-251126: mcrun_run is not used in the simulation core or component code
+//unsigned long long mcget_run_num(void);           /* wrapper to get mcrun_num=0:mcncount-1 */
 
 
 /* Useful macros and constants ============================================== */
@@ -679,10 +681,11 @@ MCDETECTOR detector_import(
     if (strlen(detector.date))   detector.date[strlen(detector.date)-1] = '\0'; /* remove last \n in date */
     detector.date_l = date_l;
 
-    if (!mcget_run_num() || mcget_run_num() >= mcget_ncount())
+    // jg-251126: disabling mcrun_num here
+    //if (!mcget_run_num() || mcget_run_num() >= mcget_ncount())
         snprintf(detector.ncount, CHAR_BUF_LENGTH, "%llu", mcget_ncount());
-    else
-        snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g/%g", (double)mcget_run_num(), (double)mcget_ncount());
+    //else
+    //    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g/%g", (double)mcget_run_num(), (double)mcget_ncount());
 
     detector.p0         = p0;
     detector.p1         = p1;
@@ -1075,7 +1078,7 @@ unsigned long long int mcget_ncount(void)
 unsigned long long int mcget_run_num() // shuld be (Neutron* _particle) somehow
 {
     /* This function only remains for the few cases outside TRACE where we need to know
-        the number of simulated particles */
+        the current number of simulated particles (e.g. ProgressBar )*/
     return mcrun_num;
 }
 

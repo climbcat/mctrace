@@ -82,10 +82,10 @@ void RunProgram(bool do_fullscreen) {
     CbuiInit("mctrace", do_fullscreen);
 
     McTraceApp app = McTraceInit();
+    app.trace_active = false;
     app.draw_rays_limit = 100;
-    app.ncount_init = 1e9;
-    mcrun_num = app.ncount_init;
-    std::thread trace_worker = std::thread(TraceParticles, &app.container, app.config.comps, &app.config.instr, app.ncount_init);
+
+    std::thread trace_worker = std::thread(TraceParticles, &app.container, &app.trace_active, app.config.comps, &app.config.instr, app.ncount_target, app.ncount_current);
 
     // app display
     while (cbui.running) {

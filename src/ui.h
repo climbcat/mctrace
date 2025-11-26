@@ -580,15 +580,42 @@ void DoUI(McTraceApp *app) {
         layout->SetFlag(WF_EXPAND_HORIZONTAL);
         char buff[200];
 
-        UI_Label("SIM");
+        UI_Label("TRACE");
 
-        sprintf(buff, "ncount (final):   %d", app->ncount_init);
+        sprintf(buff, "ncount (final):   %d", *app->ncount_target);
         Widget *w1 = UI_Label(buff);
         w1->text = StrL(buff);
 
-        sprintf(buff, "ncount (current): %d", mcncount);
+        sprintf(buff, "ncount (current): %d", *app->ncount_current);
         Widget *w2 = UI_Label(buff);
         w2->text = StrL(buff);
+
+        UI_SpaceV(10);
+        UI_LayoutHorizontal();
+
+        if (UI_Button("Run")) {
+            app->trace_active = true;
+        }
+
+        UI_SpaceH(10);
+        if (UI_Button("Pause")) {
+            app->trace_active = false;
+        }
+
+        UI_SpaceH(10);
+        if (UI_Button("Reset")) {
+
+            for (s32 i = 0; i < app->config.comps.len; ++i) {
+                Monitor *mon = &app->config.comps.arr[i]->monitor;
+                if (mon->mon_tpe != MT_NOT) {
+                    MonitorClear(mon);
+                }
+            }
+
+            TrajectoryContainerClear(&app->container);
+            *app->ncount_current = 0;
+            g_do_trace_trajectories = true;
+        }
     }
 
     else if (app->mode == MTM_TRACE) {

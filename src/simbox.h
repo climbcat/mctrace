@@ -67,7 +67,7 @@ MArena ArenaSubInit(MArena *a_dest, u64 size) {
     return a;
 }
 
-TrajBundle *InitTrajBundle(MArena *a_dest, u32 block_size, u32 comp_idx) {
+TrajBundle *TrajBundleInit(MArena *a_dest, u32 block_size, u32 comp_idx) {
     MArena a = ArenaSubInit(a_dest, block_size);
 
     TrajBundle *bundle = (TrajBundle*) ArenaAlloc(&a, sizeof(TrajBundle));
@@ -77,12 +77,29 @@ TrajBundle *InitTrajBundle(MArena *a_dest, u32 block_size, u32 comp_idx) {
     return bundle;
 }
 
-TrajContainer InitTrajectoryContainer(MArena *a_dest, u32 bundle_count, u32 block_size = 64 * KILOBYTE) {
+void TrajectoryContainerClear(TrajContainer *container) {
+    container->current_idx = 0;
+    container->events_cnt = 0;
+    container->traj_cnt = 0;
+    container->full = false;
+
+    for (s32 i = 0; i < container->bundles_ptrs.len; ++i) {
+        TrajBundle *bundle = container->bundles_ptrs.arr[i];
+        bundle->mem.used = sizeof(TrajBundle);
+        bundle->head = NULL;
+        bundle->current = NULL;
+        bundle->event_cnt = 0;
+        bundle->traj_cnt = 0;
+        bundle->full = false;
+    }
+}
+
+TrajContainer TrajectoryContainerInit(MArena *a_dest, u32 bundle_count, u32 block_size = 64 * KILOBYTE) {
     TrajContainer container = {};
     container.bundles_ptrs = InitArray<TrajBundle*>(a_dest, bundle_count);
 
     for (u32 i = 0; i < bundle_count; ++i) {
-        TrajBundle *bundle = InitTrajBundle(a_dest, block_size, i);
+        TrajBundle *bundle = TrajBundleInit(a_dest, block_size, i);
         container.bundles_ptrs.Add(bundle);
     }
 
@@ -171,6 +188,8 @@ bool PushTrajectory(TrajContainer *container, Traj traj) {
 
 #include <thread>
 
+// TODO: impl.
+
 struct SimBox {
 
 };
@@ -181,9 +200,7 @@ void RunSimulationContinuously(TrajContainer *container, bool *active) {
         () 
     {
         while (*active == true) {
-
-
-
+            // ...
         }
     });
 }

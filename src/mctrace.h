@@ -76,12 +76,15 @@ struct McTraceApp {
     Wireframe plane;
     Array<Monitor> monitors;
 
-    u32 ncount_init;
+    bool trace_active;
+    s32 *ncount_target;
+    s32 *ncount_current;
     TrajContainer container;
 
     bool draw_rays;
     bool draw_plane;
     u32 draw_rays_limit;
+
 
     McTraceMode mode;
     ColorSheme colors;
@@ -92,18 +95,25 @@ struct McTraceApp {
     Component *comp_dbl_clicked = NULL;
 };
 
+
+// forward declarations
 void OnSwitchToMode(McTraceApp *app);
 Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps);
 void GetComponentDisplayWireframes(MArena *a_dest, Array<Component*> comps);
 
+
 McTraceApp McTraceInit() {
     McTraceApp app = {};
 
+    // core counters
+    mcncount = 1e9;
+    mcrun_num = 0;
+    app.ncount_target = &mcncount;
+    app.ncount_current = &mcrun_num;
+
     app.persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
     app.cam = OrbitCameraInit();
-
-    app.ncount_init = 1e6;
-    app.config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, app.ncount_init);
+    app.config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, *app.ncount_target);
 
     // scene objects
     app.scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
@@ -117,7 +127,7 @@ McTraceApp McTraceInit() {
     app.scene_objs.Add(app.plane);
 
     // trajectories
-    app.container = InitTrajectoryContainer(cbui.ctx->a_pers, app.config.comps.len, 256 * KILOBYTE);
+    app.container = TrajectoryContainerInit(cbui.ctx->a_pers, app.config.comps.len, 256 * KILOBYTE);
     app.draw_rays_limit = 300;
 
     // monitors
@@ -206,16 +216,26 @@ void ParticlePrint(Neutron n) {
 //  Particle traces
 
 
-void TraceParticles(TrajContainer *container, Array<Component*> comps, Instrument *instr, u32 ncount) {
+void TraceParticles(TrajContainer *container, bool *run_pause, Array<Component*> comps, Instrument *instr, s32 *ncount_target, s32 *ncount_current) {
+    assert(ncount_target);
+    assert(ncount_current);
+
     MArena a_thread = ArenaCreate();
     g_a_dest_trace = &a_thread;
     g_do_trace_trajectories = true;
 
+    u32 j = 0;
+    while (*ncount_current < *ncount_target) {
 
-    for (u32 j = 0; j < ncount; ++j) {
         if (cbui.running == false) {
             break;
         }
+        if (*run_pause == false) {
+            XSleep(10);
+            continue;
+        }
+        (*ncount_current)++;
+
 
         // This sets vz = 1 and p = 1.
         // From the legacy generated code, we got:
@@ -261,9 +281,6 @@ void TraceParticles(TrajContainer *container, Array<Component*> comps, Instrumen
                 break;
             }
         }
-
-        // update core "current" ncount
-        mcncount = j;
 
         if (g_do_trace_trajectories) {
             Traj t = {};

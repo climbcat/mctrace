@@ -59,6 +59,13 @@ void mcdetector_out_list_ext_hook(const char *t, const char *xl, const char *yl,
 //  Monitor functionality
 
 
+void MonitorClear(Monitor *mon) {
+    _memzero(mon->N, sizeof(double) * mon->binm_x * mon->binn_y);
+    _memzero(mon->p, sizeof(double) * mon->binm_x * mon->binn_y);
+    _memzero(mon->p2, sizeof(double) * mon->binm_x * mon->binn_y);
+}
+
+
 void MonitorPrint(Monitor *mon) {
     if (mon->mon_tpe == MT_1D) {
         printf("1D Monitor: %.*s %d bins of %.*s\n", mon->title.len, mon->title.str, mon->binm_x, mon->xvar.len, mon->xvar.str);

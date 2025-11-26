@@ -222,8 +222,8 @@ int  numipar = 0;
 FILE *siminfo_file = NULL;
 
 
-static int mcncount;
-static int mcrun_num;
+static int mcncount;    // target number of rays
+static int mcrun_num;   // current number of rays
 static int mcseed;
 static int mcMagnet;
 
