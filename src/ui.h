@@ -153,7 +153,7 @@ Component *RenderMonitorGrid(Array<Monitor> monitors) {
     return result;
 }
 
-Widget *DrawComponentInfoBox(Component *comp) {
+Widget *DoComponentInfoBox(Component *comp) {
     Widget *w = UI_LayoutVertical();
     w->SetFlag(WF_LAYOUT_VERTICAL);
     w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
@@ -275,6 +275,11 @@ void DoComponentSelectionAnnotations(McTraceApp *app, bool fat_monitors) {
 
 Widget *DoComponentSelectionActions(McTraceApp *app) {
     Widget *w = NULL;
+
+    if (GetEnter() && app->comp_selected) {
+        Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
+        app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
+    }
 
     // hover / click  / double-click
     if (UI_DidCollide() == false) {
@@ -565,14 +570,25 @@ void DoUI(McTraceApp *app) {
             OnSwitchToMode(app);
         }
     }
-    if (GetChar('p')) { app->draw_plane = !app->draw_plane; }
-    if (GetChar('r')) { app->draw_rays = !app->draw_rays; }
 
     // UI
 
     if (app->mode == MTM_SIM) {
         DoTabMenu(app);
 
+        Widget *layout = UI_LayoutVertical();
+        layout->SetFlag(WF_EXPAND_HORIZONTAL);
+        char buff[200];
+
+        UI_Label("SIM");
+
+        sprintf(buff, "ncount (final):   %d", app->ncount_init);
+        Widget *w1 = UI_Label(buff);
+        w1->text = StrL(buff);
+
+        sprintf(buff, "ncount (current): %d", mcncount);
+        Widget *w2 = UI_Label(buff);
+        w2->text = StrL(buff);
     }
 
     else if (app->mode == MTM_TRACE) {
@@ -586,7 +602,7 @@ void DoUI(McTraceApp *app) {
         DoComponentSelectionActions(app);
 
         if (app->comp_selected) {
-            DrawComponentInfoBox(app->comp_selected);
+            DoComponentInfoBox(app->comp_selected);
         }
     }
 
@@ -602,12 +618,10 @@ void DoUI(McTraceApp *app) {
 
         if (app->comp_selected && app->comp_selected->monitor.mon_tpe != MT_NOT) {
             // display the monitor blit
-            Widget *info_box_panel = DrawComponentInfoBox(app->comp_selected);
-
-            Monitor *mon = &app->comp_selected->monitor;
+            Widget *info_box_panel = DoComponentInfoBox(app->comp_selected);
 
             assert(info_box_panel != NULL);
-            g_w_layout = info_box_panel;
+            UI_SetCurrentLayout(info_box_panel);
 
             UI_SpaceV(10);
 
@@ -617,7 +631,7 @@ void DoUI(McTraceApp *app) {
             w->h = 128;
             w->col_bckgrnd = COLOR_BLUE;
 
-            Sprite s = MonitorUpdateTexture(cbui.ctx->a_tmp, mon, w->rect.x0, w->rect.y0, 128, 128);
+            Sprite s = MonitorUpdateTexture(cbui.ctx->a_tmp, &app->comp_selected->monitor, w->rect.x0, w->rect.y0, 128, 128);
             SpriteBufferPush(s);
 
             UI_Pop();

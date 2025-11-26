@@ -238,7 +238,6 @@ void TraceParticles(TrajContainer *container, Array<Component*> comps, Instrumen
             g_do_trace_trajectories = false;
         }
 
-
         // trace components
         Vector3f current = {};
         Vector3f prev = {};
@@ -262,6 +261,9 @@ void TraceParticles(TrajContainer *container, Array<Component*> comps, Instrumen
                 break;
             }
         }
+
+        // update core "current" ncount
+        mcncount = j;
 
         if (g_do_trace_trajectories) {
             Traj t = {};

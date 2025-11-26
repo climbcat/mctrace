@@ -84,6 +84,7 @@ void RunProgram(bool do_fullscreen) {
     McTraceApp app = McTraceInit();
     app.draw_rays_limit = 100;
     app.ncount_init = 1e9;
+    mcrun_num = app.ncount_init;
     std::thread trace_worker = std::thread(TraceParticles, &app.container, app.config.comps, &app.config.instr, app.ncount_init);
 
     // app display
