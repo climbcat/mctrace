@@ -44,13 +44,28 @@ struct PSI_DMC {
 };
 
 
-static PSI_DMC PSI_DMC_var;
+int GetParameterCount_PSI_DMC() {
+    return 10;
+}
+void GetParameters_PSI_DMC(Array<Param> *pars, PSI_DMC *instr) {
+    pars->Add( Param { CPT_FLOAT, "lambda", &instr->lambda } );
+    pars->Add( Param { CPT_FLOAT, "R", &instr->R } );
+    pars->Add( Param { CPT_FLOAT, "R_curve", &instr->R_curve } );
+    pars->Add( Param { CPT_STRING, "filename", instr->filename } );
+    pars->Add( Param { CPT_FLOAT, "D_PHI", &instr->D_PHI } );
+    pars->Add( Param { CPT_FLOAT, "SHIFT", &instr->SHIFT } );
+    pars->Add( Param { CPT_FLOAT, "PACK", &instr->PACK } );
+    pars->Add( Param { CPT_FLOAT, "Dw", &instr->Dw } );
+    pars->Add( Param { CPT_FLOAT, "BARNS", &instr->BARNS } );
+    pars->Add( Param { CPT_FLOAT, "SPLITS", &instr->SPLITS } );
+}
 
 
 InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
-    PSI_DMC *spec = &PSI_DMC_var;
+    PSI_DMC _spec = {};
+    PSI_DMC *spec = (PSI_DMC*) ArenaPush(a_dest, &_spec, sizeof(PSI_DMC));
 
-    // NOTE: mcncount must be set BEFORE initialization:
+    // NOTE: mcncount must be fixed BEFORE initialization:
     //      This is used by API call mcget_ncount(), and called by some components during init (SourceMaxwell)
     mcset_ncount(ncount);
 
@@ -507,7 +522,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     config.comps.Add(in_slit);
     Slit *in_slit_comp = (Slit*) in_slit->comp;
     in_slit_comp->xmin = -0.01;
-    in_slit_comp->xmax = 0.01 ;
+    in_slit_comp->xmax = 0.01;
     in_slit_comp->ymin = -0.06;
     in_slit_comp->ymax = 0.06;
     Init_Slit(in_slit_comp, instr);

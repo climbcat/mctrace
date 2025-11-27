@@ -179,7 +179,7 @@ Widget *DoComponentInfoBox(Component *comp) {
     ComponentSharedHeader *hdr = comp->GetHeader();
     MArena *a_tmp = cbui.ctx->a_tmp;
     for (s32 i = 0; i < comp->parameters.len; ++i) {
-        CompPar par = comp->parameters.arr[i];
+        Param par = comp->parameters.arr[i];
         Str lbl = { (char*) "  ", 2};
         lbl = StrCat(lbl, par.name);
         lbl = StrCat(lbl, " = ");

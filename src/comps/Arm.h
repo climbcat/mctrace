@@ -33,7 +33,7 @@ int GetParameterCount_Arm() {
     return 0;
 }
 
-void GetParameters_Arm(Array<CompPar> *pars, Arm *comp) {
+void GetParameters_Arm(Array<Param> *pars, Arm *comp) {
 }
 
 void Init_Arm(Arm *comp, Instrument *instrument) {

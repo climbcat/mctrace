@@ -47,18 +47,18 @@ int GetParameterCount_PSD_monitor() {
     return 11;
 }
 
-void GetParameters_PSD_monitor(Array<CompPar> *pars, PSD_monitor *comp) {
-    pars->Add( CompPar { CPT_FLOAT, "nx", &comp->nx } );
-    pars->Add( CompPar { CPT_FLOAT, "ny", &comp->ny } );
-    pars->Add( CompPar { CPT_STRING, "filename", comp->filename } );
-    pars->Add( CompPar { CPT_FLOAT, "xmin", &comp->xmin } );
-    pars->Add( CompPar { CPT_FLOAT, "xmax", &comp->xmax } );
-    pars->Add( CompPar { CPT_FLOAT, "ymin", &comp->ymin } );
-    pars->Add( CompPar { CPT_FLOAT, "ymax", &comp->ymax } );
-    pars->Add( CompPar { CPT_FLOAT, "xwidth", &comp->xwidth } );
-    pars->Add( CompPar { CPT_FLOAT, "yheight", &comp->yheight } );
-    pars->Add( CompPar { CPT_FLOAT, "restore_neutron", &comp->restore_neutron } );
-    pars->Add( CompPar { CPT_FLOAT, "nowritefile", &comp->nowritefile } );
+void GetParameters_PSD_monitor(Array<Param> *pars, PSD_monitor *comp) {
+    pars->Add( Param { CPT_FLOAT, "nx", &comp->nx } );
+    pars->Add( Param { CPT_FLOAT, "ny", &comp->ny } );
+    pars->Add( Param { CPT_STRING, "filename", comp->filename } );
+    pars->Add( Param { CPT_FLOAT, "xmin", &comp->xmin } );
+    pars->Add( Param { CPT_FLOAT, "xmax", &comp->xmax } );
+    pars->Add( Param { CPT_FLOAT, "ymin", &comp->ymin } );
+    pars->Add( Param { CPT_FLOAT, "ymax", &comp->ymax } );
+    pars->Add( Param { CPT_FLOAT, "xwidth", &comp->xwidth } );
+    pars->Add( Param { CPT_FLOAT, "yheight", &comp->yheight } );
+    pars->Add( Param { CPT_FLOAT, "restore_neutron", &comp->restore_neutron } );
+    pars->Add( Param { CPT_FLOAT, "nowritefile", &comp->nowritefile } );
 }
 
 void Init_PSD_monitor(PSD_monitor *comp, Instrument *instrument) {

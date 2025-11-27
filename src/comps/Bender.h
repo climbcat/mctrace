@@ -57,29 +57,29 @@ int GetParameterCount_Bender() {
     return 22;
 }
 
-void GetParameters_Bender(Array<CompPar> *pars, Bender *comp) {
-    pars->Add( CompPar { CPT_FLOAT, "w", &comp->w } );
-    pars->Add( CompPar { CPT_FLOAT, "h", &comp->h } );
-    pars->Add( CompPar { CPT_FLOAT, "r", &comp->r } );
-    pars->Add( CompPar { CPT_FLOAT, "Win", &comp->Win } );
-    pars->Add( CompPar { CPT_FLOAT, "k", &comp->k } );
-    pars->Add( CompPar { CPT_FLOAT, "d", &comp->d } );
-    pars->Add( CompPar { CPT_FLOAT, "l", &comp->l } );
-    pars->Add( CompPar { CPT_FLOAT, "R0a", &comp->R0a } );
-    pars->Add( CompPar { CPT_FLOAT, "Qca", &comp->Qca } );
-    pars->Add( CompPar { CPT_FLOAT, "alphaa", &comp->alphaa } );
-    pars->Add( CompPar { CPT_FLOAT, "ma", &comp->ma } );
-    pars->Add( CompPar { CPT_FLOAT, "Wa", &comp->Wa } );
-    pars->Add( CompPar { CPT_FLOAT, "R0i", &comp->R0i } );
-    pars->Add( CompPar { CPT_FLOAT, "Qci", &comp->Qci } );
-    pars->Add( CompPar { CPT_FLOAT, "alphai", &comp->alphai } );
-    pars->Add( CompPar { CPT_FLOAT, "mi", &comp->mi } );
-    pars->Add( CompPar { CPT_FLOAT, "Wi", &comp->Wi } );
-    pars->Add( CompPar { CPT_FLOAT, "R0s", &comp->R0s } );
-    pars->Add( CompPar { CPT_FLOAT, "Qcs", &comp->Qcs } );
-    pars->Add( CompPar { CPT_FLOAT, "alphas", &comp->alphas } );
-    pars->Add( CompPar { CPT_FLOAT, "ms", &comp->ms } );
-    pars->Add( CompPar { CPT_FLOAT, "Ws", &comp->Ws } );
+void GetParameters_Bender(Array<Param> *pars, Bender *comp) {
+    pars->Add( Param { CPT_FLOAT, "w", &comp->w } );
+    pars->Add( Param { CPT_FLOAT, "h", &comp->h } );
+    pars->Add( Param { CPT_FLOAT, "r", &comp->r } );
+    pars->Add( Param { CPT_FLOAT, "Win", &comp->Win } );
+    pars->Add( Param { CPT_FLOAT, "k", &comp->k } );
+    pars->Add( Param { CPT_FLOAT, "d", &comp->d } );
+    pars->Add( Param { CPT_FLOAT, "l", &comp->l } );
+    pars->Add( Param { CPT_FLOAT, "R0a", &comp->R0a } );
+    pars->Add( Param { CPT_FLOAT, "Qca", &comp->Qca } );
+    pars->Add( Param { CPT_FLOAT, "alphaa", &comp->alphaa } );
+    pars->Add( Param { CPT_FLOAT, "ma", &comp->ma } );
+    pars->Add( Param { CPT_FLOAT, "Wa", &comp->Wa } );
+    pars->Add( Param { CPT_FLOAT, "R0i", &comp->R0i } );
+    pars->Add( Param { CPT_FLOAT, "Qci", &comp->Qci } );
+    pars->Add( Param { CPT_FLOAT, "alphai", &comp->alphai } );
+    pars->Add( Param { CPT_FLOAT, "mi", &comp->mi } );
+    pars->Add( Param { CPT_FLOAT, "Wi", &comp->Wi } );
+    pars->Add( Param { CPT_FLOAT, "R0s", &comp->R0s } );
+    pars->Add( Param { CPT_FLOAT, "Qcs", &comp->Qcs } );
+    pars->Add( Param { CPT_FLOAT, "alphas", &comp->alphas } );
+    pars->Add( Param { CPT_FLOAT, "ms", &comp->ms } );
+    pars->Add( Param { CPT_FLOAT, "Ws", &comp->Ws } );
 }
 
 void Init_Bender(Bender *comp, Instrument *instrument) {

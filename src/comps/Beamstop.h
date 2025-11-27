@@ -40,14 +40,14 @@ int GetParameterCount_Beamstop() {
     return 7;
 }
 
-void GetParameters_Beamstop(Array<CompPar> *pars, Beamstop *comp) {
-    pars->Add( CompPar { CPT_FLOAT, "xmin", &comp->xmin } );
-    pars->Add( CompPar { CPT_FLOAT, "xmax", &comp->xmax } );
-    pars->Add( CompPar { CPT_FLOAT, "ymin", &comp->ymin } );
-    pars->Add( CompPar { CPT_FLOAT, "ymax", &comp->ymax } );
-    pars->Add( CompPar { CPT_FLOAT, "xwidth", &comp->xwidth } );
-    pars->Add( CompPar { CPT_FLOAT, "yheight", &comp->yheight } );
-    pars->Add( CompPar { CPT_FLOAT, "radius", &comp->radius } );
+void GetParameters_Beamstop(Array<Param> *pars, Beamstop *comp) {
+    pars->Add( Param { CPT_FLOAT, "xmin", &comp->xmin } );
+    pars->Add( Param { CPT_FLOAT, "xmax", &comp->xmax } );
+    pars->Add( Param { CPT_FLOAT, "ymin", &comp->ymin } );
+    pars->Add( Param { CPT_FLOAT, "ymax", &comp->ymax } );
+    pars->Add( Param { CPT_FLOAT, "xwidth", &comp->xwidth } );
+    pars->Add( Param { CPT_FLOAT, "yheight", &comp->yheight } );
+    pars->Add( Param { CPT_FLOAT, "radius", &comp->radius } );
 }
 
 void Init_Beamstop(Beamstop *comp, Instrument *instrument) {

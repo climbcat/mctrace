@@ -72,7 +72,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_optics;
             comp->interactable = true;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_Slit());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_Slit());
             GetParameters_Slit(&comp->parameters, (Slit*) comp->comp);
         } break;
 
@@ -84,7 +84,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_monitors;
             comp->interactable = false;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_L_monitor());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_L_monitor());
             GetParameters_L_monitor(&comp->parameters, (L_monitor*) comp->comp);
         } break;
 
@@ -96,7 +96,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_optics;
             comp->interactable = true;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_Bender());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_Bender());
             GetParameters_Bender(&comp->parameters, (Bender*) comp->comp);
         } break;
 
@@ -108,7 +108,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_misc;
             comp->interactable = false;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_Progress_bar());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_Progress_bar());
             GetParameters_Progress_bar(&comp->parameters, (Progress_bar*) comp->comp);
         } break;
 
@@ -120,7 +120,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_monitors;
             comp->interactable = false;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_PSD_monitor());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_PSD_monitor());
             GetParameters_PSD_monitor(&comp->parameters, (PSD_monitor*) comp->comp);
         } break;
 
@@ -132,7 +132,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_optics;
             comp->interactable = false;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_Arm());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_Arm());
             GetParameters_Arm(&comp->parameters, (Arm*) comp->comp);
         } break;
 
@@ -144,7 +144,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_contrib;
             comp->interactable = false;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_Al_window());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_Al_window());
             GetParameters_Al_window(&comp->parameters, (Al_window*) comp->comp);
         } break;
 
@@ -156,7 +156,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_monitors;
             comp->interactable = false;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_PSDlin_monitor());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_PSDlin_monitor());
             GetParameters_PSDlin_monitor(&comp->parameters, (PSDlin_monitor*) comp->comp);
         } break;
 
@@ -168,7 +168,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_optics;
             comp->interactable = true;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_Guide());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_Guide());
             GetParameters_Guide(&comp->parameters, (Guide*) comp->comp);
         } break;
 
@@ -180,7 +180,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_sources;
             comp->interactable = true;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_Source_Maxwell_3());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_Source_Maxwell_3());
             GetParameters_Source_Maxwell_3(&comp->parameters, (Source_Maxwell_3*) comp->comp);
         } break;
 
@@ -192,7 +192,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_optics;
             comp->interactable = true;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_Beamstop());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_Beamstop());
             GetParameters_Beamstop(&comp->parameters, (Beamstop*) comp->comp);
         } break;
 
@@ -204,7 +204,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_samples;
             comp->interactable = true;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_PowderN());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_PowderN());
             GetParameters_PowderN(&comp->parameters, (PowderN*) comp->comp);
         } break;
 
@@ -216,7 +216,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_monitors;
             comp->interactable = true;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_Monitor_nD());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_Monitor_nD());
             GetParameters_Monitor_nD(&comp->parameters, (Monitor_nD*) comp->comp);
         } break;
 
@@ -228,7 +228,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->cat = CCAT_contrib;
             comp->interactable = true;
 
-            comp->parameters = InitArray<CompPar>(a_dest, GetParameterCount_Monochromator_2foc());
+            comp->parameters = InitArray<Param>(a_dest, GetParameterCount_Monochromator_2foc());
             GetParameters_Monochromator_2foc(&comp->parameters, (Monochromator_2foc*) comp->comp);
         } break;
 

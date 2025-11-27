@@ -137,7 +137,7 @@ struct Monitor {
 };
 
 
-enum CompParType {
+enum ParamType {
     CPT_STRING,
     CPT_FLOAT,
     CPT_VECTOR,
@@ -145,8 +145,8 @@ enum CompParType {
     CPT_CNT
 };
 
-struct CompPar {
-    CompParType tpe;
+struct Param {
+    ParamType tpe;
     char name[64];
     void* value;
 
@@ -197,7 +197,7 @@ struct Component {
 
     // pointer to the underlying component
     void *comp;
-    Array<CompPar> parameters;
+    Array<Param> parameters;
 
     ComponentSharedHeader *GetHeader() {
         return (ComponentSharedHeader*) comp;
@@ -247,9 +247,9 @@ void* particle_getvar_void(Neutron *p, char *name, int *suc) {
 struct Instrument {
     char *name; // used with: NAME_INSTRUMENT
     Coords *_position_absolute; // used with: POS_A_COMP_INDEX
-    int counter_N;
-    int counter_P;
-    int counter_P2;
+
+    void *instr;
+    Array<Param> parameters;
 };
 
 
