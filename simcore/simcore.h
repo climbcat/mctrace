@@ -1089,6 +1089,7 @@ static void mcsetn_arg(char *arg)
 }
 
 /* mcsetseed: set the random generator seed from a string argument */
+/*
 static void mcsetseed(char *arg)
 {
     mcseed = atol(arg);
@@ -1100,6 +1101,7 @@ static void mcsetseed(char *arg)
         exit(1);
     }
 }
+*/
 
 
 /* SECTION: MCDISPLAY support. =============================================== */

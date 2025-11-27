@@ -60,6 +60,7 @@ struct NeutronBig {
 #define Neutron NeutronBig
 
 
+// TODO: remove these
 Neutron _particle_global_randnbuse_var;
 Neutron* _particle = &_particle_global_randnbuse_var;
 
@@ -225,18 +226,20 @@ struct Component {
 #define MCCODE_STRING "tracetool_string"
 #define MCCODE_NAME "tracetool_name"
 
-int  defaultmain = 1;
-int  traceenabled = 0;
+
+// TODO: depricate further:
+//int  defaultmain = 1;
+//int  traceenabled = 0;
 char instrument_name[200] = "default_instr_name";
 char instrument_source[200] = "default_instr_source";
 char *instrument_exe = (char*) "default_instr_exe";
-int  numipar = 0;
-FILE *siminfo_file = NULL;
+//int  numipar = 0;
+//FILE *siminfo_file = NULL;
 
 
 static int mcncount;    // target number of rays
 static int mcrun_num;   // current number of rays
-static int mcseed;
+//static int mcseed;
 static int mcMagnet;
 
 // NOTE: used to get the number of components in the instrument (used in Progress_bar.comp)
