@@ -92,6 +92,7 @@ void RunProgram(bool do_fullscreen) {
 
     McTraceApp app = McTraceInit();
     app.trace_active = false;
+    app.simulation_active = false;
     app.draw_rays_limit = 100;
 
     std::thread trace_worker = std::thread(TraceParticles, &app.container, &app.trace_active, app.config.comps, &app.config.instr, app.ncount_target, app.ncount_current);

@@ -76,17 +76,15 @@ struct McTraceApp {
     Wireframe plane;
     Array<Monitor> monitors;
 
+    bool simulation_active;
     bool trace_active;
     s32 *ncount_target;
     s32 *ncount_current;
     TrajContainer container;
 
-    bool simulation_active;
-
     bool draw_rays;
     bool draw_plane;
     u32 draw_rays_limit;
-
 
     McTraceMode mode;
     ColorSheme colors;

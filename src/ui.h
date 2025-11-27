@@ -587,22 +587,28 @@ void DoUI(McTraceApp *app) {
         Widget *layout = UI_LayoutVertical();
         layout->SetFlag(WF_EXPAND_HORIZONTAL);
 
-        Instrument *instr = &app->config.instr;
-        Str line1 = StrCat(StrL("INSTRUMENT "), StrL(instr->name));
-        UI_Label(StrZ(line1));
+        {
+            Instrument *instr = &app->config.instr;
+            Str line1 = StrCat(StrL("INSTRUMENT "), StrL(instr->name));
+            UI_Label(StrZ(line1));
 
-        MArena *a_tmp = cbui.ctx->a_tmp;
-        for (s32 i = 0; i < instr->parameters.len; ++i) {
-            Param par = instr->parameters.arr[i];
+            MArena *a_tmp = cbui.ctx->a_tmp;
+            for (s32 i = 0; i < instr->parameters.len; ++i) {
+                Param par = instr->parameters.arr[i];
 
-            Str lbl = { (char*) "  ", 2};
-            lbl = StrCat(lbl, par.name);
-            lbl = StrCat(lbl, " = ");
-            lbl = StrCat(lbl, par.ValueAsString(a_tmp));
-            UI_Label(StrZ(lbl));
+                Str lbl = { (char*) "  ", 2};
+                lbl = StrCat(lbl, par.name);
+                lbl = StrCat(lbl, " = ");
+                lbl = StrCat(lbl, par.ValueAsString(a_tmp));
+                UI_Label(StrZ(lbl));
+            }
         }
+
         UI_SpaceV(10);
 
+        bool sim = app->simulation_active;
+        bool trc = app->trace_active;
+        assert(!trc || !sim);
 
         {
             UI_Label("TRACE");
@@ -619,76 +625,94 @@ void DoUI(McTraceApp *app) {
             UI_SpaceV(10);
             UI_LayoutHorizontal();
 
-            if (app->trace_active == false) {
-                if (UI_Button("Run")) {
+            if (!trc) {
+                if (UI_Button("Trace", NULL, sim)) {
+                    g_do_trace_trajectories = true;
                     app->trace_active = true;
                 }
             }
             else {
-                if (UI_Button("Pause")) {
+                if (UI_Button("Pause", NULL, sim)) {
                     app->trace_active = false;
                 }
             }
 
             UI_SpaceH(10);
-            if (UI_Button("Reset")) {
+            if (UI_Button("Reset", NULL, sim)) {
 
-                for (s32 i = 0; i < app->config.comps.len; ++i) {
-                    Monitor *mon = &app->config.comps.arr[i]->monitor;
-                    if (mon->mon_tpe != MT_NOT) {
-                        MonitorClear(mon);
+                // TODO: extact into "trace control functionality" unit
+                {
+                    app->trace_active = false;
+                    for (s32 i = 0; i < app->config.comps.len; ++i) {
+                        Monitor *mon = &app->config.comps.arr[i]->monitor;
+                        if (mon->mon_tpe != MT_NOT) {
+                            MonitorClear(mon);
+                        }
                     }
+                    TrajectoryContainerClear(&app->container);
+                    *app->ncount_current = 0;
                 }
-
-                TrajectoryContainerClear(&app->container);
-                *app->ncount_current = 0;
-                g_do_trace_trajectories = true;
             }
+            UI_Pop();
+
+
+            // TODO: Implement the case where trace has completed
+            //      In fact, it might never end
 
         }
 
-        UI_Pop();
+        //UI_Pop();
         UI_SpaceV(10);
 
         {
             UI_Label("SIMULATE");
 
+            /*
             char buff[200];
-            sprintf(buff, "ncount (final) 2:   %d", *app->ncount_target);
+            sprintf(buff, "ncount (final):   %d", *app->ncount_target);
             Widget *w1 = UI_Label(buff);
             w1->text = StrL(buff);
 
-            sprintf(buff, "ncount (current) 2: %d", *app->ncount_current);
+            sprintf(buff, "ncount (current): %d", *app->ncount_current);
             Widget *w2 = UI_Label(buff);
             w2->text = StrL(buff);
+            */
 
             UI_SpaceV(10);
             UI_LayoutHorizontal();
 
-            if (app->simulation_active == false) {
-                if (UI_Button("Run2")) {
+            if (!sim) {
+                if (UI_Button("Run", NULL, trc)) {
+
+                    // TODO: extact reset into "trace control functionality" unit
+                    {
+                        app->trace_active = false;
+                        for (s32 i = 0; i < app->config.comps.len; ++i) {
+                            Monitor *mon = &app->config.comps.arr[i]->monitor;
+                            if (mon->mon_tpe != MT_NOT) {
+                                MonitorClear(mon);
+                            }
+                        }
+                        g_do_trace_trajectories = false;
+                        TrajectoryContainerClear(&app->container);
+                        *app->ncount_current = 0;
+                    }
+
                     app->simulation_active = true;
                 }
             }
             else {
-                if (UI_Button("Pause2")) {
+                if (UI_Button("Abort", NULL, trc)) {
                     app->simulation_active = false;
                 }
             }
 
-            UI_SpaceH(10);
-            if (UI_Button("Reset2")) {
-
-                for (s32 i = 0; i < app->config.comps.len; ++i) {
-                    Monitor *mon = &app->config.comps.arr[i]->monitor;
-                    if (mon->mon_tpe != MT_NOT) {
-                        MonitorClear(mon);
-                    }
-                }
-                *app->ncount_current = 0;
-            }
-
             UI_Pop();
+
+
+            // TODO: Implement the case where the simulation is completed
+
+
         }
     }
 
