@@ -80,7 +80,6 @@ struct McTraceApp {
     bool trace_active;
     s32 *ncount_target;
     s32 *ncount_current;
-    TrajContainer container;
 
     bool draw_rays;
     bool draw_plane;
@@ -102,17 +101,15 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps);
 void GetComponentDisplayWireframes(MArena *a_dest, Array<Component*> comps);
 
 
-McTraceApp McTraceInit() {
+McTraceApp McTraceInit(InstrumentConfig config) {
     McTraceApp app = {};
-
-    s32 ncount = 1e9;
+    app.config = config;
+    app.ncount_target = &app.config.instr.ncount_target;
+    app.ncount_current = &app.config.instr.ncount_current;
 
     // core counters
     app.persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
     app.cam = OrbitCameraInit();
-    app.config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, ncount);
-    app.ncount_target = &app.config.instr.ncount_target;
-    app.ncount_current = &app.config.instr.ncount_current;
 
     // scene objects
     app.scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);
@@ -126,7 +123,6 @@ McTraceApp McTraceInit() {
     app.scene_objs.Add(app.plane);
 
     // trajectories
-    app.container = TrajectoryContainerInit(cbui.ctx->a_pers, app.config.comps.len, 256 * KILOBYTE);
     app.draw_rays_limit = 300;
 
     // monitors
@@ -252,17 +248,17 @@ void DoRendering(McTraceApp *app) {
         if (app->comp_selected) {
             u32 selected_idx = app->comp_selected->GetHeader()->index;
 
-            Traj *first_at_comp_idx = app->container.bundles_ptrs.arr[selected_idx]->head;
+            Traj *first_at_comp_idx = app->config.container.bundles_ptrs.arr[selected_idx]->head;
             RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, MCT_COLOR_TRAJECTORY, app->draw_rays_limit);
         }
         else {
             u32 trajs_rendered = 0;
-            for (s32 i = 0; i < app->container.bundles_ptrs.len; ++i) {
+            for (s32 i = 0; i < app->config.container.bundles_ptrs.len; ++i) {
                 if (trajs_rendered >= app->draw_rays_limit) {
                     break;
                 }
 
-                Traj *first_at_comp_idx = app->container.bundles_ptrs.arr[i]->head;
+                Traj *first_at_comp_idx = app->config.container.bundles_ptrs.arr[i]->head;
                 trajs_rendered += RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, MCT_COLOR_TRAJECTORY, 0);
             }
         }

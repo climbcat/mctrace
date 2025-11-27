@@ -649,7 +649,7 @@ void DoUI(McTraceApp *app) {
                             MonitorClear(mon);
                         }
                     }
-                    TrajectoryContainerClear(&app->container);
+                    TrajectoryContainerClear(&app->config.container);
                     *app->ncount_current = 0;
                 }
             }
@@ -682,7 +682,7 @@ void DoUI(McTraceApp *app) {
             UI_LayoutHorizontal();
 
             if (!sim) {
-                if (UI_Button("Run", NULL, trc)) {
+                if (UI_Button("Run 1e8", NULL, trc)) {
 
                     // TODO: extact reset into "trace control functionality" unit
                     {
@@ -694,7 +694,7 @@ void DoUI(McTraceApp *app) {
                             }
                         }
                         g_do_trace_trajectories = false;
-                        TrajectoryContainerClear(&app->container);
+                        TrajectoryContainerClear(&app->config.container);
                         *app->ncount_current = 0;
                     }
 

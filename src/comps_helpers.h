@@ -4,14 +4,17 @@
 
 struct InstrumentConfig {
     Instrument instr;
+    SceneGraphHandle scenegraph;
+
     Array<Component*> comps;
     Array<bool> comps_interactible;
     Array<bool> comps_monitors;
-    SceneGraphHandle scenegraph;
+    TrajContainer container;
 
     Matrix4f box_t_worold;
     Vector3f box_dims;
 };
+
 
 void UpdateLegacyTransforms(Array<Component*> comps) {
     Matrix4f t_world_prev = Matrix4f_Identity();

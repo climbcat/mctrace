@@ -75,7 +75,7 @@ Vector2f PointToScreen(Vector3f point, Matrix4f view_l2w, Perspective persp, u32
 #include "simcore/simcore.h"
 #include "simcore/simlib.h"
 
-
+#include "src/ptrajs.h"
 #include "src/comps_meta.h"
 #include "src/comps_helpers.h"
 #include "src/comps/PSI_DMC_config.h"
@@ -90,12 +90,16 @@ void RunProgram(bool do_fullscreen) {
 
     CbuiInit("mctrace", do_fullscreen);
 
-    McTraceApp app = McTraceInit();
+    s32 ncount = 1e9;
+    InstrumentConfig config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, ncount);
+    config.container = TrajectoryContainerInit(cbui.ctx->a_pers, config.comps.len, 256 * KILOBYTE);
+
+    McTraceApp app = McTraceInit(config);
     app.trace_active = false;
     app.simulation_active = false;
     app.draw_rays_limit = 100;
 
-    std::thread trace_worker = std::thread(TraceParticles, &app.container, &app.trace_active, app.config.comps, &app.config.instr, app.ncount_target, app.ncount_current);
+    std::thread trace_worker = std::thread(TraceParticles, &app.config.container, &app.trace_active, app.config.comps, &app.config.instr, app.ncount_target, app.ncount_current);
     std::thread sim_worker = std::thread(SimulateParticles, &app.simulation_active, app.config.comps, &app.config.instr, app.ncount_target, app.ncount_current);
 
     // app display
@@ -117,6 +121,7 @@ void RunProgram(bool do_fullscreen) {
     CbuiExit();
 
     trace_worker.join();
+    sim_worker.join();
 }
 
 
