@@ -3,6 +3,9 @@
 
 
 struct InstrumentConfig {
+    InstrumentConfig *prev;
+    InstrumentConfig *next;
+
     Instrument instr;
     SceneGraphHandle scenegraph;
 
@@ -15,7 +18,6 @@ struct InstrumentConfig {
     Matrix4f box_t_worold;
     Vector3f box_dims;
 };
-
 
 void UpdateLegacyTransforms(Array<Component*> comps) {
     Matrix4f t_world_prev = Matrix4f_Identity();
@@ -43,7 +45,6 @@ void UpdateLegacyTransforms(Array<Component*> comps) {
     }
 }
 
-
 #pragma LLM
 void RotationToEulerAnglesDegs(Rotation rot, double *rot_x, double *rot_y, double *rot_z) {
     // NOTE: supposed to be (roll pitch yaw), no exactly (x, y, z)
@@ -52,5 +53,6 @@ void RotationToEulerAnglesDegs(Rotation rot, double *rot_x, double *rot_y, doubl
     *rot_y = atan2(rot[2][1], rot[2][2]) * rad2deg;
     *rot_z = atan2(rot[1][0], rot[0][0]) * rad2deg;
 }
+
 
 #endif

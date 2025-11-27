@@ -403,16 +403,6 @@ s32 PrevTrue(Array<bool> selector, s32 initial) {
     }
 }
 
-void SelectorPrint(Array<bool> selector) {
-    for (s32 i = 0; i < selector.len; ++i) {
-        if ((i > 0) && (i % 4 == 0)) {
-            printf(" ");
-        }
-        printf("%d", selector.arr[i]);
-    }
-    printf("\n");
-}
-
 
 static bool tab_state[4] = { false, true, false, false };
 

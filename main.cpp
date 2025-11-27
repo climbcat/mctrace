@@ -92,6 +92,15 @@ enum InstrConfigs {
     IC_CNT
 };
 
+void _SelectorPrint(Array<bool> selector) {
+    for (s32 i = 0; i < selector.len; ++i) {
+        if ((i > 0) && (i % 4 == 0)) {
+            printf(" ");
+        }
+        printf("%d", selector.arr[i]);
+    }
+    printf("\n");
+}
 
 InstrumentConfig InitInstrument(MArena *a_dest, InstrConfigs ic, u32 ncount) {
     InstrumentConfig config = {};
@@ -111,10 +120,15 @@ InstrumentConfig InitInstrument(MArena *a_dest, InstrConfigs ic, u32 ncount) {
     UpdateLegacyTransforms(config.comps);
     config.container = TrajectoryContainerInit(a_dest, config.comps.len, 256 * KILOBYTE);
 
+    // monitors helper array
+    // get DISPLAY/TRACE data and PLOT data pointers
+    config.monitors = PlotSaveAndGetMonitors(a_dest, config.comps);
+    GetComponentDisplayWireframes(a_dest, config.comps);
+
     // setup scrolling arrays
     s32 ncomps = config.comps.len;
-    Array<bool> is_interactible = InitArray<bool>(cbui.ctx->a_pers, ncomps);
-    Array<bool> is_monitors = InitArray<bool>(cbui.ctx->a_pers, ncomps);
+    Array<bool> is_interactible = InitArray<bool>(a_dest, ncomps);
+    Array<bool> is_monitors = InitArray<bool>(a_dest, ncomps);
     for (s32 i = 0; i < ncomps; ++i) {
         is_interactible.Add(config.comps.arr[i]->interactable);
     }
@@ -124,11 +138,6 @@ InstrumentConfig InitInstrument(MArena *a_dest, InstrConfigs ic, u32 ncount) {
     }
     config.comps_interactible = is_interactible;
     config.comps_monitors = is_monitors;
-
-    // monitors helper array
-    // get DISPLAY/TRACE data and PLOT data pointers
-    config.monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, config.comps);
-    GetComponentDisplayWireframes(cbui.ctx->a_pers, config.comps);
 
     return config;
 }
@@ -141,6 +150,10 @@ void RunProgram(bool do_fullscreen) {
 
     s32 ncount = 1e9;
     InstrumentConfig psi_dmc = InitInstrument(cbui.ctx->a_pers, IC_PSI_DMC, ncount);
+    InstrumentConfig psi_dmc_alt = InitInstrument(cbui.ctx->a_pers, IC_PSI_DMC, ncount);
+    psi_dmc.next = &psi_dmc_alt;
+    psi_dmc_alt.prev = &psi_dmc;
+
     McTraceApp app = McTraceInit(&psi_dmc);
 
     std::thread trace_worker = std::thread(TraceParticles, &app.config->container, &app.trace_active, app.config->comps, &app.config->instr, app.ncount_target, app.ncount_current);
