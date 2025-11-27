@@ -85,22 +85,66 @@ Vector2f PointToScreen(Vector3f point, Matrix4f view_l2w, Perspective persp, u32
 #include "src/ui.h"
 
 
+enum InstrConfigs {
+    IC_UNDEV,
+    IC_PSI_DMC,
+
+    IC_CNT
+};
+
+
+InstrumentConfig InitInstrument(MArena *a_dest, InstrConfigs ic, u32 ncount) {
+    InstrumentConfig config = {};
+    config.scenegraph = SceneGraphInit(cbui.ctx->a_life);
+    config.instr.ncount_target = ncount;
+
+    switch (ic) {
+    case IC_PSI_DMC:
+        config.instr.name = (char*) "PSI_DMC";
+        config.comps = InitAndConfig_PSI_DMC(a_dest, &config.instr, &config.scenegraph, ncount); break;
+
+    default:
+        break;
+    }
+
+    SceneGraphUpdate(&config.scenegraph);
+    UpdateLegacyTransforms(config.comps);
+    config.container = TrajectoryContainerInit(a_dest, config.comps.len, 256 * KILOBYTE);
+
+    // setup scrolling arrays
+    s32 ncomps = config.comps.len;
+    Array<bool> is_interactible = InitArray<bool>(cbui.ctx->a_pers, ncomps);
+    Array<bool> is_monitors = InitArray<bool>(cbui.ctx->a_pers, ncomps);
+    for (s32 i = 0; i < ncomps; ++i) {
+        is_interactible.Add(config.comps.arr[i]->interactable);
+    }
+    for (s32 i = 0; i < ncomps; ++i) {
+        CompMonitorType montpe = config.comps.arr[i]->monitor.mon_tpe;
+        is_monitors.Add(montpe != MT_NOT);
+    }
+    config.comps_interactible = is_interactible;
+    config.comps_monitors = is_monitors;
+
+    // monitors helper array
+    // get DISPLAY/TRACE data and PLOT data pointers
+    config.monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, config.comps);
+    GetComponentDisplayWireframes(cbui.ctx->a_pers, config.comps);
+
+    return config;
+}
+
+
 void RunProgram(bool do_fullscreen) {
     TimeFunction;
 
     CbuiInit("mctrace", do_fullscreen);
 
     s32 ncount = 1e9;
-    InstrumentConfig config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, ncount);
-    config.container = TrajectoryContainerInit(cbui.ctx->a_pers, config.comps.len, 256 * KILOBYTE);
+    InstrumentConfig psi_dmc = InitInstrument(cbui.ctx->a_pers, IC_PSI_DMC, ncount);
+    McTraceApp app = McTraceInit(&psi_dmc);
 
-    McTraceApp app = McTraceInit(config);
-    app.trace_active = false;
-    app.simulation_active = false;
-    app.draw_rays_limit = 100;
-
-    std::thread trace_worker = std::thread(TraceParticles, &app.config.container, &app.trace_active, app.config.comps, &app.config.instr, app.ncount_target, app.ncount_current);
-    std::thread sim_worker = std::thread(SimulateParticles, &app.simulation_active, app.config.comps, &app.config.instr, app.ncount_target, app.ncount_current);
+    std::thread trace_worker = std::thread(TraceParticles, &app.config->container, &app.trace_active, app.config->comps, &app.config->instr, app.ncount_target, app.ncount_current);
+    std::thread sim_worker = std::thread(SimulateParticles, &app.simulation_active, app.config->comps, &app.config->instr, app.ncount_target, app.ncount_current);
 
     // app display
     while (cbui.running) {

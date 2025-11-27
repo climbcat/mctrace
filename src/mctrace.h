@@ -71,10 +71,10 @@ struct ColorSheme {
 struct McTraceApp {
     Perspective persp;
     OrbitCamera cam;
-    InstrumentConfig config;
     Array<Wireframe> scene_objs;
     Wireframe plane;
-    Array<Monitor> monitors;
+
+    InstrumentConfig *config;
 
     bool simulation_active;
     bool trace_active;
@@ -101,11 +101,15 @@ Array<Monitor> PlotSaveAndGetMonitors(MArena *a_dest, Array<Component*> comps);
 void GetComponentDisplayWireframes(MArena *a_dest, Array<Component*> comps);
 
 
-McTraceApp McTraceInit(InstrumentConfig config) {
+void McTraceSetConfig(McTraceApp *app, InstrumentConfig *config) {
+    app->config = config;
+    app->ncount_target = &config->instr.ncount_target;
+    app->ncount_current = &config->instr.ncount_current;
+}
+
+
+McTraceApp McTraceInit(InstrumentConfig *config) {
     McTraceApp app = {};
-    app.config = config;
-    app.ncount_target = &app.config.instr.ncount_target;
-    app.ncount_current = &app.config.instr.ncount_current;
 
     // core counters
     app.persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
@@ -122,27 +126,6 @@ McTraceApp McTraceInit(InstrumentConfig config) {
     WireframeRawSegments(cbui.ctx->a_pers, &app.plane);
     app.scene_objs.Add(app.plane);
 
-    // trajectories
-    app.draw_rays_limit = 300;
-
-    // monitors
-    // get DISPLAY/TRACE data and PLOT data pointers
-    app.monitors = PlotSaveAndGetMonitors(cbui.ctx->a_pers, app.config.comps);
-    GetComponentDisplayWireframes(cbui.ctx->a_pers, app.config.comps);
-
-    s32 ncomps = app.config.comps.len;
-    Array<bool> is_interactible = InitArray<bool>(cbui.ctx->a_pers, ncomps);
-    Array<bool> is_monitors = InitArray<bool>(cbui.ctx->a_pers, ncomps);
-    for (s32 i = 0; i < ncomps; ++i) {
-        is_interactible.Add(app.config.comps.arr[i]->interactable);
-    }
-    for (s32 i = 0; i < ncomps; ++i) {
-        CompMonitorType montpe = app.config.comps.arr[i]->monitor.mon_tpe;
-        is_monitors.Add(montpe != MT_NOT);
-    }
-    app.config.comps_interactible = is_interactible;
-    app.config.comps_monitors = is_monitors;
-
     v_instr_center.y = 0;
     app.cam.radius = v_instr_center.z * 1.5;
     app.cam.phi = 0;
@@ -153,7 +136,12 @@ McTraceApp McTraceInit(InstrumentConfig config) {
     app.draw_plane = true;
     app.draw_rays = true;
 
+    McTraceSetConfig(&app, config);
     OnSwitchToMode(&app);
+
+    app.trace_active = false;
+    app.simulation_active = false;
+    app.draw_rays_limit = 100;
 
     return app;
 }
@@ -244,21 +232,22 @@ void DoRendering(McTraceApp *app) {
     }
 
     if (app->draw_rays && app->draw_rays_limit > 0) {
+        TrajContainer *container = &app->config->container;
 
         if (app->comp_selected) {
             u32 selected_idx = app->comp_selected->GetHeader()->index;
 
-            Traj *first_at_comp_idx = app->config.container.bundles_ptrs.arr[selected_idx]->head;
+            Traj *first_at_comp_idx = container->bundles_ptrs.arr[selected_idx]->head;
             RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, MCT_COLOR_TRAJECTORY, app->draw_rays_limit);
         }
         else {
             u32 trajs_rendered = 0;
-            for (s32 i = 0; i < app->config.container.bundles_ptrs.len; ++i) {
+            for (s32 i = 0; i < container->bundles_ptrs.len; ++i) {
                 if (trajs_rendered >= app->draw_rays_limit) {
                     break;
                 }
 
-                Traj *first_at_comp_idx = app->config.container.bundles_ptrs.arr[i]->head;
+                Traj *first_at_comp_idx = container->bundles_ptrs.arr[i]->head;
                 trajs_rendered += RenderTrajectories(first_at_comp_idx, app->cam.view, app->persp, MCT_COLOR_TRAJECTORY, 0);
             }
         }

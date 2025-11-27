@@ -8,7 +8,7 @@ void TestComponentFuncitonsRun() {
 
 
     s32 ncount = 1e6;
-    InstrumentConfig config = InitAndConfig_PSI_DMC(ctx->a_pers, ncount);
+    InstrumentConfig config = InitInstrument(cbui.ctx->a_pers, IC_PSI_DMC, ncount);
 
 
     // run display & calculate helper matrices:

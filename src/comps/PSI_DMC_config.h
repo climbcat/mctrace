@@ -61,7 +61,7 @@ void GetParameters_PSI_DMC(Array<Param> *pars, PSI_DMC *instr) {
 }
 
 
-InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
+Array<Component*> InitAndConfig_PSI_DMC(MArena *a_dest, Instrument *instr, SceneGraphHandle *sg, u32 ncount) {
     PSI_DMC _spec = {};
     PSI_DMC *spec = (PSI_DMC*) ArenaPush(a_dest, &_spec, sizeof(PSI_DMC));
 
@@ -157,15 +157,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
 
     // configuration pre-amble
 
-
-    InstrumentConfig config = {};
-    config.scenegraph = SceneGraphInit(cbui.ctx->a_pers);
-    Instrument *instr = &config.instr;
-    instr->ncount_target = ncount;
-    SceneGraphHandle *sg = &config.scenegraph;
-
-    instr->name = (char*) "PSI_DMC";
-    config.comps = InitArray<Component*>(a_dest, 32);
+    Array<Component*> comps = InitArray<Component*>(a_dest, 32);
     f32 at_x, at_y, at_z;
     f32 phi_x, phi_y, phi_z;
     s32 index = 0;
@@ -175,7 +167,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
 
 
     Component *source_arm = CreateComponent(a_dest, CT_Progress_bar, index++, "source_arm");
-    config.comps.Add(source_arm);
+    comps.Add(source_arm);
     Progress_bar *source_arm_comp = (Progress_bar*) source_arm->comp;
     Init_Progress_bar(source_arm_comp, instr);
     // case #1:      Only AT is defined
@@ -187,7 +179,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     source_arm->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *source = CreateComponent(a_dest, CT_Source_Maxwell_3, index++, "source");
-    config.comps.Add(source);
+    comps.Add(source);
     Source_Maxwell_3 *source_comp = (Source_Maxwell_3*) source->comp;
     source_comp->yheight = 0.156;
     source_comp->xwidth = 0.126;
@@ -214,7 +206,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     source->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *PSDbefore_guides = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDbefore_guides");
-    config.comps.Add(PSDbefore_guides);
+    comps.Add(PSDbefore_guides);
     PSD_monitor *PSDbefore_guides_comp = (PSD_monitor*) PSDbefore_guides->comp;
     PSDbefore_guides_comp->nx = 128;
     PSDbefore_guides_comp->ny = 128;
@@ -231,7 +223,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     PSDbefore_guides->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *l_mon_source = CreateComponent(a_dest, CT_L_monitor, index++, "l_mon_source");
-    config.comps.Add(l_mon_source);
+    comps.Add(l_mon_source);
     L_monitor *l_mon_source_comp = (L_monitor*) l_mon_source->comp;
     l_mon_source_comp->nL = 101;
     l_mon_source_comp->filename = (char*) "lmonsource.dat";
@@ -249,7 +241,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     l_mon_source->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *guide1 = CreateComponent(a_dest, CT_Guide, index++, "guide1");
-    config.comps.Add(guide1);
+    comps.Add(guide1);
     Guide *guide1_comp = (Guide*) guide1->comp;
     guide1_comp->w1 = 0.02;
     guide1_comp->h1 = 0.12;
@@ -275,7 +267,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     guide1->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *PSDbefore_curve = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDbefore_curve");
-    config.comps.Add(PSDbefore_curve);
+    comps.Add(PSDbefore_curve);
     PSD_monitor *PSDbefore_curve_comp = (PSD_monitor*) PSDbefore_curve->comp;
     PSDbefore_curve_comp->nx = 128;
     PSDbefore_curve_comp->ny = 128;
@@ -292,7 +284,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     PSDbefore_curve->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *guide2 = CreateComponent(a_dest, CT_Bender, index++, "guide2");
-    config.comps.Add(guide2);
+    comps.Add(guide2);
     Bender *guide2_comp = (Bender*) guide2->comp;
     guide2_comp->w = 0.02;
     guide2_comp->h = 0.12;
@@ -323,7 +315,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     guide2->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *PSDafter_curve = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSDafter_curve");
-    config.comps.Add(PSDafter_curve);
+    comps.Add(PSDafter_curve);
     PSD_monitor *PSDafter_curve_comp = (PSD_monitor*) PSDafter_curve->comp;
     PSDafter_curve_comp->nx = 128;
     PSDafter_curve_comp->ny = 128;
@@ -340,7 +332,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     PSDafter_curve->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *bunker = CreateComponent(a_dest, CT_Guide, index++, "bunker");
-    config.comps.Add(bunker);
+    comps.Add(bunker);
     Guide *bunker_comp = (Guide*) bunker->comp;
     bunker_comp->w1 = 0.02;
     bunker_comp->h1 = .12;
@@ -366,7 +358,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     bunker->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *guide3 = CreateComponent(a_dest, CT_Guide, index++, "guide3");
-    config.comps.Add(guide3);
+    comps.Add(guide3);
     Guide *guide3_comp = (Guide*) guide3->comp;
     guide3_comp->w1 = 0.02;
     guide3_comp->h1 = .12;
@@ -392,7 +384,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     guide3->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *guide4 = CreateComponent(a_dest, CT_Guide, index++, "guide4");
-    config.comps.Add(guide4);
+    comps.Add(guide4);
     Guide *guide4_comp = (Guide*) guide4->comp;
     guide4_comp->w1 = 0.02;
     guide4_comp->h1 = .12;
@@ -419,7 +411,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     SceneGraphSetRotParent(sg, guide4->transform, guide3->transform);
 
     Component *window1 = CreateComponent(a_dest, CT_Al_window, index++, "window1");
-    config.comps.Add(window1);
+    comps.Add(window1);
     Al_window *window1_comp = (Al_window*) window1->comp;
     window1_comp->thickness = 0.002;
     Init_Al_window(window1_comp, instr);
@@ -432,7 +424,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     window1->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *ydist_fluxpos = CreateComponent(a_dest, CT_PSDlin_monitor, index++, "ydist_fluxpos");
-    config.comps.Add(ydist_fluxpos);
+    comps.Add(ydist_fluxpos);
     PSDlin_monitor *ydist_fluxpos_comp = (PSDlin_monitor*) ydist_fluxpos->comp;
     ydist_fluxpos_comp->nbins = 11;
     ydist_fluxpos_comp->filename = (char*) "ydist_fluxpos.dat";
@@ -453,7 +445,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     SceneGraphSetRotParent(sg, ydist_fluxpos->transform, window1->transform);
 
     Component *PSD_fluxpos = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_fluxpos");
-    config.comps.Add(PSD_fluxpos);
+    comps.Add(PSD_fluxpos);
     PSD_monitor *PSD_fluxpos_comp = (PSD_monitor*) PSD_fluxpos->comp;
     PSD_fluxpos_comp->nx = 100;
     PSD_fluxpos_comp->ny = 100;
@@ -470,7 +462,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     PSD_fluxpos->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *xdist_flux_pos = CreateComponent(a_dest, CT_PSDlin_monitor, index++, "xdist_flux_pos");
-    config.comps.Add(xdist_flux_pos);
+    comps.Add(xdist_flux_pos);
     PSDlin_monitor *xdist_flux_pos_comp = (PSDlin_monitor*) xdist_flux_pos->comp;
     xdist_flux_pos_comp->nbins = 11;
     xdist_flux_pos_comp->filename = (char*) "xdist_fluxpos.dat";
@@ -486,7 +478,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     xdist_flux_pos->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *PSD_fluxposB = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_fluxposB");
-    config.comps.Add(PSD_fluxposB);
+    comps.Add(PSD_fluxposB);
     PSD_monitor *PSD_fluxposB_comp = (PSD_monitor*) PSD_fluxposB->comp;
     PSD_fluxposB_comp->nx = 100;
     PSD_fluxposB_comp->ny = 100;
@@ -503,7 +495,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     PSD_fluxposB->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *window2 = CreateComponent(a_dest, CT_Al_window, index++, "window2");
-    config.comps.Add(window2);
+    comps.Add(window2);
     Al_window *window2_comp = (Al_window*) window2->comp;
     window2_comp->thickness = 0.002;
     Init_Al_window(window2_comp, instr);
@@ -516,7 +508,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     window2->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *in_slit = CreateComponent(a_dest, CT_Slit, index++, "in_slit");
-    config.comps.Add(in_slit);
+    comps.Add(in_slit);
     Slit *in_slit_comp = (Slit*) in_slit->comp;
     in_slit_comp->xmin = -0.01;
     in_slit_comp->xmax = 0.01;
@@ -532,7 +524,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     in_slit->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *lambda_in = CreateComponent(a_dest, CT_L_monitor, index++, "lambda_in");
-    config.comps.Add(lambda_in);
+    comps.Add(lambda_in);
     L_monitor *lambda_in_comp = (L_monitor*) lambda_in->comp;
     lambda_in_comp->xmin = -0.011;
     lambda_in_comp->xmax = 0.011;
@@ -552,7 +544,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     lambda_in->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *sma = CreateComponent(a_dest, CT_Arm, index++, "sma");
-    config.comps.Add(sma);
+    comps.Add(sma);
     Arm *sma_comp = (Arm*) sma->comp;
     Init_Arm(sma_comp, instr);
     // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
@@ -568,7 +560,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     sma->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *foc_mono = CreateComponent(a_dest, CT_Monochromator_2foc, index++, "foc_mono");
-    config.comps.Add(foc_mono);
+    comps.Add(foc_mono);
     Monochromator_2foc *foc_mono_comp = (Monochromator_2foc*) foc_mono->comp;
     foc_mono_comp->zwidth = 0.05;
     foc_mono_comp->yheight = 0.025;
@@ -591,7 +583,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     foc_mono->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *msa = CreateComponent(a_dest, CT_Arm, index++, "msa");
-    config.comps.Add(msa);
+    comps.Add(msa);
     Arm *msa_comp = (Arm*) msa->comp;
     Init_Arm(msa_comp, instr);
     // case #3:      AT and ROT are defined RELATIVE to different parents (SceneGraphAlloc defines the AT-parent, SceneGraphSetRotParent defines the ROT-parent)
@@ -608,7 +600,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     SceneGraphSetRotParent(sg, msa->transform, in_slit->transform);
 
     Component *out1_slit = CreateComponent(a_dest, CT_Slit, index++, "out1_slit");
-    config.comps.Add(out1_slit);
+    comps.Add(out1_slit);
     Slit *out1_slit_comp = (Slit*) out1_slit->comp;
     out1_slit_comp->xmin = -0.01;
     out1_slit_comp->xmax = 0.01;
@@ -628,7 +620,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     out1_slit->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *Amoin_slit = CreateComponent(a_dest, CT_Slit, index++, "Amoin_slit");
-    config.comps.Add(Amoin_slit);
+    comps.Add(Amoin_slit);
     Slit *Amoin_slit_comp = (Slit*) Amoin_slit->comp;
     Amoin_slit_comp->xmin = -0.01;
     Amoin_slit_comp->xmax = 0.01;
@@ -648,7 +640,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     Amoin_slit->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *Bmoin_slit = CreateComponent(a_dest, CT_Slit, index++, "Bmoin_slit");
-    config.comps.Add(Bmoin_slit);
+    comps.Add(Bmoin_slit);
     Slit *Bmoin_slit_comp = (Slit*) Bmoin_slit->comp;
     Bmoin_slit_comp->xmin = -0.01;
     Bmoin_slit_comp->xmax = 0.01;
@@ -668,7 +660,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     Bmoin_slit->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *out2_slit = CreateComponent(a_dest, CT_Slit, index++, "out2_slit");
-    config.comps.Add(out2_slit);
+    comps.Add(out2_slit);
     Slit *out2_slit_comp = (Slit*) out2_slit->comp;
     out2_slit_comp->xmin = -0.01;
     out2_slit_comp->xmax = 0.01;
@@ -688,7 +680,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     out2_slit->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *PSD_sample = CreateComponent(a_dest, CT_PSD_monitor, index++, "PSD_sample");
-    config.comps.Add(PSD_sample);
+    comps.Add(PSD_sample);
     PSD_monitor *PSD_sample_comp = (PSD_monitor*) PSD_sample->comp;
     PSD_sample_comp->xmin = -0.05;
     PSD_sample_comp->xmax = 0.05;
@@ -707,7 +699,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     PSD_sample->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *lambda_sample = CreateComponent(a_dest, CT_L_monitor, index++, "lambda_sample");
-    config.comps.Add(lambda_sample);
+    comps.Add(lambda_sample);
     L_monitor *lambda_sample_comp = (L_monitor*) lambda_sample->comp;
     lambda_sample_comp->xmin = -spec->sample_radius;
     lambda_sample_comp->xmax = spec->sample_radius;
@@ -727,7 +719,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     lambda_sample->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *sa_arm = CreateComponent(a_dest, CT_Arm, index++, "sa_arm");
-    config.comps.Add(sa_arm);
+    comps.Add(sa_arm);
     Arm *sa_arm_comp = (Arm*) sa_arm->comp;
     Init_Arm(sa_arm_comp, instr);
     // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
@@ -743,7 +735,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     sa_arm->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *sample = CreateComponent(a_dest, CT_PowderN, index++, "sample");
-    config.comps.Add(sample);
+    comps.Add(sample);
     PowderN *sample_comp = (PowderN*) sample->comp;
     sample_comp->d_phi = spec->D_PHI;
     sample_comp->radius = spec->sample_radius;
@@ -764,7 +756,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     sample->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } );
 
     Component *STOP = CreateComponent(a_dest, CT_Beamstop, index++, "STOP");
-    config.comps.Add(STOP);
+    comps.Add(STOP);
     Beamstop *STOP_comp = (Beamstop*) STOP->comp;
     STOP_comp->radius = 0.3;
     Init_Beamstop(STOP_comp, instr);
@@ -781,7 +773,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     STOP->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
     Component *Detector = CreateComponent(a_dest, CT_Monitor_nD, index++, "Detector");
-    config.comps.Add(Detector);
+    comps.Add(Detector);
     Monitor_nD *Detector_comp = (Monitor_nD*) Detector->comp;
     Detector_comp->xwidth = 3.0;
     Detector_comp->yheight = 0.09;
@@ -803,13 +795,10 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     Detector->transform = SceneGraphAlloc(sg, sa_arm->transform);
     Detector->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
-    SceneGraphUpdate(sg);
-    UpdateLegacyTransforms(config.comps);
-
     instr->parameters = InitArray<Param>(a_dest, GetParameterCount_PSI_DMC());
     GetParameters_PSI_DMC(&instr->parameters, spec);
 
-    return config;
+    return comps;
 }
 
 

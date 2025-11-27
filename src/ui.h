@@ -225,8 +225,7 @@ void DrawComponentHover(Component *comp) {
 }
 
 void DoComponentSelectionAnnotations(McTraceApp *app, bool fat_monitors) {
-    Array<Component*> comps = app->config.comps;
-
+    Array<Component*> comps = app->config->comps;
     Button lft = MouseLeft();
 
     Ray mouse_ray = CameraGetRayWorld(app->cam.view, app->persp.fov, app->persp.aspect, cbui.plf.cursorpos.x_frac, cbui.plf.cursorpos.y_frac);
@@ -330,16 +329,17 @@ void OnSwitchToMode(McTraceApp *app) {
     app->colors.SetToMode(app->mode);
     app->comp_selected = NULL;
 
+    Array<Component*> comps = app->config->comps;
     if (app->mode == MTM_TRACE) {
-        for (s32 i = 0; i < app->config.comps.len; ++i) {
-            Component *comp = app->config.comps.arr[i];
+        for (s32 i = 0; i < comps.len; ++i) {
+            Component *comp = comps.arr[i];
 
             comp->interactable_this_frame = comp->interactable;
         }
     }
     else if (app->mode == MTM_MONITORS) {
-        for (s32 i = 0; i < app->config.comps.len; ++i) {
-            Component *comp = app->config.comps.arr[i];
+        for (s32 i = 0; i < comps.len; ++i) {
+            Component *comp = comps.arr[i];
 
             comp->interactable_this_frame = comp->cat == CCAT_monitors;
         }
@@ -445,6 +445,7 @@ void DoEnableTabButton(McTraceMode mode) {
 
 void DoScrollBtn(McTraceApp *app, const char* btn_label, s32 direction, Array<bool> selector) {
     assert(direction == -1 || direction == 1);
+    Array<Component*> comps = app->config->comps;
 
     Widget *btn = NULL;
     bool clicked = false;
@@ -476,7 +477,7 @@ void DoScrollBtn(McTraceApp *app, const char* btn_label, s32 direction, Array<bo
         }
 
         if (idx >= 0) { 
-            Component *to_select = app->config.comps.arr[idx];
+            Component *to_select = comps.arr[idx];
 
             app->comp_selected = to_select;
             app->comp_clicked = app->comp_selected;
@@ -582,13 +583,14 @@ void DoUI(McTraceApp *app) {
     // UI
 
     if (app->mode == MTM_SIM) {
+        Array<Component*> comps = app->config->comps;
         DoTabMenu(app);
 
         Widget *layout = UI_LayoutVertical();
         layout->SetFlag(WF_EXPAND_HORIZONTAL);
 
         {
-            Instrument *instr = &app->config.instr;
+            Instrument *instr = &app->config->instr;
             Str line1 = StrCat(StrL("INSTRUMENT "), StrL(instr->name));
             UI_Label(StrZ(line1));
 
@@ -643,13 +645,13 @@ void DoUI(McTraceApp *app) {
                 // TODO: extact into "trace control functionality" unit
                 {
                     app->trace_active = false;
-                    for (s32 i = 0; i < app->config.comps.len; ++i) {
-                        Monitor *mon = &app->config.comps.arr[i]->monitor;
+                    for (s32 i = 0; i < comps.len; ++i) {
+                        Monitor *mon = &comps.arr[i]->monitor;
                         if (mon->mon_tpe != MT_NOT) {
                             MonitorClear(mon);
                         }
                     }
-                    TrajectoryContainerClear(&app->config.container);
+                    TrajectoryContainerClear(&app->config->container);
                     *app->ncount_current = 0;
                 }
             }
@@ -687,14 +689,14 @@ void DoUI(McTraceApp *app) {
                     // TODO: extact reset into "trace control functionality" unit
                     {
                         app->trace_active = false;
-                        for (s32 i = 0; i < app->config.comps.len; ++i) {
-                            Monitor *mon = &app->config.comps.arr[i]->monitor;
+                        for (s32 i = 0; i < comps.len; ++i) {
+                            Monitor *mon = &comps.arr[i]->monitor;
                             if (mon->mon_tpe != MT_NOT) {
                                 MonitorClear(mon);
                             }
                         }
                         g_do_trace_trajectories = false;
-                        TrajectoryContainerClear(&app->config.container);
+                        TrajectoryContainerClear(&app->config->container);
                         *app->ncount_current = 0;
                     }
 
@@ -722,7 +724,7 @@ void DoUI(McTraceApp *app) {
         app->draw_plane = true;
         app->draw_rays = true;
 
-        DoLeftRightButtons(app, app->config.comps_interactible);
+        DoLeftRightButtons(app, app->config->comps_interactible);
         DoComponentSelectionAnnotations(app, false);
         DoComponentSelectionActions(app);
 
@@ -737,7 +739,7 @@ void DoUI(McTraceApp *app) {
         app->draw_plane = true;
         app->draw_rays = false;
 
-        DoLeftRightButtons(app, app->config.comps_monitors);
+        DoLeftRightButtons(app, app->config->comps_monitors);
         DoComponentSelectionAnnotations(app, true);
         DoComponentSelectionActions(app);
 
@@ -771,7 +773,7 @@ void DoUI(McTraceApp *app) {
         app->draw_plane = false;
         app->draw_rays = false;
 
-        Component *monitor_clicked = RenderMonitorGrid(app->monitors);
+        Component *monitor_clicked = RenderMonitorGrid(app->config->monitors);
         if (monitor_clicked) {
             app->mode = MTM_MONITORS;
             DoEnableTabButton(MTM_MONITORS);

@@ -7,6 +7,7 @@ struct InstrumentConfig {
     SceneGraphHandle scenegraph;
 
     Array<Component*> comps;
+    Array<Monitor> monitors;
     Array<bool> comps_interactible;
     Array<bool> comps_monitors;
     TrajContainer container;
