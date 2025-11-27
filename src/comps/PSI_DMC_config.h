@@ -56,8 +56,8 @@ void GetParameters_PSI_DMC(Array<Param> *pars, PSI_DMC *instr) {
     pars->Add( Param { CPT_FLOAT, "SHIFT", &instr->SHIFT } );
     pars->Add( Param { CPT_FLOAT, "PACK", &instr->PACK } );
     pars->Add( Param { CPT_FLOAT, "Dw", &instr->Dw } );
-    pars->Add( Param { CPT_FLOAT, "BARNS", &instr->BARNS } );
-    pars->Add( Param { CPT_FLOAT, "SPLITS", &instr->SPLITS } );
+    pars->Add( Param { CPT_INT, "BARNS", &instr->BARNS } );
+    pars->Add( Param { CPT_INT, "SPLITS", &instr->SPLITS } );
 }
 
 
@@ -808,6 +808,9 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
 
     SceneGraphUpdate(sg);
     UpdateLegacyTransforms(config.comps);
+
+    instr->parameters = InitArray<Param>(a_dest, GetParameterCount_PSI_DMC());
+    GetParameters_PSI_DMC(&instr->parameters, spec);
 
     return config;
 }

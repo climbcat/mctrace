@@ -140,6 +140,7 @@ struct Monitor {
 enum ParamType {
     CPT_STRING,
     CPT_FLOAT,
+    CPT_INT,
     CPT_VECTOR,
 
     CPT_CNT
@@ -158,6 +159,17 @@ struct Param {
             else {
                 return { (char*) "NULL", 0 };
             }
+        }
+        else if (tpe == CPT_INT) {
+            Str result = {};
+
+            char buff[32] = {};
+            int val = *((int*) value);
+            sprintf(buff, "%d", val);
+
+            result.len = strlen(buff);
+            result.str = (char*) ArenaPush(a_dest, buff, result.len);
+            return result;
         }
         else if (tpe == CPT_FLOAT) {
             Str result = {};

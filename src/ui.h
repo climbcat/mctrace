@@ -48,7 +48,6 @@ GridLayout GridCalculate(f32 w = 640, f32 h = 480, f32 N = 20) {
     return lay;
 }
 
-
 Sprite MonitorUpdateTexture(MArena *a_dest, Monitor *mon, f32 sprite_x0, f32 sprite_y0, s32 dest_width, s32 dest_height) {
     if (mon->mon_tpe != MT_2D) {
         return {};
@@ -80,8 +79,6 @@ Sprite MonitorUpdateTexture(MArena *a_dest, Monitor *mon, f32 sprite_x0, f32 spr
 
     return s;
 }
-
-
 
 Component *RenderMonitorGrid(Array<Monitor> monitors) {
     Component *result = NULL;
@@ -589,11 +586,28 @@ void DoUI(McTraceApp *app) {
 
         Widget *layout = UI_LayoutVertical();
         layout->SetFlag(WF_EXPAND_HORIZONTAL);
-        char buff[200];
+
+        Instrument *instr = &app->config.instr;
+        Str line1 = StrCat(StrL("INSTRUMENT "), StrL(instr->name));
+        UI_Label(StrZ(line1));
+
+        MArena *a_tmp = cbui.ctx->a_tmp;
+        for (s32 i = 0; i < instr->parameters.len; ++i) {
+            Param par = instr->parameters.arr[i];
+
+            Str lbl = { (char*) "  ", 2};
+            lbl = StrCat(lbl, par.name);
+            lbl = StrCat(lbl, " = ");
+            lbl = StrCat(lbl, par.ValueAsString(a_tmp));
+            UI_Label(StrZ(lbl));
+        }
+        UI_SpaceV(10);
+
 
         {
             UI_Label("TRACE");
 
+            char buff[200];
             sprintf(buff, "ncount (final):   %d", *app->ncount_target);
             Widget *w1 = UI_Label(buff);
             w1->text = StrL(buff);
@@ -639,6 +653,7 @@ void DoUI(McTraceApp *app) {
         {
             UI_Label("SIMULATE");
 
+            char buff[200];
             sprintf(buff, "ncount (final) 2:   %d", *app->ncount_target);
             Widget *w1 = UI_Label(buff);
             w1->text = StrL(buff);
