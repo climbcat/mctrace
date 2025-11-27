@@ -65,10 +65,6 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     PSI_DMC _spec = {};
     PSI_DMC *spec = (PSI_DMC*) ArenaPush(a_dest, &_spec, sizeof(PSI_DMC));
 
-    // NOTE: mcncount must be fixed BEFORE initialization:
-    //      This is used by API call mcget_ncount(), and called by some components during init (SourceMaxwell)
-    mcset_ncount(ncount);
-
 
     // initialize
 
@@ -165,6 +161,7 @@ InstrumentConfig InitAndConfig_PSI_DMC(MArena *a_dest, u32 ncount) {
     InstrumentConfig config = {};
     config.scenegraph = SceneGraphInit(cbui.ctx->a_pers);
     Instrument *instr = &config.instr;
+    instr->ncount_target = ncount;
     SceneGraphHandle *sg = &config.scenegraph;
 
     instr->name = (char*) "PSI_DMC";

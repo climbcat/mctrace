@@ -105,15 +105,14 @@ void GetComponentDisplayWireframes(MArena *a_dest, Array<Component*> comps);
 McTraceApp McTraceInit() {
     McTraceApp app = {};
 
-    // core counters
-    mcncount = 1e9;
-    mcrun_num = 0;
-    app.ncount_target = &mcncount;
-    app.ncount_current = &mcrun_num;
+    s32 ncount = 1e9;
 
+    // core counters
     app.persp = ProjectionInit(cbui.plf.width, cbui.plf.height);
     app.cam = OrbitCameraInit();
-    app.config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, *app.ncount_target);
+    app.config = InitAndConfig_PSI_DMC(cbui.ctx->a_pers, ncount);
+    app.ncount_target = &app.config.instr.ncount_target;
+    app.ncount_current = &app.config.instr.ncount_current;
 
     // scene objects
     app.scene_objs = InitArray<Wireframe>(cbui.ctx->a_pers, 100);

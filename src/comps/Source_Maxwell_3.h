@@ -135,7 +135,11 @@ void Init_Source_Maxwell_3(Source_Maxwell_3 *comp, Instrument *instrument) {
     l_range = Lmax-Lmin;
     w_mult = w_source*h_source*1.0e4;     /* source area correction */
     w_mult *= l_range;            /* wavelength range correction */
-    w_mult *= 1.0/mcget_ncount();   /* correct for # neutron rays */
+
+
+    // NOTE: disabling mcncount global variable
+    //w_mult *= 1.0/mcget_ncount();   /* correct for # neutron rays */
+    w_mult *= 1.0/instrument->ncount_target;   /* correct for # neutron rays */
 
     if (w_source <0 || h_source < 0 || Lmin <= 0 || Lmax <= 0 || dist <= 0 || T1 <= 0 || T2 <= 0|| T3 <= 0 || Lmax<=Lmin) {
         printf("Source_Maxwell_3: %s: Error in input parameter values!\n"

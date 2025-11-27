@@ -237,8 +237,8 @@ char *instrument_exe = (char*) "default_instr_exe";
 //FILE *siminfo_file = NULL;
 
 
-static int mcncount;    // target number of rays
-static int mcrun_num;   // current number of rays
+//static int mcncount;    // target number of rays
+//static int mcrun_num;   // current number of rays
 //static int mcseed;
 static int mcMagnet;
 
@@ -262,6 +262,8 @@ void* particle_getvar_void(Neutron *p, char *name, int *suc) {
 struct Instrument {
     char *name; // used with: NAME_INSTRUMENT
     Coords *_position_absolute; // used with: POS_A_COMP_INDEX
+    s32 ncount_target;
+    s32 ncount_current;
 
     void *instr;
     Array<Param> parameters;

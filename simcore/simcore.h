@@ -683,7 +683,7 @@ MCDETECTOR detector_import(
 
     // jg-251126: disabling mcrun_num here
     //if (!mcget_run_num() || mcget_run_num() >= mcget_ncount())
-        snprintf(detector.ncount, CHAR_BUF_LENGTH, "%llu", mcget_ncount());
+    //    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%llu", mcget_ncount());
     //else
     //    snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g/%g", (double)mcget_run_num(), (double)mcget_ncount());
 
@@ -1062,31 +1062,39 @@ void destroy_darr3d(DArray3d a){
 /*******************************************************************************
 * mcset_ncount: set total number of rays to generate
 *******************************************************************************/
+/*
 void mcset_ncount(unsigned long long int count)
 {
     mcncount = count;
 }
+*/
 
 /* mcget_ncount: get total number of rays to generate */
+/*
 unsigned long long int mcget_ncount(void)
 {
     return mcncount;
 }
+*/
 
 /* mcget_run_num: get curent number of rays */
 /* Within the TRACE scope we are now using _particle->uid directly */
+/*
 unsigned long long int mcget_run_num() // shuld be (Neutron* _particle) somehow
 {
-    /* This function only remains for the few cases outside TRACE where we need to know
-        the current number of simulated particles (e.g. ProgressBar )*/
+    // This function only remains for the few cases outside TRACE where we need to know
+    //  the current number of simulated particles (e.g. ProgressBar )
     return mcrun_num;
 }
+*/
 
 /* mcsetn_arg: get ncount from a string argument */
+/*
 static void mcsetn_arg(char *arg)
 {
     mcset_ncount((long long int) strtod(arg, NULL));
 }
+*/
 
 /* mcsetseed: set the random generator seed from a string argument */
 /*

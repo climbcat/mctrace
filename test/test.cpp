@@ -43,7 +43,7 @@ void TestComponentFuncitonsRun() {
 
     // trace
     u32 DBG_break_after_ncount = 5;
-    for (u32 j = 0; j < mcncount; ++j) {
+    for (u32 j = 0; j < ncount; ++j) {
         Neutron particle = {};
 
         for (s32 i = 0; i < config.comps.len; ++i) {
