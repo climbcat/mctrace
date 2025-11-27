@@ -716,14 +716,16 @@ void DoUI(McTraceApp *app) {
 
         DoLeftRightButtons(app, app->config->comps_interactible);
 
-        UI_LayoutHorizontal();
-        if (UI_Button("PrvConf") && app->config->prev) {
-            McTraceSetConfig(app, app->config->prev);
+        if (false) {
+            UI_LayoutHorizontal();
+            if (UI_Button("PrvConf") && app->config->prev) {
+                McTraceSetConfig(app, app->config->prev);
+            }
+            if (UI_Button("NxtConf") && app->config->next) {
+                McTraceSetConfig(app, app->config->next);
+            }
+            UI_Pop();
         }
-        if (UI_Button("NxtConf") && app->config->next) {
-            McTraceSetConfig(app, app->config->next);
-        }
-        UI_Pop();
 
         DoComponentSelectionAnnotations(app, false);
         DoComponentSelectionActions(app);
