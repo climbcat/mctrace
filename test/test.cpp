@@ -352,8 +352,7 @@ void TestBlitMonitors() {
         s32 sz_y;
         s32 txt_l;
         s32 txt_t;
-        TextPlotAligned(blit.title, plot->rect.x0, plot->rect.y0, blit.w, blit.h, &sz_x, &sz_y, COLOR_BLUE, 0, 1);
-        //TextPositionLine(blit.title, plot->rect.x0, plot->rect.y0, blit.w, blit.h, 0, 1, &txt_l, &txt_t, &sz_x, &sz_y);
+        TextPlot(blit.title, plot->rect.x0, plot->rect.y0, blit.w, blit.h, &sz_x, &sz_y, COLOR_BLUE, 0, 1);
 
 
         CbuiFrameEnd();
