@@ -270,12 +270,102 @@ void TestIndexSelector() {
 
     printf("idx_first: %d, idx_last: %d\n", first, last);
     printf("idx_prev: %d << at idx: %d >> idx_next: %d\n", prev, idx, next);
-
 }
+
+
+struct MBlit {
+    Str title;
+    Str xmin;
+    Str xmax;
+    Str ymin;
+    Str ymax;
+
+    s32 w;
+    s32 h;
+
+    Array<f32> x;
+    Array<f32> y;
+};
+
+
+MBlit MBlitGetExample(MArena *a_dest) {
+    MBlit blit = {};
+
+    blit.title = StrL("Monitor PSD Data");
+    blit.xmin = StrL("0");
+    blit.xmax = StrL("10");
+    blit.ymin = StrL("0");
+    blit.ymax = StrL("5");
+
+    blit.w = 200;
+    blit.h = 200;
+
+    s32 len = 20;
+    s32 xmin = 0;
+    s32 xmax = 10;
+    s32 ymin = 0;
+    s32 ymax = 5;
+    blit.x = InitArray<f32>(a_dest, len);
+    blit.y = InitArray<f32>(a_dest, len);
+    for (s32 i = 0; i < len; ++i) {
+        blit.x.Add( RandMinMaxI_f32(xmin, xmax) );
+        blit.y.Add( RandMinMaxI_f32(ymin, ymax) );
+    }
+
+    return blit;
+}
+
+
+void TestBlitMonitors() {
+    printf("TestBlitMonitors\n");
+
+    CbuiInit("TestBlitMonitors", false);
+    while (cbui.running) {
+        CbuiFrameStart();
+
+        Widget *wrap = UI_Center();
+        wrap->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+        wrap->col_bckgrnd = COLOR_GREEN;
+        wrap->col_border = COLOR_BLACK;
+        wrap->sz_border = 1;
+        wrap->padding = 5;
+        wrap->SetFlag(WF_ALIGN_CENTER);
+
+        MBlit blit = MBlitGetExample(cbui.ctx->a_tmp);
+
+        //Widget *plot = UI_LayoutHorizontal();
+        Widget *plot = WidgetGetCached("plot1D");
+        WidgetTreeSibling(plot);
+        plot->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
+        plot->col_bckgrnd = COLOR_WHITE;
+        plot->col_border = COLOR_BLACK;
+        plot->sz_border = 1;
+        plot->w = blit.w;
+        plot->h = blit.h;
+
+        plot->rect.y0;
+
+        UI_SetFontSize(FS_18);
+
+        // plot the title
+        s32 sz_x;
+        s32 sz_y;
+        s32 txt_l;
+        s32 txt_t;
+        TextPlotAligned(blit.title, plot->rect.x0, plot->rect.y0, blit.w, blit.h, &sz_x, &sz_y, COLOR_BLUE, 0, 1);
+        //TextPositionLine(blit.title, plot->rect.x0, plot->rect.y0, blit.w, blit.h, 0, 1, &txt_l, &txt_t, &sz_x, &sz_y);
+
+
+        CbuiFrameEnd();
+    }
+    CbuiExit();
+}
+
 
 void Test() {
     //TestComponentFuncitonsRun();
     //TestMainLayout();
     //TestGridLayoutCalculations();
-    TestIndexSelector();
+    //TestIndexSelector();
+    TestBlitMonitors();
 }
