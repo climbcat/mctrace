@@ -357,14 +357,6 @@ Sprite SpriteTexture_32it(MArena *a_dest, const char* name, s32 w, s32 h, f32 x0
     return s;
 }
 
-
-inline
-Color *GetImageBuffer() {
-    Color *img = (Color*) cbui.plf.image_buffer;
-    return img;
-}
-
-
 void TestBlitMonitors() {
     printf("TestBlitMonitors\n");
 
