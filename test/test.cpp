@@ -316,6 +316,49 @@ MBlit MBlitGetExample(MArena *a_dest) {
 }
 
 
+Sprite SpriteTexture_32it(MArena *a_dest, const char* name, s32 w, s32 h, f32 x0, f32 y0, HashMap *map_textures, Color **buffer_out) {
+    // 1) pushes an inlined Texture struct and a buffer to a_dest
+    // 2) returns a sprite that connects to this buffer
+    // 3) The sprite can be pushed to a list for defered blitting on top of the UI elements
+
+    u64 key = HashStringValue(name);
+
+    assert(buffer_out);
+
+    Texture *tex = (Texture*) ArenaPush(a_dest, &tex, sizeof(Texture));
+    tex->tpe = TT_RGBA;
+    tex->width = w;
+    tex->height = h;
+    tex->px_sz = 1;
+    tex->data = (u8*) ArenaAlloc(a_dest, w * h * sizeof(Color));
+    *buffer_out = (Color*) tex->data;
+
+    memset(*buffer_out, 255, w*h*sizeof(Color));
+
+    Sprite s = {};
+    s.color = COLOR_WHITE;
+    s.w = w;
+    s.h = h;
+    s.u0 = 0;
+    s.u1 = 1;
+    s.v0 = 0;
+    s.v1 = 1;
+    s.x0 = x0;
+    s.y0 = y0;
+    s.tex_id = key;    
+    MapPut(map_textures, key, tex);
+
+    return s;
+}
+
+
+inline
+Color *GetImageBuffer() {
+    Color *img = (Color*) cbui.plf.image_buffer;
+    return img;
+}
+
+
 void TestBlitMonitors() {
     printf("TestBlitMonitors\n");
 
@@ -348,12 +391,43 @@ void TestBlitMonitors() {
         UI_SetFontSize(FS_18);
 
         // plot the title
+
+        // The Plan (TM):
+        //
+        // - create a temp buffer
+        // - blit the title:
+        //      - get the line positioning (left, top) relative to the top of the tmp buffer: (0,0,w,h, center_h, top_v) -> (l,t)
+        //      - get a list of sprites by creating a new version of the text positioning fucntion (these two could be merged into one TextPlot2 function)
+        //      - blit the sprites into the buffer using SpriteBlit
+        // - draw the axes:
+        //      - calculate the remaining space
+        //      - draw the x,y axis on that
+        // - draw the segments:
+        //      - calculate the anchor positions relative to the sub-buffer / sub-bux
+        //      - draw into the buffer using DrawLineRGBA
+        // - blit the buffer into the image space:
+        //      - create a sprite from the tmp buff and push that to the system - like we did with the 2d monitor data
+
+        // - axis labels: use a refinement of the above steps
+    
+        // NOTE: This means we are creating the plot with all manual positioning - not using the UI layout alg.
+        //      Can we somehow use the layout alg to calculate positions?
+        //      That is, what would that layout request sequence look like? We have bottom-left and bottom-right, top-left etc. to use potentially
+        //      I feel that I am missing some idea of how to make this happen more conveniently(?). Maybe not though.
+
+
+        // push a temp buffer
+        Color *tmp_buff;
+        Sprite s_mon = SpriteTexture_32it(cbui.ctx->a_tmp, "monitor_1D_example", blit.w, blit.h, plot->rect.x0, plot->rect.y0, &cbui.map_textures, &tmp_buff);
+        SpriteBufferPush(s_mon);
+
+        // get title and blit into our tmp buffer
         s32 sz_x;
         s32 sz_y;
         s32 txt_l;
         s32 txt_t;
-        TextPlot(blit.title, plot->rect.x0, plot->rect.y0, blit.w, blit.h, &sz_x, &sz_y, COLOR_BLUE, 0, 1);
-
+        Array<Sprite> title = TextPlot(cbui.ctx->a_tmp, blit.title, 0, 0, blit.w, blit.h, &sz_x, &sz_y, COLOR_BLACK, 0, 1);
+        SpriteArrayBlit(title, cbui.map_textures, s_mon.w, s_mon.h, tmp_buff);
 
         CbuiFrameEnd();
     }
