@@ -275,10 +275,12 @@ void TestIndexSelector() {
 
 struct MBlit {
     Str title;
-    Str xmin;
-    Str xmax;
-    Str ymin;
-    Str ymax;
+    Str xlabel;
+    
+    f32 xmin;
+    f32 xmax;
+    f32 ymin;
+    f32 ymax;
 
     s32 w;
     s32 h;
@@ -292,24 +294,28 @@ MBlit MBlitGetExample(MArena *a_dest) {
     MBlit blit = {};
 
     blit.title = StrL("Monitor PSD Data");
-    blit.xmin = StrL("0");
-    blit.xmax = StrL("10");
-    blit.ymin = StrL("0");
-    blit.ymax = StrL("5");
+    blit.xlabel = StrL("dist [m]");
+    //blit.xmin = StrL("0");
+    //blit.xmax = StrL("10");
+    //blit.ymin = StrL("0");
+    //blit.ymax = StrL("5");
 
     blit.w = 200;
     blit.h = 200;
 
     s32 len = 20;
-    s32 xmin = 0;
-    s32 xmax = 10;
-    s32 ymin = 0;
-    s32 ymax = 5;
+    blit.xmin = 0;
+    blit.xmax = 10;
+    blit.ymin = 0;
+    blit.ymax = 5;
     blit.x = InitArray<f32>(a_dest, len);
     blit.y = InitArray<f32>(a_dest, len);
+
+    f32 scale_x = (blit.xmax - blit.xmin) / len;
+    f32 offset_x = blit.xmin;
     for (s32 i = 0; i < len; ++i) {
-        blit.x.Add( RandMinMaxI_f32(xmin, xmax) );
-        blit.y.Add( RandMinMaxI_f32(ymin, ymax) );
+        blit.x.Add( i * scale_x + offset_x );
+        blit.y.Add( RandMinMaxI_f32(blit.ymin, blit.ymax) );
     }
 
     return blit;
@@ -363,6 +369,8 @@ void TestBlitMonitors() {
     printf("TestBlitMonitors\n");
 
     CbuiInit("TestBlitMonitors", false);
+    MBlit blit = MBlitGetExample(cbui.ctx->a_life);
+
     while (cbui.running) {
         CbuiFrameStart();
 
@@ -373,8 +381,6 @@ void TestBlitMonitors() {
         wrap->sz_border = 1;
         wrap->padding = 5;
         wrap->SetFlag(WF_ALIGN_CENTER);
-
-        MBlit blit = MBlitGetExample(cbui.ctx->a_tmp);
 
         //Widget *plot = UI_LayoutHorizontal();
         Widget *plot = WidgetGetCached("plot1D");
@@ -428,6 +434,32 @@ void TestBlitMonitors() {
         s32 txt_t;
         Array<Sprite> title = TextPlot(cbui.ctx->a_tmp, blit.title, 0, 0, blit.w, blit.h, &sz_x, &sz_y, COLOR_BLACK, 0, 1);
         SpriteArrayBlit(title, cbui.map_textures, s_mon.w, s_mon.h, tmp_buff);
+
+        // x-label
+        Array<Sprite> xlabel = TextPlot(cbui.ctx->a_tmp, blit.xlabel, 0, 0, blit.w, blit.h, &sz_x, &sz_y, COLOR_BLACK, 0, -1);
+        SpriteArrayBlit(xlabel, cbui.map_textures, s_mon.w, s_mon.h, tmp_buff);
+
+        // draw the axes
+        s32 space_top = 15;
+        s32 space_left = 15;
+        s32 space_below = 15;
+        RenderLineRGBA((u8*) tmp_buff, s_mon.w, s_mon.h, 0 + space_left, 0 + space_top, 0 + space_left, s_mon.h - 1 - space_below, COLOR_BLACK);
+        RenderLineRGBA((u8*) tmp_buff, s_mon.w, s_mon.h, 0 + space_left, s_mon.h - 1 - space_below, s_mon.w, s_mon.h - 1 - space_below, COLOR_BLACK);
+
+        // draw data segments
+        f32 scale_x = (blit.w - space_left) / (blit.xmax - blit.xmin);
+        f32 offset_x = space_left;
+        f32 scale_y = -1 * (blit.h - space_top - space_below) / (blit.ymax - blit.ymin);
+        f32 offset_y = blit.h - space_below;
+        for (s32 i = 0; i < blit.x.len - 1; ++i) {
+            f32 x1 = (blit.x.arr[i] - blit.xmin) * scale_x + offset_x;
+            f32 y1 = (blit.y.arr[i] - blit.ymin) * scale_y + offset_y;
+
+            f32 x2 = (blit.x.arr[i+1] - blit.xmin) * scale_x + offset_x;
+            f32 y2 = (blit.y.arr[i+1] - blit.ymin) * scale_y + offset_y;
+
+            RenderLineRGBA((u8*) tmp_buff, s_mon.w, s_mon.h, x1, y1-1, x2, y2-1, COLOR_BLACK);
+        }
 
         CbuiFrameEnd();
     }
