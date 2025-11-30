@@ -458,34 +458,24 @@ void TestBlitSubRect() {
     //
     //  we can now write the loop that blits this data into buff.
 
-    // create monitor-like 2D data
+    // create monitor-like 2D data (this is given by the system)
     s32 w_data = 500;
     s32 h_data = 500;
-    f32 zmin = 0;
+    f32 zmin = 5000;
     f32 zmax = 8000;
     f32 *data = (f32*) ArenaAlloc(cbui.ctx->a_life, w_data * h_data * sizeof(f32));
     for (s32 j = 0; j < h_data; ++j) {
         for (s32 i = 0; i < w_data; ++i) {
-            f32 val = zmin + (zmax-zmin) * Rand01_f32();
-            data[ j * w_data + i ] = val;
-        }
-    }
 
-    // create data colors
-    Color *data_colors = (Color*) ArenaAlloc(cbui.ctx->a_life, w_data * h_data * sizeof(Color));
-    for (s32 j = 0; j < h_data; ++j) {
-        for (s32 i = 0; i < w_data; ++i) {
-            f32 src_val = data[ j * w_data + i ];
-            f32 max_val = zmax;
-
-            Color col = ColorMapGet(src_val / max_val, colormap_paletted_jet);
-
+            f32 val = zmin;
             if (i > 100) {
-                data_colors[ j * w_data + i ] = col;
+                val = zmin + (zmax-zmin) * Rand01_f32();
             }
             else {
-                data_colors[ j * w_data + i ] = COLOR_YELLOW2;
+                val = 6000;
             }
+
+            data[ j * w_data + i ] = val;
         }
     }
 
@@ -503,9 +493,14 @@ void TestBlitSubRect() {
         j = t_sub + h_sub - 1 - y;
         for (s32 x = 0; x < w_sub; x++) {
 
-            f32 x_frac = x * scale_x;
-            f32 y_frac = y * scale_y;
-            Color color_ij = SampleTexture(x_frac, y_frac, COLOR_BLACK, w_data, h_data, data_colors);
+            s32 x_data = (s32) round(w_data * scale_x * x);
+            s32 y_data = (s32) round(h_data * scale_y * y);
+            u32 idx = w_data * j + i;
+
+            // get the proportianal data point
+            f32 data_val = data[ w_data * y_data + x_data ];
+            // scale the color map from zmin to zmax
+            Color color_ij = ColorMapGet((data_val - zmin) / (zmax - zmin), colormap_paletted_jet);
 
             i = x + l_sub;
             tmp_buff[ w * j + i ] = color_ij;
