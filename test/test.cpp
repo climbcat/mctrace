@@ -392,10 +392,75 @@ void TestBlitMonitors() {
 }
 
 
+void TestBlitSubRect() {
+    printf("TestBlitSubRect\n");
+
+    // the sub-rect is described using t_sub, l_sub, w_sub, h_sub
+    //
+    // the data is descried using an array of y values with xmin,xmax for the x-axis and ymin,ymax for the y axis
+    // first, we need to create an index-map: It takes indices from the sub-rect into the buffer
+    //
+    //  x -> i
+    //  y -> j
+    //
+    //  here i and j span the dest buffer from ULC: (0, 0) to LRC: (w, h)
+    //  and we are blitting into the buffer 'buff' of size w * h
+    //
+    //  this is a linear function taking:
+    //
+    //  0, 0 -> t + h_sub, l
+    //  w_sub, h_sub -> t, l + w_sub
+    //
+    //  thus:
+    //  i = x + l_sub
+    //  j = t + h_sub - y
+    //
+
+    //  2D:
+    //  x and y maps to actual data using a sampling fucntion (we are essentailly re-doing the sprite blitting function)
+    //  value = sample(x, y) is drawn at i,j:
+    //
+    //  sample(x, y) is the sprite sampling function: SampleTexture on colors_data
+    //
+    //  with:
+    //
+    //  w_data = (xmax - xmin)
+    //  h_data = (ymax - ymin)
+    //
+    //  scale_x = 1 / w_sub
+    //  scale_y = 1 / h_sub
+    //
+    //  x_frac = x * scale_x
+    //  y_frac = y * scale_y
+    //
+    //  thus x_frac and y_frac go from zero to one when iterating from 0 to w_sub and h_sub (e.g. the sub rect)
+    //  
+    //  then:
+    //
+    //  color_i,j = SampleTexture(x_frac, y_frac, w_data, h_data, colors_data);
+    //
+    //  colors_data: zmin, zmax, k, l -> color which is constructed in the function MonitorDataBuffer2D
+    //  (BUT we are looking to in-line it, and not have that be a separater loop though)
+    //
+    //  we can now write the loop that blits this data into buff.
+
+    //  1D:
+    //  We have xmin, xmax, ymin, ymax and an array of y-values
+    //  We just need the x,y indices here, given each data "anchor"
+    //
+    //  x1, y1 -> x, y
+    //  x = (x1 - xmin) / w_data
+    //  y = (y1 - ymin) / h_data
+    //
+    //  lines are now drawn between pairs of consecutive anchors    
+}
+
+
 void Test() {
     //TestComponentFuncitonsRun();
     //TestMainLayout();
     //TestGridLayoutCalculations();
     //TestIndexSelector();
-    TestBlitMonitors();
+    //TestBlitMonitors();
+    TestBlitSubRect();
 }

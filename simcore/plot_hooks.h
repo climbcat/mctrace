@@ -140,7 +140,7 @@ void MonitorBlit(MArena *a_tmp, Monitor monitor, s32 mon_left, s32 mon_top, s32 
     Blit32Bit(sprite_width, sprite_height, left, top, u0, u1, v0, v1, src_width, src_height, src_colbuff, dest_width, dest_height, dest_buffer);
 }
 
-void *MonitorDataBuffer(MArena *a_tmp, s32 src_width, s32 src_height, double *src_buffer) {
+void *MonitorDataBuffer2D(MArena *a_tmp, s32 src_width, s32 src_height, double *src_buffer) {
     Color *src_colbuff = (Color*) ArenaAlloc(a_tmp, sizeof(Color) * src_width * src_height);
 
     f32 max_value = 0;

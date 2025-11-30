@@ -57,7 +57,7 @@ Sprite MonitorUpdateTexture(MArena *a_dest, Monitor *mon, f32 sprite_x0, f32 spr
     mon->texture_2d.width = mon->binm_x;
     mon->texture_2d.height = mon->binn_y;
     mon->texture_2d.px_sz = 1;
-    mon->texture_2d.data = (u8*) MonitorDataBuffer(a_dest, mon->binm_x, mon->binn_y, mon->N);
+    mon->texture_2d.data = (u8*) MonitorDataBuffer2D(a_dest, mon->binm_x, mon->binn_y, mon->N);
 
     // TODO: how the feck to we remove that texture from the registration?
 
