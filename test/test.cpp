@@ -395,6 +395,21 @@ void TestBlitMonitors() {
 void TestBlitSubRect() {
     printf("TestBlitSubRect\n");
 
+    CbuiInit("TestBlitSubRect", false);
+
+    s32 w = 200;
+    s32 h = 200;
+    // push a temp buffer
+    Color *tmp_buff;
+    Sprite s_mon = SpriteTexture_32it(cbui.ctx->a_life, "subrect_example", w, h, 20, 20, &cbui.map_textures, &tmp_buff);
+
+    // fill the are with a green
+    for (s32 j = 0; j < h; j++) {
+        for (s32 i = 0; i < w; i++) {
+            tmp_buff[ w * j + i ] = COLOR_GREEN;
+        }
+    }
+
     // the sub-rect is described using t_sub, l_sub, w_sub, h_sub
     //
     // the data is descried using an array of y values with xmin,xmax for the x-axis and ymin,ymax for the y axis
@@ -413,8 +428,22 @@ void TestBlitSubRect() {
     //
     //  thus:
     //  i = x + l_sub
-    //  j = t + h_sub - y
-    //
+    //  j = t_sub + h_sub - y
+
+    s32 t_sub = 5;
+    s32 l_sub = 15;
+    s32 w_sub = 180;
+    s32 h_sub = 180;
+
+    s32 i, j;
+    for (s32 y = 0; y < h_sub; y++) {
+        j = t_sub + h_sub - 1 - y;
+        for (s32 x = 0; x < w_sub; x++) {
+            i = x + l_sub;
+
+            tmp_buff[ w * j + i ] = COLOR_BLUE;
+        }
+    }
 
     //  2D:
     //  x and y maps to actual data using a sampling fucntion (we are essentailly re-doing the sprite blitting function)
@@ -452,7 +481,17 @@ void TestBlitSubRect() {
     //  x = (x1 - xmin) / w_data
     //  y = (y1 - ymin) / h_data
     //
-    //  lines are now drawn between pairs of consecutive anchors    
+    //  lines are now drawn between pairs of consecutive anchors
+
+
+    while (cbui.running) {
+        CbuiFrameStart();
+
+        SpriteBufferPush(s_mon);
+
+        CbuiFrameEnd();
+    }
+    CbuiExit();
 }
 
 
