@@ -399,21 +399,34 @@ void TestBlitSubRect() {
 
     s32 w = 200;
     s32 h = 200;
-    // push a temp buffer
-    Color *tmp_buff;
-    Sprite s_mon = SpriteTexture_32it(cbui.ctx->a_life, "subrect_example", w, h, 20, 20, &cbui.map_textures, &tmp_buff);
 
-    // fill the are with a green
+    // 2D texture
+    Color *tmp_buff;
+    Sprite s_2d = SpriteTexture_32it(cbui.ctx->a_life, "subrect_example_2D", w, h, 20, 20, &cbui.map_textures, &tmp_buff);
+
+    // fill with blud
     for (s32 j = 0; j < h; j++) {
         for (s32 i = 0; i < w; i++) {
             tmp_buff[ w * j + i ] = COLOR_BLUE;
         }
     }
 
-    // the sub-rect is described using t_sub, l_sub, w_sub, h_sub
+    // 1D texture
+    Color *tmp_buff_1D;
+    Sprite s_1d = SpriteTexture_32it(cbui.ctx->a_life, "subrect_example_1D", w, h, 20, h + 20 + 10, &cbui.map_textures, &tmp_buff_1D);
+
+    // fill with red
+    for (s32 j = 0; j < h; j++) {
+        for (s32 i = 0; i < w; i++) {
+            tmp_buff_1D[ w * j + i ] = COLOR_GREEN;
+        }
+    }
+
+    //  SHARED:
+    //  the sub-rect is described using t_sub, l_sub, w_sub, h_sub
     //
-    // the data is descried using an array of y values with xmin,xmax for the x-axis and ymin,ymax for the y axis
-    // first, we need to create an index-map: It takes indices from the sub-rect into the buffer
+    //  the data is descried using an array of y values with xmin,xmax for the x-axis and ymin,ymax for the y axis
+    //  first, we need to create an index-map: It takes indices from the sub-rect into the buffer
     //
     //  x -> i
     //  y -> j
@@ -463,7 +476,7 @@ void TestBlitSubRect() {
     s32 h_data = 500;
     f32 zmin = 5000;
     f32 zmax = 8000;
-    f32 *data = (f32*) ArenaAlloc(cbui.ctx->a_life, w_data * h_data * sizeof(f32));
+    f32 *data_2d = (f32*) ArenaAlloc(cbui.ctx->a_life, w_data * h_data * sizeof(f32));
     for (s32 j = 0; j < h_data; ++j) {
         for (s32 i = 0; i < w_data; ++i) {
 
@@ -475,7 +488,7 @@ void TestBlitSubRect() {
                 val = 6000;
             }
 
-            data[ j * w_data + i ] = val;
+            data_2d[ j * w_data + i ] = val;
         }
     }
 
@@ -498,7 +511,7 @@ void TestBlitSubRect() {
             u32 idx = w_data * j + i;
 
             // get the proportianal data point
-            f32 data_val = data[ w_data * y_data + x_data ];
+            f32 data_val = data_2d[ w_data * y_data + x_data ];
             // scale the color map from zmin to zmax
             Color color_ij = ColorMapGet((data_val - zmin) / (zmax - zmin), colormap_paletted_jet);
 
@@ -517,11 +530,42 @@ void TestBlitSubRect() {
     //
     //  lines are now drawn between pairs of consecutive anchors
 
+    // create the 1D data
+    f32 ymin = 1400;
+    f32 ymax = 1800;
+    f32 xmin = 23;
+    f32 xmax = 24;
+    s32 len_data = 8;
+    f32 *data_1d = (f32*) ArenaAlloc(cbui.ctx->a_life, len_data *  sizeof(f32));
+    for (s32 i = 0; i < len_data; ++i) {
+        data_1d[i] = ymin + (ymax - ymin) * Rand01_f32();
+    }
+
+    // get anchor pairs
+    f32 scale_y_1d = h_sub / (ymax - ymin);
+    f32 scale_x_1d = w_sub / (len_data - 1);
+    for (s32 i = 0; i < len_data - 1; ++i) {
+        f32 val1 = data_1d[i];
+        f32 val2 = data_1d[i + 1];
+
+        s32 x1 = scale_x_1d * i;
+        s32 y1 = scale_y_1d * (val1 - ymin);
+        s32 x2 = scale_x_1d * (i + 1);
+        s32 y2 = scale_y_1d * (val2 - ymin);
+
+        s32 i1 = x1 + l_sub;
+        s32 j1 = t_sub + h_sub - 1 - y1;
+        s32 i2 = x2 + l_sub;
+        s32 j2 = t_sub + h_sub - 1 - y2;
+
+        RenderLineRGBA((u8*) tmp_buff_1D, w, h, i1, j1, i2, j2, COLOR_BLACK);
+    }
 
     while (cbui.running) {
         CbuiFrameStart();
 
-        SpriteBufferPush(s_mon);
+        SpriteBufferPush(s_1d);
+        SpriteBufferPush(s_2d);
 
         CbuiFrameEnd();
     }
