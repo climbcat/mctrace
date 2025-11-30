@@ -406,7 +406,7 @@ void TestBlitSubRect() {
     // fill the are with a green
     for (s32 j = 0; j < h; j++) {
         for (s32 i = 0; i < w; i++) {
-            tmp_buff[ w * j + i ] = COLOR_GREEN;
+            tmp_buff[ w * j + i ] = COLOR_BLUE;
         }
     }
 
@@ -429,21 +429,6 @@ void TestBlitSubRect() {
     //  thus:
     //  i = x + l_sub
     //  j = t_sub + h_sub - y
-
-    s32 t_sub = 5;
-    s32 l_sub = 15;
-    s32 w_sub = 180;
-    s32 h_sub = 180;
-
-    s32 i, j;
-    for (s32 y = 0; y < h_sub; y++) {
-        j = t_sub + h_sub - 1 - y;
-        for (s32 x = 0; x < w_sub; x++) {
-            i = x + l_sub;
-
-            tmp_buff[ w * j + i ] = COLOR_BLUE;
-        }
-    }
 
     //  2D:
     //  x and y maps to actual data using a sampling fucntion (we are essentailly re-doing the sprite blitting function)
@@ -472,6 +457,39 @@ void TestBlitSubRect() {
     //  (BUT we are looking to in-line it, and not have that be a separater loop though)
     //
     //  we can now write the loop that blits this data into buff.
+
+    // create data sameple
+    s32 w_data = 500;
+    s32 h_data = 500;
+    Color *data = (Color*) ArenaAlloc(cbui.ctx->a_life, w_data * h_data * sizeof(Color));
+    for (s32 j = 0; j < h_data; ++j) {
+        for (s32 i = 0; i < w_data; ++i) {
+            data[ j * w_data + i ] = COLOR_RED;
+        }
+    }
+
+    // blit data buffer into the subrect
+    s32 t_sub = 5;
+    s32 l_sub = 15;
+    s32 w_sub = 180;
+    s32 h_sub = 180;
+
+    f32 scale_x = 1 / w_sub;
+    f32 scale_y = 1 / h_sub;
+
+    s32 i, j;
+    for (s32 y = 0; y < h_sub; y++) {
+        j = t_sub + h_sub - 1 - y;
+        for (s32 x = 0; x < w_sub; x++) {
+
+            f32 x_frac = x * scale_x;
+            f32 y_frac = y * scale_y;
+            Color color_ij = SampleTexture(x_frac, y_frac, COLOR_BLACK, w_data, h_data, data);
+
+            i = x + l_sub;
+            tmp_buff[ w * j + i ] = color_ij;
+        }
+    }
 
     //  1D:
     //  We have xmin, xmax, ymin, ymax and an array of y-values
