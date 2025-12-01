@@ -57,15 +57,28 @@ void BlitMonitorIntoWidget(Monitor *mon, Widget *w) {
     rect.left = padding;
     rect.top = padding;
 
+    s32 w_dest = w->rect.Width();
+    s32 h_dest = w->rect.Height();
+
+    // get title and blit into our tmp buffer
+    s32 sz_x;
+    s32 sz_y;
+    Array<Sprite> title = TextPlot(cbui.ctx->a_tmp, mon->title, 0, 0, w_dest, h_dest, &sz_x, &sz_y, COLOR_BLACK, 0, 1);
+    rect.top = sz_y;
+    rect.height = h_dest - 2 * sz_y;
+    rect.left = sz_y;
+    rect.width = w_dest - 2 *  sz_y;
+
     if (mon->mon_tpe == MT_2D) {
         // 2D texture
         Color *blit_buff_2d;
-        Sprite s_2d = SpriteTexture_32it(cbui.ctx->a_tmp, StrZ( StrCat(mon->comp_name, "_blitarea") ), w->rect.Width(), w->rect.Height(), w->rect.x0, w->rect.y0, &cbui.map_textures, &blit_buff_2d);
+        Sprite s_2d = SpriteTexture_32it(cbui.ctx->a_tmp, StrZ( StrCat(mon->comp_name, "_blitarea") ), w_dest, h_dest, w->rect.x0, w->rect.y0, &cbui.map_textures, &blit_buff_2d);
         SpriteBufferPush(s_2d);
 
         f64 zmin, zmax;
         Monitor2DGetMinMax(mon->binm_x, mon->binn_y, mon->N, &zmin, &zmax);
-        Monitor2DBlit(mon->binm_x, mon->binn_y, mon->N, zmin, zmax, rect.left, rect.top, rect.width, rect.height, w->rect.Width(), w->rect.Height(), blit_buff_2d);
+        Monitor2DBlit(mon->binm_x, mon->binn_y, mon->N, zmin, zmax, rect.left, rect.top, rect.width, rect.height, w_dest, h_dest, blit_buff_2d);
+        SpriteArrayBlit(title, cbui.map_textures, w_dest, h_dest, blit_buff_2d);
     }
 
     else if (mon->mon_tpe == MT_1D) {
@@ -77,6 +90,7 @@ void BlitMonitorIntoWidget(Monitor *mon, Widget *w) {
         f64 ymin, ymax;
         Monitor1DGetMinMax(mon->binm_x, mon->N, &ymin, &ymax);
         Monitor1DBlit(mon->binm_x, ymin, ymax, mon->N, rect.left, rect.top, rect.width, rect.height, w->rect.Width(), w->rect.Height(), blit_buff_1d);
+        SpriteArrayBlit(title, cbui.map_textures, w_dest, h_dest, blit_buff_1d);
     }
 }
 
@@ -102,11 +116,10 @@ Component *RenderMonitorGrid(Array<Monitor> monitors) {
 
     MArena *a_tmp = cbui.ctx->a_tmp;
 
-    s32 n = 0;
     s32 idx = 0;
     for (s32 j = 0; j < grid.rows; ++j) {
         for (s32 i = 0; i < grid.cols; ++i) {
-            if (n++ < monitors.len) {
+            if (idx < monitors.len) {
                 char buff[50];
                 _memzero(&buff[0], 50);
                 sprintf(buff, "mongrid_%d", idx);
@@ -129,9 +142,6 @@ Component *RenderMonitorGrid(Array<Monitor> monitors) {
                 }
                 if (w->hot && MouseLeft().clicked) {
                     result = (Component *) (monitors.arr + idx)->comp;
-                    if (result && idx == 10) {
-                        printf("%d\n", idx);
-                    }
                 }
 
                 Monitor *mon = monitors.arr + idx;

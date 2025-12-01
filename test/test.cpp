@@ -396,11 +396,10 @@ void TestBlitSubRect() {
     printf("TestBlitSubRect\n");
 
     CbuiInit("TestBlitSubRect", false);
-
+    UI_SetFontSize(FS_18);
 
     while (cbui.running) {
         CbuiFrameStart();
-
 
         // size
         s32 w_dest = cbui.plf.width * 0.3;
@@ -410,12 +409,7 @@ void TestBlitSubRect() {
         rect.top = 20;
         rect.left = 20;
         rect.width = w_dest * 0.7;
-        rect.height = rect.width;
-
-        if (GetSpace()) {
-            printf("plot: %d rect: %d\n", w_dest, rect.width);
-        }
-
+        rect.height = w_dest * 0.7;
 
         // 2D texture
         Color *blit_buff_2d;
@@ -448,6 +442,17 @@ void TestBlitSubRect() {
             }
         }
 
+
+        // get title and blit into our tmp buffer
+        s32 sz_x;
+        s32 sz_y;
+        Array<Sprite> title = TextPlot(cbui.ctx->a_tmp, StrL("My 2D monitor<3"), 0, 0, w_dest, h_dest, &sz_x, &sz_y, COLOR_BLACK, 0, 1);
+        rect.top = sz_y;
+        rect.height = h_dest - 2 * sz_y;
+        rect.left = sz_y;
+        rect.width = w_dest - 2 *  sz_y;
+
+        SpriteArrayBlit(title, cbui.map_textures, w_dest, h_dest, blit_buff_2d);
         Monitor2DBlit(w_data, h_data, data_2d, zmin, zmax, rect.left, rect.top, rect.width, rect.height, w_dest, h_dest, blit_buff_2d);
 
 
