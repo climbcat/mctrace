@@ -397,66 +397,73 @@ void TestBlitSubRect() {
 
     CbuiInit("TestBlitSubRect", false);
 
-    s32 w_dest = 200;
-    s32 h_dest = 200;
-
-    Rect32 rect = {};
-    rect.top = 20;
-    rect.left = 20;
-    rect.width = 160;
-    rect.height = 160;
-
-
-    // 2D texture
-    Color *blit_buff_2d;
-    Sprite s_2d = SpriteTexture_32it(cbui.ctx->a_life, "blit_buff_2d", w_dest, h_dest, 20, 20, &cbui.map_textures, &blit_buff_2d);
-    SpriteTextureFill(s_2d, blit_buff_2d, COLOR_BLUE);
-
-    // 1D texture
-    Color *blit_buff_1d;
-    Sprite s_1d = SpriteTexture_32it(cbui.ctx->a_life, "blit_buff_1d", w_dest, h_dest, 20, h_dest + 20 + 10, &cbui.map_textures, &blit_buff_1d);
-    SpriteTextureFill(s_1d, blit_buff_1d, COLOR_GREEN);
-
-    // create random 2D data
-    s32 w_data = 500;
-    s32 h_data = 500;
-    f64 zmin = 5000;
-    f64 zmax = 8000;
-    f64 *data_2d = (f64*) ArenaAlloc(cbui.ctx->a_life, w_data * h_data * sizeof(f64));
-    for (s32 j = 0; j < h_data; ++j) {
-        for (s32 i = 0; i < w_data; ++i) {
-
-            f32 val = zmin;
-            if (i > 100) {
-                val = zmin + (zmax-zmin) * Rand01_f32();
-            }
-            else {
-                val = 6000;
-            }
-
-            data_2d[ j * w_data + i ] = val;
-        }
-    }
-
-    Monitor2DBlit(w_data, h_data, data_2d, zmin, zmax, rect.left, rect.top, rect.width, rect.height, w_dest, h_dest, blit_buff_2d);
-
-
-    // create random the 1D data
-    f64 ymin = 1400;
-    f64 ymax = 1800;
-    f64 xmin = 23;
-    f64 xmax = 24;
-    s32 len_data = 8;
-    f64 *data_1d = (f64*) ArenaAlloc(cbui.ctx->a_life, len_data *  sizeof(f64));
-    for (s32 i = 0; i < len_data; ++i) {
-        data_1d[i] = ymin + (ymax - ymin) * Rand01_f32();
-    }
-
-    Monitor1DBlit(len_data, ymin, ymax, data_1d, rect.left, rect.top, rect.width, rect.height, w_dest, h_dest, blit_buff_1d);
-
 
     while (cbui.running) {
         CbuiFrameStart();
+
+
+        // size
+        s32 w_dest = cbui.plf.width * 0.3;
+        s32 h_dest = w_dest;
+
+        Rect32 rect = {};
+        rect.top = 20;
+        rect.left = 20;
+        rect.width = w_dest * 0.7;
+        rect.height = rect.width;
+
+        if (GetSpace()) {
+            printf("plot: %d rect: %d\n", w_dest, rect.width);
+        }
+
+
+        // 2D texture
+        Color *blit_buff_2d;
+        Sprite s_2d = SpriteTexture_32it(cbui.ctx->a_tmp, "blit_buff_2d", w_dest, h_dest, 20, 20, &cbui.map_textures, &blit_buff_2d);
+        SpriteTextureFill(s_2d, blit_buff_2d, COLOR_BLUE);
+
+        // 1D texture
+        Color *blit_buff_1d;
+        Sprite s_1d = SpriteTexture_32it(cbui.ctx->a_tmp, "blit_buff_1d", w_dest, h_dest, 20, h_dest + 20 + 10, &cbui.map_textures, &blit_buff_1d);
+        SpriteTextureFill(s_1d, blit_buff_1d, COLOR_GREEN);
+
+        // create random 2D data
+        s32 w_data = 500;
+        s32 h_data = 500;
+        f64 zmin = 5000;
+        f64 zmax = 8000;
+        f64 *data_2d = (f64*) ArenaAlloc(cbui.ctx->a_tmp, w_data * h_data * sizeof(f64));
+        for (s32 j = 0; j < h_data; ++j) {
+            for (s32 i = 0; i < w_data; ++i) {
+
+                f32 val = zmin;
+                if (i > 100) {
+                    val = zmin + (zmax-zmin) * Rand01_f32();
+                }
+                else {
+                    val = 6000;
+                }
+
+                data_2d[ j * w_data + i ] = val;
+            }
+        }
+
+        Monitor2DBlit(w_data, h_data, data_2d, zmin, zmax, rect.left, rect.top, rect.width, rect.height, w_dest, h_dest, blit_buff_2d);
+
+
+        // create random the 1D data
+        f64 ymin = 1400;
+        f64 ymax = 1800;
+        f64 xmin = 23;
+        f64 xmax = 24;
+        s32 len_data = 16;
+        f64 *data_1d = (f64*) ArenaAlloc(cbui.ctx->a_tmp, len_data *  sizeof(f64));
+        for (s32 i = 0; i < len_data; ++i) {
+            data_1d[i] = ymin + (ymax - ymin) * Rand01_f32();
+        }
+
+        Monitor1DBlit(len_data, ymin, ymax, data_1d, rect.left, rect.top, rect.width, rect.height, w_dest, h_dest, blit_buff_1d);
+
 
         SpriteBufferPush(s_1d);
         SpriteBufferPush(s_2d);
