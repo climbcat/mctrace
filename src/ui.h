@@ -81,41 +81,6 @@ void BlitMonitorIntoWidget(Monitor *mon, Widget *w) {
 }
 
 
-
-Sprite MonitorUpdateTexture(MArena *a_dest, Monitor *mon, f32 sprite_x0, f32 sprite_y0, s32 dest_width, s32 dest_height) {
-    if (mon->mon_tpe != MT_2D) {
-        return {};
-    }
-
-    mon->texture_2d.tpe = TT_RGBA;
-    mon->texture_2d.width = mon->binm_x;
-    mon->texture_2d.height = mon->binn_y;
-    mon->texture_2d.px_sz = 1;
-    mon->texture_2d.data = (u8*) MonitorDataBuffer2D(a_dest, mon->binm_x, mon->binn_y, mon->N);
-
-    // TODO: how the feck to we remove that texture from the registration?
-
-    u64 key = HashStringValue(mon->comp_name);
-    MapPut(&cbui.map_textures, key, &mon->texture_2d);
-
-    // construct the corresponding sprite
-    Sprite s = {};
-    s.tex_id = key;
-
-    s.w = dest_width;
-    s.h = dest_height;
-    s.x0 = sprite_x0;
-    s.y0 = sprite_y0;
-    s.u0 = 0;
-    s.u1 = 1;
-    s.v0 = 0;
-    s.v1 = 1;
-
-    return s;
-}
-
-
-
 Component *RenderMonitorGrid(Array<Monitor> monitors) {
     Component *result = NULL;
 
