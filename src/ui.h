@@ -51,16 +51,16 @@ GridLayout GridCalculate(f32 w = 640, f32 h = 480, f32 N = 20) {
 
 void BlitMonitorIntoWidget(Monitor *mon, Widget *w) {
     Rect32 rect = {};
-    rect.width = (s32) floor(w->rect.x1 - w->rect.x0);
-    rect.height = (s32) floor(w->rect.y1 - w->rect.y0);
-    rect.left = 0;
-    rect.top = 0;
+    s32 padding = 0;
+    rect.width = (s32) floor(w->rect.x1 - w->rect.x0) - 2*padding;
+    rect.height = (s32) floor(w->rect.y1 - w->rect.y0) - 2*padding;
+    rect.left = padding;
+    rect.top = padding;
 
     if (mon->mon_tpe == MT_2D) {
         // 2D texture
         Color *blit_buff_2d;
         Sprite s_2d = SpriteTexture_32it(cbui.ctx->a_tmp, StrZ( StrCat(mon->comp_name, "_blitarea") ), w->rect.Width(), w->rect.Height(), w->rect.x0, w->rect.y0, &cbui.map_textures, &blit_buff_2d);
-        SpriteTextureFill(s_2d, blit_buff_2d, COLOR_WHITE);
         SpriteBufferPush(s_2d);
 
         f64 zmin, zmax;
@@ -72,12 +72,11 @@ void BlitMonitorIntoWidget(Monitor *mon, Widget *w) {
         // 1D texture
         Color *blit_buff_1d;
         Sprite s_1d = SpriteTexture_32it(cbui.ctx->a_tmp, StrZ( StrCat(mon->comp_name, "_blitarea") ), w->rect.Width(), w->rect.Height(), w->rect.x0, w->rect.y0, &cbui.map_textures, &blit_buff_1d);
-        SpriteTextureFill(s_1d, blit_buff_1d, COLOR_WHITE);
         SpriteBufferPush(s_1d);
 
         f64 ymin, ymax;
         Monitor1DGetMinMax(mon->binm_x, mon->N, &ymin, &ymax);
-        Monitor1DBlit(mon->binm_x, ymin, ymax, mon->N, rect, w->rect.Width(), w->rect.Height(), blit_buff_1d);
+        Monitor1DBlit(mon->binm_x, ymin, ymax, mon->N, rect.left, rect.top, rect.width, rect.height, w->rect.Width(), w->rect.Height(), blit_buff_1d);
     }
 }
 
@@ -160,15 +159,18 @@ Component *RenderMonitorGrid(Array<Monitor> monitors) {
                 w->x0 = i * grid.c;
                 w->y0 = j * grid.c;
 
-                Monitor *mon = monitors.arr + idx;
-                BlitMonitorIntoWidget(mon, w);
-
                 if (w->hot) {
                     w->col_border = COLOR_RED;
                 }
                 if (w->hot && MouseLeft().clicked) {
                     result = (Component *) (monitors.arr + idx)->comp;
+                    if (result && idx == 10) {
+                        printf("%d\n", idx);
+                    }
                 }
+
+                Monitor *mon = monitors.arr + idx;
+                BlitMonitorIntoWidget(mon, w);
 
                 idx++;
             }

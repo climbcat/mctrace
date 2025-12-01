@@ -244,13 +244,13 @@ void Monitor2DBlit(s32 data_width, s32 data_height, f64 *data, f64 data_min, f64
 }
 
 
-void Monitor1DBlit(s32 data_size, f64 data_min, f64 data_max, f64 *data, Rect32 rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
-    if (rect.width > dest_width || rect.height > dest_height) {
+void Monitor1DBlit(s32 data_size, f64 data_min, f64 data_max, f64 *data, s32 rect_t, s32 rect_l, s32 rect_w, s32 rect_h, s32 dest_width, s32 dest_height, Color *dest_buff) {
+    if (rect_w > dest_width || rect_h > dest_height) {
         return;
     }
 
-    f32 scale_y_1d = rect.height / (data_max - data_min);
-    f32 scale_x_1d = rect.width / (data_size - 1);
+    f32 scale_y_1d = rect_h / (data_max - data_min);
+    f32 scale_x_1d = rect_w / (data_size - 1);
 
     s32 x1, y1, x2, y2;
     s32 i1, j1, i2, j2;
@@ -263,10 +263,10 @@ void Monitor1DBlit(s32 data_size, f64 data_min, f64 data_max, f64 *data, Rect32 
         x2 = scale_x_1d * (i + 1);
         y2 = scale_y_1d * (val2 - data_min);
 
-        i1 = x1 + rect.left;
-        j1 = rect.top + rect.height - 1 - y1;
-        i2 = x2 + rect.left;
-        j2 = rect.top + rect.height - 1 - y2;
+        i1 = x1 + rect_l;
+        j1 = rect_t + rect_h - 1 - y1;
+        i2 = x2 + rect_l;
+        j2 = rect_t + rect_h - 1 - y2;
 
         RenderLineRGBA((u8*) dest_buff, dest_width, dest_height, i1, j1, i2, j2, COLOR_BLACK);
     }

@@ -401,10 +401,10 @@ void TestBlitSubRect() {
     s32 h_dest = 200;
 
     Rect32 rect = {};
-    rect.top = 5;
-    rect.left = 15;
-    rect.width = 180;
-    rect.height = 180;
+    rect.top = 20;
+    rect.left = 20;
+    rect.width = 160;
+    rect.height = 160;
 
 
     // 2D texture
@@ -452,7 +452,7 @@ void TestBlitSubRect() {
         data_1d[i] = ymin + (ymax - ymin) * Rand01_f32();
     }
 
-    Monitor1DBlit(len_data, ymin, ymax, data_1d, rect, w_dest, h_dest, blit_buff_1d);
+    Monitor1DBlit(len_data, ymin, ymax, data_1d, rect.left, rect.top, rect.width, rect.height, w_dest, h_dest, blit_buff_1d);
 
 
     while (cbui.running) {
