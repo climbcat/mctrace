@@ -90,6 +90,10 @@ void MonitorPrint(Monitor *mon) {
 }
 
 
+//
+// 1st iteration monitor blit functions
+
+
 void MonitorBlit(MArena *a_tmp, Monitor monitor, s32 mon_left, s32 mon_top, s32 sprite_width, s32 sprite_height, s32 dest_width, s32 dest_height, Color* dest_buffer) {
     // simply blit 2D monitor contents into the image/dest buffer
 
@@ -162,6 +166,108 @@ void *MonitorDataBuffer2D(MArena *a_tmp, s32 src_width, s32 src_height, double *
     }
 
     return src_colbuff;
+}
+
+
+//
+//  2nd iteration monitor blitting
+
+
+void Monitor1DGetMinMax(s32 src_len, double *src_buffer, f64 *ymin_out, f64 *ymax_out) {
+    assert(ymin_out || ymax_out);
+
+    f64 max_value = src_buffer[0];
+    f64 min_value = src_buffer[0];
+
+    for (s32 i = 0; i < src_len; ++i) {
+        f64 src_value = src_buffer[i];
+        max_value = MaxF64(max_value, src_value);
+        min_value = MinF64(min_value, src_value);
+    }
+
+    if (ymin_out) {
+        *ymin_out = min_value;
+    }
+    if (ymax_out) {
+        *ymax_out = max_value;
+    }
+}
+
+void Monitor2DGetMinMax(s32 src_width, s32 src_height, double *src_buffer, f64 *zmin_out, f64 *zmax_out) {
+    assert(zmin_out || zmax_out);
+
+    f64 max_value = src_buffer[0];
+    f64 min_value = src_buffer[0];
+
+    for (s32 i = 0; i < src_width; ++i) {
+        for (s32 j = 0; j < src_width; ++j) {
+            f64 src_value = src_buffer[i*src_width + j];
+            max_value = MaxF64(max_value, src_value);
+            min_value = MinF64(min_value, src_value);
+        }
+    }
+
+    if (zmin_out) {
+        *zmin_out = min_value;
+    }
+    if (zmax_out) {
+        *zmax_out = max_value;
+    }
+}
+
+void Monitor2DBlit(s32 data_width, s32 data_height, f64 *data, f64 data_min, f64 data_max, Rect rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
+    assert(rect.width <= dest_width);
+    assert(rect.height <= dest_height);
+
+    f32 scale_x = 1.0f / rect.width;
+    f32 scale_y = 1.0f / rect.height;
+
+    s32 i, j;
+    for (s32 y = 0; y < rect.height; y++) {
+        j = rect.top + rect.height - 1 - y;
+        for (s32 x = 0; x < rect.width; x++) {
+
+            s32 x_data = (s32) round(data_width * scale_x * x);
+            s32 y_data = (s32) round(data_height * scale_y * y);
+            u32 idx = data_width * j + i;
+
+            // get the proportianal data point
+            f32 data_val = data[ data_width * y_data + x_data ];
+            // scale the color map from zmin to zmax
+            Color color_ij = ColorMapGet((data_val - data_min) / (data_max - data_min), colormap_paletted_jet);
+
+            i = x + rect.left;
+            dest_buff[ dest_width * j + i ] = color_ij;
+        }
+    }
+}
+
+
+void Monitor1DBlit(s32 data_size, f64 data_min, f64 data_max, f64 *data, Rect rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
+    assert(rect.width <= dest_width);
+    assert(rect.height <= dest_height);
+
+    f32 scale_y_1d = rect.height / (data_max - data_min);
+    f32 scale_x_1d = rect.width / (data_size - 1);
+
+    s32 x1, y1, x2, y2;
+    s32 i1, j1, i2, j2;
+    for (s32 i = 0; i < data_size - 1; ++i) {
+        f64 val1 = data[i];
+        f64 val2 = data[i + 1];
+
+        x1 = scale_x_1d * i;
+        y1 = scale_y_1d * (val1 - data_min);
+        x2 = scale_x_1d * (i + 1);
+        y2 = scale_y_1d * (val2 - data_min);
+
+        i1 = x1 + rect.left;
+        j1 = rect.top + rect.height - 1 - y1;
+        i2 = x2 + rect.left;
+        j2 = rect.top + rect.height - 1 - y2;
+
+        RenderLineRGBA((u8*) dest_buff, dest_width, dest_height, i1, j1, i2, j2, COLOR_BLACK);
+    }
 }
 
 

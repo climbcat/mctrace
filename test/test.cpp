@@ -392,62 +392,6 @@ void TestBlitMonitors() {
 }
 
 
-void Monitor2DBlit(s32 data_width, s32 data_height, f32 *data, f32 data_min, f32 data_max, Rect rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
-    assert(rect.width <= dest_width);
-    assert(rect.height <= dest_height);
-
-    f32 scale_x = 1.0f / rect.width;
-    f32 scale_y = 1.0f / rect.height;
-
-    s32 i, j;
-    for (s32 y = 0; y < rect.height; y++) {
-        j = rect.top + rect.height - 1 - y;
-        for (s32 x = 0; x < rect.width; x++) {
-
-            s32 x_data = (s32) round(data_width * scale_x * x);
-            s32 y_data = (s32) round(data_height * scale_y * y);
-            u32 idx = data_width * j + i;
-
-            // get the proportianal data point
-            f32 data_val = data[ data_width * y_data + x_data ];
-            // scale the color map from zmin to zmax
-            Color color_ij = ColorMapGet((data_val - data_min) / (data_max - data_min), colormap_paletted_jet);
-
-            i = x + rect.left;
-            dest_buff[ dest_width * j + i ] = color_ij;
-        }
-    }
-}
-
-
-void Monitor1DBlit(s32 data_size, f32 data_min, f32 data_max, f32 *data, Rect rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
-    assert(rect.width <= dest_width);
-    assert(rect.height <= dest_height);
-
-    f32 scale_y_1d = rect.height / (data_max - data_min);
-    f32 scale_x_1d = rect.width / (data_size - 1);
-
-    s32 x1, y1, x2, y2;
-    s32 i1, j1, i2, j2;
-    for (s32 i = 0; i < data_size - 1; ++i) {
-        f32 val1 = data[i];
-        f32 val2 = data[i + 1];
-
-        x1 = scale_x_1d * i;
-        y1 = scale_y_1d * (val1 - data_min);
-        x2 = scale_x_1d * (i + 1);
-        y2 = scale_y_1d * (val2 - data_min);
-
-        i1 = x1 + rect.left;
-        j1 = rect.top + rect.height - 1 - y1;
-        i2 = x2 + rect.left;
-        j2 = rect.top + rect.height - 1 - y2;
-
-        RenderLineRGBA((u8*) dest_buff, dest_width, dest_height, i1, j1, i2, j2, COLOR_BLACK);
-    }
-}
-
-
 void TestBlitSubRect() {
     printf("TestBlitSubRect\n");
 
@@ -476,9 +420,9 @@ void TestBlitSubRect() {
     // create random 2D data
     s32 w_data = 500;
     s32 h_data = 500;
-    f32 zmin = 5000;
-    f32 zmax = 8000;
-    f32 *data_2d = (f32*) ArenaAlloc(cbui.ctx->a_life, w_data * h_data * sizeof(f32));
+    f64 zmin = 5000;
+    f64 zmax = 8000;
+    f64 *data_2d = (f64*) ArenaAlloc(cbui.ctx->a_life, w_data * h_data * sizeof(f64));
     for (s32 j = 0; j < h_data; ++j) {
         for (s32 i = 0; i < w_data; ++i) {
 
@@ -498,12 +442,12 @@ void TestBlitSubRect() {
 
 
     // create random the 1D data
-    f32 ymin = 1400;
-    f32 ymax = 1800;
-    f32 xmin = 23;
-    f32 xmax = 24;
+    f64 ymin = 1400;
+    f64 ymax = 1800;
+    f64 xmin = 23;
+    f64 xmax = 24;
     s32 len_data = 8;
-    f32 *data_1d = (f32*) ArenaAlloc(cbui.ctx->a_life, len_data *  sizeof(f32));
+    f64 *data_1d = (f64*) ArenaAlloc(cbui.ctx->a_life, len_data *  sizeof(f64));
     for (s32 i = 0; i < len_data; ++i) {
         data_1d[i] = ymin + (ymax - ymin) * Rand01_f32();
     }

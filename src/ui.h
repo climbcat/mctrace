@@ -2,6 +2,7 @@
 #define __MCT_UI_H__
 
 
+
 struct GridLayout {
     f32 w;
     f32 h;
@@ -48,6 +49,43 @@ GridLayout GridCalculate(f32 w = 640, f32 h = 480, f32 N = 20) {
     return lay;
 }
 
+
+void BlitMonitorIntoWidget(Monitor *mon, Widget *w) {
+    Rect rect = {};
+    rect.width = w->rect.x1 - w->rect.x0;
+    rect.height = w->rect.y1 - w->rect.y0;
+    rect.left = 0;
+    rect.top = 0;
+
+    if (mon->mon_tpe == MT_2D) {
+        // 2D texture
+        Color *blit_buff_2d;
+        Sprite s_2d = SpriteTexture_32it(cbui.ctx->a_tmp, StrZ( StrCat(mon->comp_name, "_blitarea") ), w->w, w->h, w->rect.x0, w->rect.y0, &cbui.map_textures, &blit_buff_2d);
+        SpriteTextureFill(s_2d, blit_buff_2d, COLOR_WHITE);
+        SpriteBufferPush(s_2d);
+
+        f64 zmin, zmax;
+        Monitor2DGetMinMax(mon->binm_x, mon->binn_y, mon->N, &zmin, &zmax);
+
+        Monitor2DBlit(mon->binm_x, mon->binn_y, mon->N, zmin, zmax, rect, w->w, w->h, blit_buff_2d);
+    }
+
+    else if (mon->mon_tpe == MT_1D) {
+        // 1D texture
+        Color *blit_buff_1d;
+        Sprite s_1d = SpriteTexture_32it(cbui.ctx->a_tmp, StrZ( StrCat(mon->comp_name, "_blitarea") ), w->w, w->h, w->rect.x0, w->rect.y0, &cbui.map_textures, &blit_buff_1d);
+        SpriteTextureFill(s_1d, blit_buff_1d, COLOR_WHITE);
+        SpriteBufferPush(s_1d);
+
+        f64 ymin, ymax;
+        Monitor1DGetMinMax(mon->binm_x, mon->N, &ymin, &ymax);
+
+        Monitor1DBlit(mon->binm_x, ymin, ymax, mon->N, rect, w->w, w->h, blit_buff_1d);
+    }
+}
+
+
+
 Sprite MonitorUpdateTexture(MArena *a_dest, Monitor *mon, f32 sprite_x0, f32 sprite_y0, s32 dest_width, s32 dest_height) {
     if (mon->mon_tpe != MT_2D) {
         return {};
@@ -79,6 +117,8 @@ Sprite MonitorUpdateTexture(MArena *a_dest, Monitor *mon, f32 sprite_x0, f32 spr
 
     return s;
 }
+
+
 
 Component *RenderMonitorGrid(Array<Monitor> monitors) {
     Component *result = NULL;
@@ -124,10 +164,7 @@ Component *RenderMonitorGrid(Array<Monitor> monitors) {
                 w->y0 = j * grid.c;
 
                 Monitor *mon = monitors.arr + idx;
-                if (mon->mon_tpe == MT_2D) {
-                    Sprite s = MonitorUpdateTexture(a_tmp, mon, w->rect.x0, w->rect.y0, grid.c, grid.c);
-                    SpriteBufferPush(s);
-                }
+                BlitMonitorIntoWidget(mon, w);
 
                 if (w->hot) {
                     w->col_border = COLOR_RED;
@@ -760,8 +797,8 @@ void DoUI(McTraceApp *app) {
             w->h = 128;
             w->col_bckgrnd = COLOR_BLUE;
 
-            Sprite s = MonitorUpdateTexture(cbui.ctx->a_tmp, &app->comp_selected->monitor, w->rect.x0, w->rect.y0, 128, 128);
-            SpriteBufferPush(s);
+            Monitor *mon = &app->comp_selected->monitor;
+            BlitMonitorIntoWidget(mon, w);
 
             UI_Pop();
         }
