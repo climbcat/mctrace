@@ -392,86 +392,88 @@ void TestBlitMonitors() {
 }
 
 
+void Monitor2DBlit(s32 data_width, s32 data_height, f32 *data, f32 data_min, f32 data_max, Rect rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
+    assert(rect.width <= dest_width);
+    assert(rect.height <= dest_height);
+
+    f32 scale_x = 1.0f / rect.width;
+    f32 scale_y = 1.0f / rect.height;
+
+    s32 i, j;
+    for (s32 y = 0; y < rect.height; y++) {
+        j = rect.top + rect.height - 1 - y;
+        for (s32 x = 0; x < rect.width; x++) {
+
+            s32 x_data = (s32) round(data_width * scale_x * x);
+            s32 y_data = (s32) round(data_height * scale_y * y);
+            u32 idx = data_width * j + i;
+
+            // get the proportianal data point
+            f32 data_val = data[ data_width * y_data + x_data ];
+            // scale the color map from zmin to zmax
+            Color color_ij = ColorMapGet((data_val - data_min) / (data_max - data_min), colormap_paletted_jet);
+
+            i = x + rect.left;
+            dest_buff[ dest_width * j + i ] = color_ij;
+        }
+    }
+}
+
+
+void Monitor1DBlit(s32 data_size, f32 data_min, f32 data_max, f32 *data, Rect rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
+    assert(rect.width <= dest_width);
+    assert(rect.height <= dest_height);
+
+    f32 scale_y_1d = rect.height / (data_max - data_min);
+    f32 scale_x_1d = rect.width / (data_size - 1);
+
+    s32 x1, y1, x2, y2;
+    s32 i1, j1, i2, j2;
+    for (s32 i = 0; i < data_size - 1; ++i) {
+        f32 val1 = data[i];
+        f32 val2 = data[i + 1];
+
+        x1 = scale_x_1d * i;
+        y1 = scale_y_1d * (val1 - data_min);
+        x2 = scale_x_1d * (i + 1);
+        y2 = scale_y_1d * (val2 - data_min);
+
+        i1 = x1 + rect.left;
+        j1 = rect.top + rect.height - 1 - y1;
+        i2 = x2 + rect.left;
+        j2 = rect.top + rect.height - 1 - y2;
+
+        RenderLineRGBA((u8*) dest_buff, dest_width, dest_height, i1, j1, i2, j2, COLOR_BLACK);
+    }
+}
+
+
 void TestBlitSubRect() {
     printf("TestBlitSubRect\n");
 
     CbuiInit("TestBlitSubRect", false);
 
-    s32 w = 200;
-    s32 h = 200;
+    s32 w_dest = 200;
+    s32 h_dest = 200;
+
+    Rect rect = {};
+    rect.top = 5;
+    rect.left = 15;
+    rect.width = 180;
+    rect.height = 180;
+
 
     // 2D texture
-    Color *tmp_buff;
-    Sprite s_2d = SpriteTexture_32it(cbui.ctx->a_life, "subrect_example_2D", w, h, 20, 20, &cbui.map_textures, &tmp_buff);
-
-    // fill with blud
-    for (s32 j = 0; j < h; j++) {
-        for (s32 i = 0; i < w; i++) {
-            tmp_buff[ w * j + i ] = COLOR_BLUE;
-        }
-    }
+    Color *blit_buff_2d;
+    Sprite s_2d = SpriteTexture_32it(cbui.ctx->a_life, "blit_buff_2d", w_dest, h_dest, 20, 20, &cbui.map_textures, &blit_buff_2d);
+    SpriteTextureFill(s_2d, blit_buff_2d, COLOR_BLUE);
 
     // 1D texture
-    Color *tmp_buff_1D;
-    Sprite s_1d = SpriteTexture_32it(cbui.ctx->a_life, "subrect_example_1D", w, h, 20, h + 20 + 10, &cbui.map_textures, &tmp_buff_1D);
+    Color *blit_buff_1d;
+    Sprite s_1d = SpriteTexture_32it(cbui.ctx->a_life, "blit_buff_1d", w_dest, h_dest, 20, h_dest + 20 + 10, &cbui.map_textures, &blit_buff_1d);
+    SpriteTextureFill(s_1d, blit_buff_1d, COLOR_GREEN);
 
-    // fill with red
-    for (s32 j = 0; j < h; j++) {
-        for (s32 i = 0; i < w; i++) {
-            tmp_buff_1D[ w * j + i ] = COLOR_GREEN;
-        }
-    }
-
-    //  SHARED:
-    //  the sub-rect is described using t_sub, l_sub, w_sub, h_sub
-    //
-    //  the data is descried using an array of y values with xmin,xmax for the x-axis and ymin,ymax for the y axis
-    //  first, we need to create an index-map: It takes indices from the sub-rect into the buffer
-    //
-    //  x -> i
-    //  y -> j
-    //
-    //  here i and j span the dest buffer from ULC: (0, 0) to LRC: (w, h)
-    //  and we are blitting into the buffer 'buff' of size w * h
-    //
-    //  this is a linear function taking:
-    //
-    //  0, 0 -> t + h_sub, l
-    //  w_sub, h_sub -> t, l + w_sub
-    //
-    //  thus:
-    //  i = x + l_sub
-    //  j = t_sub + h_sub - y
-
-    //  2D:
-    //  x and y maps to actual data using a sampling fucntion (we are essentailly re-doing the sprite blitting function)
-    //  value = sample(x, y) is drawn at i,j:
-    //
-    //  sample(x, y) is the sprite sampling function: SampleTexture on colors_data
-    //
-    //  with:
-    //
-    //  w_data = (xmax - xmin)
-    //  h_data = (ymax - ymin)
-    //
-    //  scale_x = 1 / w_sub
-    //  scale_y = 1 / h_sub
-    //
-    //  x_frac = x * scale_x
-    //  y_frac = y * scale_y
-    //
-    //  thus x_frac and y_frac go from zero to one when iterating from 0 to w_sub and h_sub (e.g. the sub rect)
-    //  
-    //  then:
-    //
-    //  color_i,j = SampleTexture(x_frac, y_frac, w_data, h_data, colors_data);
-    //
-    //  colors_data: zmin, zmax, k, l -> color which is constructed in the function MonitorDataBuffer2D
-    //  (BUT we are looking to in-line it, and not have that be a separater loop though)
-    //
-    //  we can now write the loop that blits this data into buff.
-
-    // create monitor-like 2D data (this is given by the system)
+    // create random 2D data
     s32 w_data = 500;
     s32 h_data = 500;
     f32 zmin = 5000;
@@ -492,45 +494,10 @@ void TestBlitSubRect() {
         }
     }
 
-    // blit data buffer into the subrect
-    s32 t_sub = 5;
-    s32 l_sub = 15;
-    s32 w_sub = 180;
-    s32 h_sub = 180;
+    Monitor2DBlit(w_data, h_data, data_2d, zmin, zmax, rect, w_dest, h_dest, blit_buff_2d);
 
-    f32 scale_x = 1.0f / w_sub;
-    f32 scale_y = 1.0f / h_sub;
 
-    s32 i, j;
-    for (s32 y = 0; y < h_sub; y++) {
-        j = t_sub + h_sub - 1 - y;
-        for (s32 x = 0; x < w_sub; x++) {
-
-            s32 x_data = (s32) round(w_data * scale_x * x);
-            s32 y_data = (s32) round(h_data * scale_y * y);
-            u32 idx = w_data * j + i;
-
-            // get the proportianal data point
-            f32 data_val = data_2d[ w_data * y_data + x_data ];
-            // scale the color map from zmin to zmax
-            Color color_ij = ColorMapGet((data_val - zmin) / (zmax - zmin), colormap_paletted_jet);
-
-            i = x + l_sub;
-            tmp_buff[ w * j + i ] = color_ij;
-        }
-    }
-
-    //  1D:
-    //  We have xmin, xmax, ymin, ymax and an array of y-values
-    //  We just need the x,y indices here, given each data "anchor"
-    //
-    //  x1, y1 -> x, y
-    //  x = (x1 - xmin) / w_data
-    //  y = (y1 - ymin) / h_data
-    //
-    //  lines are now drawn between pairs of consecutive anchors
-
-    // create the 1D data
+    // create random the 1D data
     f32 ymin = 1400;
     f32 ymax = 1800;
     f32 xmin = 23;
@@ -541,25 +508,8 @@ void TestBlitSubRect() {
         data_1d[i] = ymin + (ymax - ymin) * Rand01_f32();
     }
 
-    // get anchor pairs
-    f32 scale_y_1d = h_sub / (ymax - ymin);
-    f32 scale_x_1d = w_sub / (len_data - 1);
-    for (s32 i = 0; i < len_data - 1; ++i) {
-        f32 val1 = data_1d[i];
-        f32 val2 = data_1d[i + 1];
+    Monitor1DBlit(len_data, ymin, ymax, data_1d, rect, w_dest, h_dest, blit_buff_1d);
 
-        s32 x1 = scale_x_1d * i;
-        s32 y1 = scale_y_1d * (val1 - ymin);
-        s32 x2 = scale_x_1d * (i + 1);
-        s32 y2 = scale_y_1d * (val2 - ymin);
-
-        s32 i1 = x1 + l_sub;
-        s32 j1 = t_sub + h_sub - 1 - y1;
-        s32 i2 = x2 + l_sub;
-        s32 j2 = t_sub + h_sub - 1 - y2;
-
-        RenderLineRGBA((u8*) tmp_buff_1D, w, h, i1, j1, i2, j2, COLOR_BLACK);
-    }
 
     while (cbui.running) {
         CbuiFrameStart();
