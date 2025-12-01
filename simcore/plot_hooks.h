@@ -216,8 +216,9 @@ void Monitor2DGetMinMax(s32 src_width, s32 src_height, double *src_buffer, f64 *
 }
 
 void Monitor2DBlit(s32 data_width, s32 data_height, f64 *data, f64 data_min, f64 data_max, Rect rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
-    assert(rect.width <= dest_width);
-    assert(rect.height <= dest_height);
+    if (rect.width > dest_width || rect.height > dest_height) {
+        return;
+    }
 
     f32 scale_x = 1.0f / rect.width;
     f32 scale_y = 1.0f / rect.height;
@@ -244,8 +245,9 @@ void Monitor2DBlit(s32 data_width, s32 data_height, f64 *data, f64 data_min, f64
 
 
 void Monitor1DBlit(s32 data_size, f64 data_min, f64 data_max, f64 *data, Rect rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
-    assert(rect.width <= dest_width);
-    assert(rect.height <= dest_height);
+    if (rect.width > dest_width || rect.height > dest_height) {
+        return;
+    }
 
     f32 scale_y_1d = rect.height / (data_max - data_min);
     f32 scale_x_1d = rect.width / (data_size - 1);

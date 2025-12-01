@@ -188,6 +188,8 @@ Component *RenderMonitorGrid(Array<Monitor> monitors) {
 }
 
 Widget *DoComponentInfoBox(Component *comp) {
+    UI_SetFontSize(FS_18);
+
     Widget *w = UI_LayoutVertical();
     w->SetFlag(WF_LAYOUT_VERTICAL);
     w->SetFlag(WF_DRAW_BACKGROUND_AND_BORDER);
@@ -197,6 +199,8 @@ Widget *DoComponentInfoBox(Component *comp) {
     w->sz_border = 1;
     w->padding = 5;
     w->y0 = 15;
+    w->x0 = 20;
+    w->y0 = 80;
 
     UI_Label("COMPONENT");
 
@@ -746,12 +750,8 @@ void DoUI(McTraceApp *app) {
     }
 
     else if (app->mode == MTM_TRACE) {
-        DoTabMenu(app);
-
         app->draw_plane = true;
         app->draw_rays = true;
-
-        DoLeftRightButtons(app, app->config->comps_interactible);
 
         if (false) {
             UI_LayoutHorizontal();
@@ -770,15 +770,16 @@ void DoUI(McTraceApp *app) {
         if (app->comp_selected) {
             DoComponentInfoBox(app->comp_selected);
         }
+
+        DoTabMenu(app);
+        DoLeftRightButtons(app, app->config->comps_interactible);
     }
 
     else if (app->mode == MTM_MONITORS) {
-        DoTabMenu(app);
 
         app->draw_plane = true;
         app->draw_rays = false;
 
-        DoLeftRightButtons(app, app->config->comps_monitors);
         DoComponentSelectionAnnotations(app, true);
         DoComponentSelectionActions(app);
 
@@ -802,6 +803,9 @@ void DoUI(McTraceApp *app) {
 
             UI_Pop();
         }
+
+        DoTabMenu(app);
+        DoLeftRightButtons(app, app->config->comps_monitors);
     }
 
     else if (app->mode == MTM_PLOT) {
