@@ -60,6 +60,16 @@ Vector2f PointToScreen(Vector3f point, Matrix4f view_l2w, Perspective persp, u32
 
     return p_screen;
 }
+struct Rect32 {
+    s32 width;
+    s32 height;
+    s32 left;
+    s32 top;
+
+    void Print() {
+        printf("rect: w: %u, h: %u, left: %d, top: %d\n", width, height, left, top);
+    }
+};
 // ************************************************************************************
 
 

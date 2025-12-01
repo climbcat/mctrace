@@ -49,38 +49,35 @@ GridLayout GridCalculate(f32 w = 640, f32 h = 480, f32 N = 20) {
     return lay;
 }
 
-
 void BlitMonitorIntoWidget(Monitor *mon, Widget *w) {
-    Rect rect = {};
-    rect.width = w->rect.x1 - w->rect.x0;
-    rect.height = w->rect.y1 - w->rect.y0;
+    Rect32 rect = {};
+    rect.width = (s32) floor(w->rect.x1 - w->rect.x0);
+    rect.height = (s32) floor(w->rect.y1 - w->rect.y0);
     rect.left = 0;
     rect.top = 0;
 
     if (mon->mon_tpe == MT_2D) {
         // 2D texture
         Color *blit_buff_2d;
-        Sprite s_2d = SpriteTexture_32it(cbui.ctx->a_tmp, StrZ( StrCat(mon->comp_name, "_blitarea") ), w->w, w->h, w->rect.x0, w->rect.y0, &cbui.map_textures, &blit_buff_2d);
+        Sprite s_2d = SpriteTexture_32it(cbui.ctx->a_tmp, StrZ( StrCat(mon->comp_name, "_blitarea") ), w->rect.Width(), w->rect.Height(), w->rect.x0, w->rect.y0, &cbui.map_textures, &blit_buff_2d);
         SpriteTextureFill(s_2d, blit_buff_2d, COLOR_WHITE);
         SpriteBufferPush(s_2d);
 
         f64 zmin, zmax;
         Monitor2DGetMinMax(mon->binm_x, mon->binn_y, mon->N, &zmin, &zmax);
-
-        Monitor2DBlit(mon->binm_x, mon->binn_y, mon->N, zmin, zmax, rect, w->w, w->h, blit_buff_2d);
+        Monitor2DBlit(mon->binm_x, mon->binn_y, mon->N, zmin, zmax, rect.left, rect.top, rect.width, rect.height, w->rect.Width(), w->rect.Height(), blit_buff_2d);
     }
 
     else if (mon->mon_tpe == MT_1D) {
         // 1D texture
         Color *blit_buff_1d;
-        Sprite s_1d = SpriteTexture_32it(cbui.ctx->a_tmp, StrZ( StrCat(mon->comp_name, "_blitarea") ), w->w, w->h, w->rect.x0, w->rect.y0, &cbui.map_textures, &blit_buff_1d);
+        Sprite s_1d = SpriteTexture_32it(cbui.ctx->a_tmp, StrZ( StrCat(mon->comp_name, "_blitarea") ), w->rect.Width(), w->rect.Height(), w->rect.x0, w->rect.y0, &cbui.map_textures, &blit_buff_1d);
         SpriteTextureFill(s_1d, blit_buff_1d, COLOR_WHITE);
         SpriteBufferPush(s_1d);
 
         f64 ymin, ymax;
         Monitor1DGetMinMax(mon->binm_x, mon->N, &ymin, &ymax);
-
-        Monitor1DBlit(mon->binm_x, ymin, ymax, mon->N, rect, w->w, w->h, blit_buff_1d);
+        Monitor1DBlit(mon->binm_x, ymin, ymax, mon->N, rect, w->rect.Width(), w->rect.Height(), blit_buff_1d);
     }
 }
 

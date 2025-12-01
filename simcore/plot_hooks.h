@@ -215,18 +215,18 @@ void Monitor2DGetMinMax(s32 src_width, s32 src_height, double *src_buffer, f64 *
     }
 }
 
-void Monitor2DBlit(s32 data_width, s32 data_height, f64 *data, f64 data_min, f64 data_max, Rect rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
-    if (rect.width > dest_width || rect.height > dest_height) {
+void Monitor2DBlit(s32 data_width, s32 data_height, f64 *data, f64 data_min, f64 data_max, s32 rect_t, s32 rect_l, s32 rect_w, s32 rect_h, s32 dest_width, s32 dest_height, Color *dest_buff) {
+    if (rect_w > dest_width || rect_h > dest_height) {
         return;
     }
 
-    f32 scale_x = 1.0f / rect.width;
-    f32 scale_y = 1.0f / rect.height;
+    f32 scale_x = 1.0f / rect_w;
+    f32 scale_y = 1.0f / rect_h;
 
     s32 i, j;
-    for (s32 y = 0; y < rect.height; y++) {
-        j = rect.top + rect.height - 1 - y;
-        for (s32 x = 0; x < rect.width; x++) {
+    for (s32 y = 0; y < rect_h; y++) {
+        j = rect_t + rect_h - 1 - y;
+        for (s32 x = 0; x < rect_w; x++) {
 
             s32 x_data = (s32) round(data_width * scale_x * x);
             s32 y_data = (s32) round(data_height * scale_y * y);
@@ -237,14 +237,14 @@ void Monitor2DBlit(s32 data_width, s32 data_height, f64 *data, f64 data_min, f64
             // scale the color map from zmin to zmax
             Color color_ij = ColorMapGet((data_val - data_min) / (data_max - data_min), colormap_paletted_jet);
 
-            i = x + rect.left;
+            i = x + rect_l;
             dest_buff[ dest_width * j + i ] = color_ij;
         }
     }
 }
 
 
-void Monitor1DBlit(s32 data_size, f64 data_min, f64 data_max, f64 *data, Rect rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
+void Monitor1DBlit(s32 data_size, f64 data_min, f64 data_max, f64 *data, Rect32 rect, s32 dest_width, s32 dest_height, Color *dest_buff) {
     if (rect.width > dest_width || rect.height > dest_height) {
         return;
     }

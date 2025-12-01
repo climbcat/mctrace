@@ -400,7 +400,7 @@ void TestBlitSubRect() {
     s32 w_dest = 200;
     s32 h_dest = 200;
 
-    Rect rect = {};
+    Rect32 rect = {};
     rect.top = 5;
     rect.left = 15;
     rect.width = 180;
@@ -438,7 +438,7 @@ void TestBlitSubRect() {
         }
     }
 
-    Monitor2DBlit(w_data, h_data, data_2d, zmin, zmax, rect, w_dest, h_dest, blit_buff_2d);
+    Monitor2DBlit(w_data, h_data, data_2d, zmin, zmax, rect.left, rect.top, rect.width, rect.height, w_dest, h_dest, blit_buff_2d);
 
 
     // create random the 1D data
