@@ -170,6 +170,12 @@ void Monitor1DBlit(s32 data_size, f64 data_min, f64 data_max, f64 *data, s32 rec
         return;
     }
 
+    // adjust min/max value limits for nice plotting
+    f32 data_range = data_max - data_min;
+    data_min = data_min - 0.2 * data_range;
+    data_min = MaxF32(data_min, 0); // stay positive
+    data_max = data_max + 0.2 * data_range;
+
     f32 scale_y_1d = 1.0f * rect_h / ( (f32) data_max - (f32) data_min);
     f32 scale_x_1d = 1.0f * rect_w / (data_size - 1);
 
