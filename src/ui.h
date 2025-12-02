@@ -63,6 +63,7 @@ void BlitMonitorIntoWidget(Monitor *mon, Widget *w) {
     // get title and blit into our tmp buffer
     s32 sz_x;
     s32 sz_y;
+    UI_SetFontSize(FS_12);
     Array<Sprite> title = TextPlot(cbui.ctx->a_tmp, mon->title, 0, 0, w_dest, h_dest, &sz_x, &sz_y, COLOR_BLACK, 0, 1);
     rect.top = sz_y;
     rect.height = h_dest - 2 * sz_y;
