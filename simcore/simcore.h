@@ -223,12 +223,13 @@ void mcdis_sphere(double x, double y, double z, double r);
 double _randnorm2(randstate_t* state);
 
 // Component writer interface
-#define randnorm() _randnorm2(_particle->randstate)        // NOTE: can't use _randnorm on GPU
-#define rand01() _rand01(_particle->randstate)
-#define randpm1() _randpm1(_particle->randstate)
-#define rand0max(p1) _rand0max(p1, _particle->randstate)
-#define randminmax(p1, p2) _randminmax(p1, p2, _particle->randstate)
-#define randtriangle() _randtriangle(_particle->randstate)
+#define randnorm() _randnorm2((randstate_t*) _particle->randstate[0])        // NOTE: can't use _randnorm on GPU
+#define rand01() _rand01((randstate_t*) _particle->randstate[0])
+#define randpm1() _randpm1((randstate_t*) _particle->randstate[0])
+#define rand0max(p1) _rand0max(p1, (randstate_t*) _particle->randstate[0])
+#define randminmax(p1, p2) _randminmax(p1, p2, (randstate_t*) _particle->randstate[0])
+#define randtriangle() _randtriangle((randstate_t*) _particle->randstate[0])
+
 
 // Mersenne Twister rng
 uint32_t mt_random(void);

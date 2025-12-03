@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 
 #include <cstdlib>
 #include <cstring>
@@ -5,6 +6,11 @@
 #include <cstddef>
 
 #include "lib/jg_baselayer.h"
+
+
+//extern char *c_strcasestr (const char *haystack, const char *needle) {
+//    return 0;
+//}
 
 
 // ***************** include in jg_baselayer 0.2.5: ***********************************
@@ -16,6 +22,32 @@ MArena ArenaSubInit(MArena *a_dest, u64 size) {
     a.mem = (u8*) ArenaAlloc(a_dest, size);
     return a;
 }
+// ************************************************************************************
+
+
+// ************ port to plf_win.h - GNU replacement function (LLM generated ) *********
+#if WINDOWS
+#include <ctype.h>
+#include <string.h>
+#pragma LLM
+char* strcasestr(const char* haystack, const char* needle)
+{
+    if (!haystack || !needle)
+        return NULL;
+
+    size_t nlen = strlen(needle);
+    if (nlen == 0)
+        return (char*)haystack;
+
+    for (; *haystack; haystack++) {
+        if (tolower((unsigned char)*haystack) == tolower((unsigned char)*needle)) {
+            if (_strnicmp(haystack, needle, nlen) == 0)
+                return (char*)haystack;
+        }
+    }
+    return NULL;
+}
+#endif
 // ************************************************************************************
 
 
@@ -55,7 +87,6 @@ struct Rect32 {
 #define DEBUG_DISPLAY
 #define DEBUG_TRACE
 #define DEBUG_PLOT
-
 
 #include "simcore/simcore_types.h"
 #include "simcore/display_hooks.h"
