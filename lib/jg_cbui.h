@@ -3330,19 +3330,18 @@ struct ResourceStreamHandle {
 };
 
 
-// TODO: how do we put a bound on the number of resources in a file?
+// embeded resource
 #define MAX_RESOURCE_CNT 999
+extern "C" {
+    extern char _binary_all_res_start[];
+}
 
 
 ResourceStreamHandle ResourceStreamLoadAndOpen(MArena *a_tmp, MArena *a_dest, const char *filename, bool put_strs_inline = true) {
 
     ResourceStreamHandle hdl = {};
-    hdl.first = (ResourceHdr *) LoadFileFSeek(a_dest, (char*) filename);
-    if (hdl.first == NULL) {
-        printf("Could not load file: '%s', exiting ...\n", filename);
-        exit(0);
-        return hdl;
-    }
+    hdl.first =  (ResourceHdr *) &_binary_all_res_start[0];
+
     HashMap map_names = InitMap(a_tmp, MAX_RESOURCE_CNT);
     HashMap map_keynames = InitMap(a_tmp, MAX_RESOURCE_CNT);
 
