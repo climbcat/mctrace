@@ -11,6 +11,28 @@
 #include <math.h>
 
 
+#define AA2MS    629.622368        /* Convert k[1/AA] to v[m/s] */
+#define MS2AA    1.58825361e-3     /* Convert v[m/s] to k[1/AA] */
+#define K2V      AA2MS
+#define V2K      MS2AA
+#define Q2V      AA2MS
+#define V2Q      MS2AA
+#define SE2V     437.393377        /* Convert sqrt(E)[meV] to v[m/s] */
+#define VS2E     5.22703725e-6     /* Convert (v[m/s])**2 to E[meV] */
+
+
+struct Event {
+    Vector3f pos;
+    f32 lambda;
+};
+
+inline
+f64 Lambda(f64 vx, f64 vy, f64 vz) {
+    double lambda = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+    return lambda;
+}
+
+
 struct NeutronSmall {
     double x;
     double y;

@@ -60,6 +60,10 @@ void mcdetector_out_list_ext_hook(const char *t, const char *xl, const char *yl,
 
 
 void MonitorClear(Monitor *mon) {
+    // TODO: clear the 2D monitor locations without also killing the [][] pointers
+    //      We can probably just do an offset to clear from (there are binm_x pointers at the start)
+    // NOTE: This will only affect the simcore, because we don't use [][], instead we offset manually
+    //      when iterating the 2D data
     _memzero(mon->N, sizeof(double) * mon->binm_x * mon->binn_y);
     _memzero(mon->p, sizeof(double) * mon->binm_x * mon->binn_y);
     _memzero(mon->p2, sizeof(double) * mon->binm_x * mon->binn_y);

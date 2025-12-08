@@ -2516,15 +2516,6 @@ double _randminmax(double min, double max, randstate_t* state) {
 // mcstas-r
 
 
-#define AA2MS    629.622368        /* Convert k[1/AA] to v[m/s] */
-#define MS2AA    1.58825361e-3     /* Convert v[m/s] to k[1/AA] */
-#define K2V      AA2MS
-#define V2K      MS2AA
-#define Q2V      AA2MS
-#define V2Q      MS2AA
-#define SE2V     437.393377        /* Convert sqrt(E)[meV] to v[m/s] */
-#define VS2E     5.22703725e-6     /* Convert (v[m/s])**2 to E[meV] */
-
 #define SCATTER0 do { DEBUG_SCATTER(); SCATTERED++; } while(0)
 #define SCATTER SCATTER0
 
@@ -2686,8 +2677,8 @@ do { \
 #    define DEBUG_SCATTER() if(!mcdotrace); else printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", x,y,z,vx,vy,vz,t,sx,sy,sz,p);
 #else
 #   ifdef DEBUG_TRACE
-#       define DEBUG_STATE() trace_state_ext_hook(x, y, z);
-#       define DEBUG_SCATTER() trace_scatter_ext_hook(x, y, z);
+#       define DEBUG_STATE() trace_state_ext_hook(x, y, z, vx, vy, vz);
+#       define DEBUG_SCATTER() trace_scatter_ext_hook(x, y, z, vx, vy, vz);
 #   else
 #       define DEBUG_STATE()
 #       define DEBUG_SCATTER()

@@ -210,8 +210,12 @@ u32 RenderTrajectories(NeutronTrajectory *traces, Matrix4f view, Perspective per
 
     while (traces) {
         for (u32 i = 0; i < traces->events.len - 1; ++i) {
-            Vector3f a = traces->events.lst[i];
-            Vector3f b = traces->events.lst[i + 1];
+            f32 lambda = traces->events.lst[i].lambda;
+            Vector3f a = traces->events.lst[i].pos;
+            Vector3f b = traces->events.lst[i + 1].pos;
+
+            f32 lambda_color_value = (lambda - lambda_min) / (lambda_max - lambda_min);
+            trajectory_color = ColorMapGet(lambda_color_value, colormap_paletted_jet);
 
             RenderLineSegment(cbui.image_buffer, TransformGetInverse(view), persp, a, b, cbui.plf.width, cbui.plf.height, trajectory_color);
         }

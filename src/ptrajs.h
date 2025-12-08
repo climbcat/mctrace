@@ -4,7 +4,7 @@
 
 struct Traj {
     Traj *next;
-    List<Vector3f> events;
+    List<Event> events;
     u32 comp_idx_max;
 };
 typedef Traj NeutronTrajectory;
@@ -112,13 +112,13 @@ bool PushTrajectory(TrajBundle *bundle, Traj traj) {
     if (bundle->full) {
         return false;
     }
-    u32 traj_size = sizeof(Traj) + sizeof(Vector3f) * traj.events.len;
+    u32 traj_size = sizeof(Traj) + sizeof(Event) * traj.events.len;
 
     if (ArenaHasEnoughSpace(&bundle->mem, traj_size)) {
         Traj *tpushed = (Traj *) ArenaPush(&bundle->mem, &traj, sizeof(Traj));
 
         // NOTE: the len should not be set until the copy is done; how can we ensure this?
-        tpushed->events.lst = (Vector3f*) ArenaPush(&bundle->mem, traj.events.lst, sizeof(Vector3f) * traj.events.len);
+        tpushed->events.lst = (Event*) ArenaPush(&bundle->mem, traj.events.lst, sizeof(Event) * traj.events.len);
         tpushed->events.len = traj.events.len;
 
         if (bundle->head == NULL) {

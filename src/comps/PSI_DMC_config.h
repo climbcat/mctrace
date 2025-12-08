@@ -39,7 +39,8 @@ struct PSI_DMC {
     double R0_curve = 0.995;
     double Mvalue_curve = 2.1;
     double W_curve = 1.0/250.0;
-    double ldiff = 0.05;
+    //double ldiff = 0.05;
+    double ldiff = 1.5;
     double angleGuideCurved;
 };
 

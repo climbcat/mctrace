@@ -660,6 +660,9 @@ void DoUI(McTraceApp *app) {
                     }
                     TrajectoryContainerClear(&app->config->container);
                     *app->ncount_current = 0;
+                    if (g_a_dest_trace) {
+                        //ArenaClear(g_a_dest_trace);
+                    }
                 }
             }
             UI_Pop();

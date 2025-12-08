@@ -64,7 +64,6 @@ void TraceParticles(TrajContainer *container, bool *run_pause, Array<Component*>
     u32 j = 0;
     while (true) {
 
-
         if (cbui.running == false) {
             break;
         }
@@ -88,7 +87,7 @@ void TraceParticles(TrajContainer *container, bool *run_pause, Array<Component*>
             u32 idx = container->current_idx;
             TrajBundle *bundle = container->bundles_ptrs.arr[idx];
 
-            g_anchors_trace = InitList<Vector3f>(&a_thread, 0);
+            g_anchors_trace = InitList<Event>(&a_thread, 0);
 
             g_trace_current = {};
         }
@@ -113,7 +112,7 @@ void TraceParticles(TrajContainer *container, bool *run_pause, Array<Component*>
             _particle->_index++;
 
             // record the state after each comp, because there is no guarantee that the component will call SCATTER
-            trace_state_ext_hook(n.x, n.y, n.z);
+            trace_state_ext_hook(n.x, n.y, n.z, n.vx, n.vy, n.vz);
 
             // break iteration of absorbed particles
             if (n._absorbed) {
@@ -127,6 +126,7 @@ void TraceParticles(TrajContainer *container, bool *run_pause, Array<Component*>
             t.events = g_anchors_trace;
 
             PushTrajectory(container, t);
+            ArenaClear(g_a_dest_trace); 
             g_anchors_trace.len = 0;
         }
     }
@@ -172,7 +172,7 @@ void SimulateParticles(bool *run_pause, Array<Component*> comps, Instrument *ins
             TraceComponent(comp, &n, instr);
 
             // record the state after each comp, because there is no guarantee that the component will call SCATTER
-            trace_state_ext_hook(n.x, n.y, n.z);
+            trace_state_ext_hook(n.x, n.y, n.z, n.vx, n.vy, n.vz);
 
             // break iteration of absorbed particles
             if (n._absorbed) {

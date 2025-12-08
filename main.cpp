@@ -83,6 +83,11 @@ struct Rect32 {
 };
 // ************************************************************************************
 
+// DBG
+static f32 lambda_min;
+static f32 lambda_max;
+
+
 
 #define DEBUG_DISPLAY
 #define DEBUG_TRACE
@@ -162,11 +167,16 @@ InstrumentConfig InitInstrument(MArena *a_dest, InstrConfigs ic, u32 ncount) {
     return config;
 }
 
-
 void RunProgram(bool do_fullscreen) {
     TimeFunction;
 
     CbuiInit("mctrace", do_fullscreen);
+
+    // DBG
+    // TODO: a total hack - find a better way
+    lambda_max = 1.82;
+    lambda_min = 3.32;
+
 
     s32 ncount = 1e9;
     InstrumentConfig psi_dmc = InitInstrument(cbui.ctx->a_pers, IC_PSI_DMC, ncount);
