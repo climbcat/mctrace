@@ -302,7 +302,7 @@ Widget *DoComponentSelectionActions(McTraceApp *app) {
 
     if (GetEnter() && app->comp_selected) {
         Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
-        app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
+        app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.5f);
     }
 
     // hover / click  / double-click
@@ -317,7 +317,7 @@ Widget *DoComponentSelectionActions(McTraceApp *app) {
 
         if (app->comp_dbl_clicked) {
             Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_dbl_clicked->display, 0.02f);
-            app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
+            app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.5f);
             app->comp_selected = app->comp_dbl_clicked;
         }
         else if (app->comp_clicked) {
@@ -745,7 +745,7 @@ void DoUI(McTraceApp *app) {
             OnSwitchToMode(app);
             app->comp_selected = monitor_clicked;
             Wireframe box = CreateAABoundingBox(cbui.ctx->a_tmp, app->comp_selected->display, 0.02f);
-            app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.25f);
+            app->cam.SetRelativeTo(box.transform, box.SizeBallpark() * 1.5f);
         }
 
     }
