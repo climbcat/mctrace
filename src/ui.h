@@ -716,8 +716,8 @@ void DoUI(McTraceApp *app) {
 
             Widget *w = WidgetGetCached("monitor_selection_blit_area");
             WidgetTreeSibling(w);
-            w->w = 128;
-            w->h = 128;
+            w->w = 256;
+            w->h = 256;
             w->col_bckgrnd = COLOR_BLUE;
 
             Monitor *mon = &app->comp_selected->monitor;
