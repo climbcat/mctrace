@@ -79,7 +79,7 @@ void GetParameters_Source_Maxwell_3(Array<Param> *pars, Source_Maxwell_3 *comp) 
     pars->Add( Param { CPT_FLOAT, "I1", &comp->I1 } );
     pars->Add( Param { CPT_FLOAT, "I2", &comp->I2 } );
     pars->Add( Param { CPT_FLOAT, "I3", &comp->I3 } );
-    pars->Add( Param { CPT_FLOAT, "target_index", &comp->target_index } );
+    pars->Add( Param { CPT_INT, "target_index", &comp->target_index } );
     pars->Add( Param { CPT_FLOAT, "lambda0", &comp->lambda0 } );
     pars->Add( Param { CPT_FLOAT, "dlambda", &comp->dlambda } );
 }
@@ -135,11 +135,8 @@ void Init_Source_Maxwell_3(Source_Maxwell_3 *comp, Instrument *instrument) {
     l_range = Lmax-Lmin;
     w_mult = w_source*h_source*1.0e4;     /* source area correction */
     w_mult *= l_range;            /* wavelength range correction */
-
-
-    // NOTE: disabling mcncount global variable
     //w_mult *= 1.0/mcget_ncount();   /* correct for # neutron rays */
-    w_mult *= 1.0/instrument->ncount_target;   /* correct for # neutron rays */
+    w_mult *= 1.0/1.0/instrument->ncount_target;   /* correct for # neutron rays */
 
     if (w_source <0 || h_source < 0 || Lmin <= 0 || Lmax <= 0 || dist <= 0 || T1 <= 0 || T2 <= 0|| T3 <= 0 || Lmax<=Lmin) {
         printf("Source_Maxwell_3: %s: Error in input parameter values!\n"

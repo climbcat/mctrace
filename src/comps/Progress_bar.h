@@ -70,7 +70,6 @@ void Init_Progress_bar(Progress_bar *comp, Instrument *instrument) {
     CurrentTime=0;
 
     fprintf(stdout, "[%s] Initialize\n", instrument_name);
-
     // NOTE: disabled, should be re-implemented
     /*
     if (percent*mcget_ncount()/100 < 1e5) {
@@ -122,6 +121,7 @@ void Trace_Progress_bar(Progress_bar *comp, Neutron *particle, Instrument *instr
 
     double ncount;
 
+
     // NOTE: depricated, ncount vars moved to Instrument struct
     //ncount = mcget_run_num();
     ncount = instrument->ncount_target;
@@ -134,15 +134,18 @@ void Trace_Progress_bar(Progress_bar *comp, Neutron *particle, Instrument *instr
     time_t NowTime;
     time(&NowTime);
 
-    //s32 ncount_current = mcget_ncount();
+
     s32 ncount_current = instrument->ncount_current;
+
 
     /* compute initial estimate of computation duration */
     if (!EndTime && ncount >= IntermediateCnts) {
         CurrentTime = NowTime;
         if (difftime(NowTime,StartTime) > 10 && ncount) {
             /* wait 10 sec before writing ETA */
-            EndTime = StartTime + (time_t)(difftime(NowTime,StartTime) *(double) ncount_current/ncount);
+            //EndTime = StartTime + (time_t)(difftime(NowTime,StartTime) *(double)mcget_ncount()/ncount);
+            EndTime = StartTime + (time_t)(difftime(NowTime,StartTime) *(double)ncount_current/ncount);
+
             IntermediateCnts = 0;
             fprintf(stdout, "\nTrace ETA ");
             fprintf(stdout, "%s", infostring);
@@ -160,15 +163,19 @@ void Trace_Progress_bar(Progress_bar *comp, Neutron *particle, Instrument *instr
     }
 
     /* display percentage when percent or minutes have reached step */
+    //if (EndTime && mcget_ncount() &&
     if (EndTime && ncount_current &&
         (    (minutes && difftime(NowTime,CurrentTime) > minutes*60)
         || (percent && !minutes && ncount >= IntermediateCnts))   )
     {
+        //fprintf(stdout, "%llu %%\n", (unsigned long long)(ncount*100.0/mcget_ncount())); fflush(stdout);
         fprintf(stdout, "%llu %%\n", (unsigned long long)(ncount*100.0/ncount_current)); fflush(stdout);
         CurrentTime = NowTime;
 
+        //IntermediateCnts = ncount + percent*mcget_ncount()/100;
         IntermediateCnts = ncount + percent*ncount_current/100;
         /* check that next intermediate ncount check is a multiple of the desired percentage */
+        //IntermediateCnts = floor(IntermediateCnts*100/percent/mcget_ncount())*percent*mcget_ncount()/100;
         IntermediateCnts = floor(IntermediateCnts*100/percent/ncount_current)*percent*ncount_current/100;
         /* raise flag to indicate that we did something */
         SCATTER;

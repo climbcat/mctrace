@@ -74,15 +74,15 @@ void GetParameters_Monitor_nD(Array<Param> *pars, Monitor_nD *comp) {
     pars->Add( Param { CPT_FLOAT, "ymax", &comp->ymax } );
     pars->Add( Param { CPT_FLOAT, "zmin", &comp->zmin } );
     pars->Add( Param { CPT_FLOAT, "zmax", &comp->zmax } );
-    pars->Add( Param { CPT_FLOAT, "bins", &comp->bins } );
+    pars->Add( Param { CPT_INT, "bins", &comp->bins } );
     pars->Add( Param { CPT_FLOAT, "min", &comp->min } );
     pars->Add( Param { CPT_FLOAT, "max", &comp->max } );
-    pars->Add( Param { CPT_FLOAT, "restore_neutron", &comp->restore_neutron } );
+    pars->Add( Param { CPT_INT, "restore_neutron", &comp->restore_neutron } );
     pars->Add( Param { CPT_FLOAT, "radius", &comp->radius } );
     pars->Add( Param { CPT_STRING, "options", comp->options } );
     pars->Add( Param { CPT_STRING, "filename", comp->filename } );
     pars->Add( Param { CPT_STRING, "geometry", comp->geometry } );
-    pars->Add( Param { CPT_FLOAT, "nowritefile", &comp->nowritefile } );
+    pars->Add( Param { CPT_INT, "nowritefile", &comp->nowritefile } );
     pars->Add( Param { CPT_STRING, "username1", comp->username1 } );
     pars->Add( Param { CPT_STRING, "username2", comp->username2 } );
     pars->Add( Param { CPT_STRING, "username3", comp->username3 } );

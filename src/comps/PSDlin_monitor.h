@@ -48,17 +48,17 @@ int GetParameterCount_PSDlin_monitor() {
 }
 
 void GetParameters_PSDlin_monitor(Array<Param> *pars, PSDlin_monitor *comp) {
-    pars->Add( Param { CPT_FLOAT, "nbins", &comp->nbins } );
+    pars->Add( Param { CPT_INT, "nbins", &comp->nbins } );
     pars->Add( Param { CPT_STRING, "filename", comp->filename } );
     pars->Add( Param { CPT_FLOAT, "xmin", &comp->xmin } );
     pars->Add( Param { CPT_FLOAT, "xmax", &comp->xmax } );
     pars->Add( Param { CPT_FLOAT, "ymin", &comp->ymin } );
     pars->Add( Param { CPT_FLOAT, "ymax", &comp->ymax } );
-    pars->Add( Param { CPT_FLOAT, "nowritefile", &comp->nowritefile } );
+    pars->Add( Param { CPT_INT, "nowritefile", &comp->nowritefile } );
     pars->Add( Param { CPT_FLOAT, "xwidth", &comp->xwidth } );
     pars->Add( Param { CPT_FLOAT, "yheight", &comp->yheight } );
-    pars->Add( Param { CPT_FLOAT, "restore_neutron", &comp->restore_neutron } );
-    pars->Add( Param { CPT_FLOAT, "vertical", &comp->vertical } );
+    pars->Add( Param { CPT_INT, "restore_neutron", &comp->restore_neutron } );
+    pars->Add( Param { CPT_INT, "vertical", &comp->vertical } );
 }
 
 void Init_PSDlin_monitor(PSDlin_monitor *comp, Instrument *instrument) {

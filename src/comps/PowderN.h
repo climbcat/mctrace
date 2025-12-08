@@ -507,7 +507,7 @@ void GetParameters_PowderN(Array<Param> *pars, PowderN *comp) {
     pars->Add( Param { CPT_FLOAT, "barns", &comp->barns } );
     pars->Add( Param { CPT_FLOAT, "Strain", &comp->Strain } );
     pars->Add( Param { CPT_FLOAT, "focus_flip", &comp->focus_flip } );
-    pars->Add( Param { CPT_FLOAT, "target_index", &comp->target_index } );
+    pars->Add( Param { CPT_INT, "target_index", &comp->target_index } );
 }
 
 void Init_PowderN(PowderN *comp, Instrument *instrument) {

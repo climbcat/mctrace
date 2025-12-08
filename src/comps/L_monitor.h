@@ -49,9 +49,9 @@ int GetParameterCount_L_monitor() {
 }
 
 void GetParameters_L_monitor(Array<Param> *pars, L_monitor *comp) {
-    pars->Add( Param { CPT_FLOAT, "nL", &comp->nL } );
+    pars->Add( Param { CPT_INT, "nL", &comp->nL } );
     pars->Add( Param { CPT_STRING, "filename", comp->filename } );
-    pars->Add( Param { CPT_FLOAT, "nowritefile", &comp->nowritefile } );
+    pars->Add( Param { CPT_INT, "nowritefile", &comp->nowritefile } );
     pars->Add( Param { CPT_FLOAT, "xmin", &comp->xmin } );
     pars->Add( Param { CPT_FLOAT, "xmax", &comp->xmax } );
     pars->Add( Param { CPT_FLOAT, "ymin", &comp->ymin } );
@@ -60,7 +60,7 @@ void GetParameters_L_monitor(Array<Param> *pars, L_monitor *comp) {
     pars->Add( Param { CPT_FLOAT, "yheight", &comp->yheight } );
     pars->Add( Param { CPT_FLOAT, "Lmin", &comp->Lmin } );
     pars->Add( Param { CPT_FLOAT, "Lmax", &comp->Lmax } );
-    pars->Add( Param { CPT_FLOAT, "restore_neutron", &comp->restore_neutron } );
+    pars->Add( Param { CPT_INT, "restore_neutron", &comp->restore_neutron } );
 }
 
 void Init_L_monitor(L_monitor *comp, Instrument *instrument) {
