@@ -62,12 +62,13 @@ void TraceParticles(TrajContainer *container, bool *run_pause, Array<Component*>
     g_do_trace_trajectories = true;
 
     u32 j = 0;
-    while (*ncount_current < *ncount_target) {
+    while (true) {
+
 
         if (cbui.running == false) {
             break;
         }
-        if (*run_pause == false) {
+        if (*run_pause == false || *ncount_current >= *ncount_target) {
             XSleep(10);
             continue;
         }
@@ -80,9 +81,9 @@ void TraceParticles(TrajContainer *container, bool *run_pause, Array<Component*>
         // (see mcsetstate in simcore.h).
         Neutron n = {};
 
-        u32 compo_idx_max = 0;
 
         // record trajectories
+        u32 compo_idx_max = 0;
         if (container->full == false) {
             u32 idx = container->current_idx;
             TrajBundle *bundle = container->bundles_ptrs.arr[idx];
@@ -109,6 +110,7 @@ void TraceParticles(TrajContainer *container, bool *run_pause, Array<Component*>
 
             // run trace code
             TraceComponent(comp, &n, instr);
+            _particle->_index++;
 
             // record the state after each comp, because there is no guarantee that the component will call SCATTER
             trace_state_ext_hook(n.x, n.y, n.z);

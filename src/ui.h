@@ -668,60 +668,6 @@ void DoUI(McTraceApp *app) {
             //      In fact, it might never end
 
         }
-
-        //UI_Pop();
-        UI_SpaceV(10);
-
-        {
-            UI_Label("SIMULATE");
-
-            /*
-            char buff[200];
-            sprintf(buff, "ncount (final):   %d", *app->ncount_target);
-            Widget *w1 = UI_Label(buff);
-            w1->text = StrL(buff);
-
-            sprintf(buff, "ncount (current): %d", *app->ncount_current);
-            Widget *w2 = UI_Label(buff);
-            w2->text = StrL(buff);
-            */
-
-            UI_SpaceV(10);
-            UI_LayoutHorizontal();
-
-            if (!sim) {
-                if (UI_Button("Run 1e8", NULL, trc)) {
-
-                    // TODO: extact reset into "trace control functionality" unit
-                    {
-                        app->trace_active = false;
-                        for (s32 i = 0; i < comps.len; ++i) {
-                            Monitor *mon = &comps.arr[i]->monitor;
-                            if (mon->mon_tpe != MT_NOT) {
-                                MonitorClear(mon);
-                            }
-                        }
-                        g_do_trace_trajectories = false;
-                        TrajectoryContainerClear(&app->config->container);
-                        *app->ncount_current = 0;
-                    }
-
-                    app->simulation_active = true;
-                }
-            }
-            else {
-                if (UI_Button("Abort", NULL, trc)) {
-                    app->simulation_active = false;
-                }
-            }
-
-            UI_Pop();
-
-
-            // TODO: Implement the case where the simulation is completed
-
-
-        }
     }
 
     else if (app->mode == MTM_TRACE) {

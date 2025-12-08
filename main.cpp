@@ -177,7 +177,6 @@ void RunProgram(bool do_fullscreen) {
     McTraceApp app = McTraceInit(&psi_dmc);
 
     std::thread trace_worker = std::thread(TraceParticles, &app.config->container, &app.trace_active, app.config->comps, &app.config->instr, app.ncount_target, app.ncount_current);
-    std::thread sim_worker = std::thread(SimulateParticles, &app.simulation_active, app.config->comps, &app.config->instr, app.ncount_target, app.ncount_current);
 
     // app display
     while (cbui.running) {
@@ -198,7 +197,6 @@ void RunProgram(bool do_fullscreen) {
     CbuiExit();
 
     trace_worker.join();
-    sim_worker.join();
 }
 
 
