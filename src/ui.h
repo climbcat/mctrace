@@ -90,6 +90,7 @@ void BlitMonitorIntoWidget(Monitor *mon, Widget *w) {
 
         f64 ymin, ymax;
         Monitor1DGetMinMax(mon->binm_x, mon->N, &ymin, &ymax);
+        ymin = 0;
         Monitor1DBlit(mon->binm_x, ymin, ymax, mon->N, rect.left, rect.top, rect.width, rect.height, w->rect.Width(), w->rect.Height(), blit_buff_1d);
         SpriteArrayBlit(title, cbui.map_textures, w_dest, h_dest, blit_buff_1d);
     }
