@@ -456,14 +456,16 @@ void DoScrollBtn(McTraceApp *app, const char* btn_label, s32 direction, Array<bo
 
     Widget *btn = NULL;
     bool clicked = false;
+    bool left_right_pressed = false;
 
     clicked = UI_Button(btn_label, &btn);
+    left_right_pressed = (GetLeft() && direction == -1) || (GetRight() && direction == 1);
     btn->y0 -= 1;
     btn->w = 40;
     btn->h = 20;
     UI_SpaceH(10);
 
-    if (clicked) {
+    if (clicked || left_right_pressed) {
         s32 idx = -1;
         if (app->comp_selected) {
             idx = app->comp_selected->GetHeader()->index;
@@ -586,6 +588,13 @@ void DoUI(McTraceApp *app) {
             OnSwitchToMode(app);
         }
     }
+    else if (GetTab()) {
+        s32 mode_int = (u32) app->mode;
+        app->comp_selected = NULL;
+        app->mode = (McTraceMode) (mode_int % 4 + 1);
+        DoEnableTabButton(app->mode);
+        OnSwitchToMode(app);
+    }
 
     // UI
 
@@ -620,6 +629,9 @@ void DoUI(McTraceApp *app) {
         assert(!trc || !sim);
 
         {
+            app->draw_plane = true;
+            app->draw_rays = false;
+
             UI_Label("TRACE");
 
             char buff[200];
