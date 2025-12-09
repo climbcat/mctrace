@@ -5153,6 +5153,7 @@ struct AsciiKeys {
 
 struct ActionKeys {
     bool esc;
+    bool tab;
     bool enter;
     bool backspace;
     bool del;
@@ -5303,6 +5304,9 @@ void KeyCallBack(GLFWwindow* window,  int key, int scancode, int action, int mod
     if (action == GLFW_PRESS) {
         if (key == 256) {
             plf->akeys.esc = true;
+        }
+        if (key == GLFW_KEY_TAB) {
+            plf->akeys.tab = true;
         }
         else if (key == 257) {
             plf->akeys.enter = true;
@@ -5495,6 +5499,7 @@ inline Vector2f CurserPos() { return { g_plaf_glfw->cursorpos.x, g_plaf_glfw->cu
 inline Vector2f MouseFracDelta() { return { (f32) g_plaf_glfw->cursorpos.dx / g_plaf_glfw->width, (f32) g_plaf_glfw->cursorpos.dy / g_plaf_glfw->height }; }
 inline char GetChar() { return g_plaf_glfw->keys.Get(); }
 inline bool GetEscape() { return g_plaf_glfw->akeys.esc; }
+inline bool GetTab() { return g_plaf_glfw->akeys.tab; }
 inline bool GetEnter() { return g_plaf_glfw->akeys.enter; }
 inline bool GetSpace() { return g_plaf_glfw->akeys.space; }
 inline bool GetBackspace() { return g_plaf_glfw->akeys.backspace; }
