@@ -226,6 +226,7 @@ int main (int argc, char **argv) {
         do_fullscreen = true;
     }
 
+    /*
     if (CLAContainsArg("--help", argc, argv) || CLAContainsArg("-h", argc, argv)) {
         printf("--help / -h         display help (this text)\n");
         printf("--fullscreen / -f   display help (this text)\n");
@@ -236,6 +237,7 @@ int main (int argc, char **argv) {
         Test();
     }
     else {
-        RunProgram(do_fullscreen);
     }
+    */
+    RunProgram(do_fullscreen);
 }
