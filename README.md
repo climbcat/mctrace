@@ -34,4 +34,4 @@ project for neutron- and x-ray scattering instrumentation, see [mccode.org](http
 ### Support
 
 The example is PSI_DMC and its 15 components. Further porting of instruments and components
-is straight-forwardy - please reach out to me on jakob.garde@gmail.com for further information.
+is straight-forward: Reach out to me on jakob.garde@gmail.com for more information.
