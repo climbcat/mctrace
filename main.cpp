@@ -212,6 +212,16 @@ void RunProgram(bool do_fullscreen) {
 
 #include "test/test.cpp"
 
+#if WINDOWS
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int nCmdShow) {
+    BaselayerAssertVersion(0, 2, 6);
+    CbuiAssertVersion(0, 2, 5);
+
+    RunProgram(false);
+
+    return 0;
+}
+#else
 
 int main (int argc, char **argv) {
     TimeProgram;
@@ -241,3 +251,5 @@ int main (int argc, char **argv) {
     */
     RunProgram(do_fullscreen);
 }
+
+#endif

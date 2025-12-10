@@ -2034,7 +2034,8 @@ Sprite SpriteTexture_32it(MArena *a_dest, const char* name, s32 w, s32 h, f32 x0
 
     u64 key = HashStringValue(name);
 
-    Texture *tex = (Texture*) ArenaPush(a_dest, &tex, sizeof(Texture));
+    Texture _tex = {};
+    Texture *tex = (Texture*) ArenaPush(a_dest, &_tex, sizeof(Texture));
     tex->tpe = TT_RGBA;
     tex->width = w;
     tex->height = h;
