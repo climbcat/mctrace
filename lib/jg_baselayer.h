@@ -1961,6 +1961,8 @@ u64 Hash64(u64 x) {
 #ifdef __arm__
     #warning "__arm__ detected: u64 typedef'd to 32bit"
     #define Hash Hash32
+
+    // TODO: 32bit version for HashDJB2 below
 #else
     #define Hash Hash64
 #endif
@@ -1983,13 +1985,14 @@ u64 HashDJB2(Str skey) {
 
 inline
 u64 HashStringValue(Str key) {
-    u64 hash = Hash( HashDJB2(key) );
+    u64 hash = HashDJB2(key);
     return hash;
 }
 
 inline
 u64 HashStringValue(const char *key) {
-    return HashStringValue( StrL(key) );
+    u64 hash = HashDJB2( StrL(key) );
+    return hash;
 }
 
 
@@ -1998,185 +2001,226 @@ u64 HashStringValue(const char *key) {
 //
 
 
-struct HashMapKeyVal {
+struct KeyVal {
     u64 key;
     u64 val;
-    HashMapKeyVal *chain;
+    s64 next;
 };
+
 struct HashMap {
-    List<HashMapKeyVal> slots;
-    List<HashMapKeyVal> colls;
-    u32 ncollisions;
-    u32 nresets;
-    u32 noccupants;
+    Array<KeyVal> slots;
+    u32 collisions;
+    u32 load;
+    u32 overflows;
 
-    bool IsInitialized() {
-        return slots.len > 0;
+    void Print() {
+        printf("load: %u, collisions: %u, overflows: %u\n", load, collisions, overflows);
     }
-    void PrintOccupance() {
-        printf("noccupants: %u, nresets: %u\n", noccupants, nresets);
+    void PrintElements() {
+        for (s32 i = 0; i < slots.len; ++i) {
+            KeyVal kv = slots.arr[i];
+            printf("%d: key: %lu, val: %lu, next: %ld\n", i, kv.key, kv.val, kv.next);
+        }
     }
 };
-HashMap InitMap(MArena *a_dest, u32 nslots = 1000) {
-    HashMap map = {};
-    map.slots = InitList<HashMapKeyVal>(a_dest, nslots);
-    map.slots.len = nslots;
-    map.colls = InitList<HashMapKeyVal>(a_dest, nslots);
 
+HashMap InitMap(MArena *a_dest, u32 nslots = 1023) {
+    HashMap map = {};
+    map.slots = InitArray<KeyVal>(a_dest, nslots);
+    map.slots.len = nslots;
     return map;
 }
+
 void MapClear(HashMap *map) {
-    u32 nslots = map->slots.len;
-    _memzero(map->colls.lst, sizeof(HashMapKeyVal) * map->slots.len);
-    _memzero(map->slots.lst, sizeof(HashMapKeyVal) * map->slots.len);
-    map->ncollisions = 0;
-    map->noccupants = 0;
-    map->nresets = 0;
-    map->colls.len = 0;
-    map->slots.len = nslots;
+    memset(map->slots.arr, 0, sizeof(KeyVal) * map->slots.len);
+    map->collisions = 0;
+    map->load = 0;
+    map->overflows = 0;
 }
 
 struct MapIter {
     s32 slot_idx;
-    s32 coll_idx;
-
-    s32 occ_slots_cnt = 0;
-    s32 occ_colliders_cnt = 0;
+    s32 occ_slots_cnt;
 };
 
-u64 MapNextVal(HashMap *map, MapIter *iter) {
-    while (iter->slot_idx < (s32) map->slots.len) {
-        HashMapKeyVal kv = map->slots.lst[iter->slot_idx++];
+s64 MapPut(HashMap *map, u64 key, u64 val) {
+    assert(key != 0);
 
-        if (kv.val) {
-            iter->occ_slots_cnt++;
+    u64 len = (u64) map->slots.len;
 
-            return kv.val;
-        }
-
-    }
-    while (iter->coll_idx < (s32) map->colls.len) {
-        HashMapKeyVal kv = map->colls.lst[iter->coll_idx++];
-        if (kv.val) {
-            iter->occ_colliders_cnt++;
-
-            return kv.val;
-        }
+    // full-guard
+    if (map->load == len) {
+        map->overflows++;
+        return -1;
     }
 
-    return 0;
-}
+    KeyVal *slot0 = map->slots.arr + (key % len);
+    KeyVal *slot;
 
-bool MapPut(HashMap *map, u64 key, u64 val) {
-    assert(key != 0 && "null ptr can not be used as a key");
+    if (slot0->next || slot0->key) {
+        map->collisions++;
 
-    u32 slot = Hash(key) % map->slots.len;
-    HashMapKeyVal *kv_slot = map->slots.lst + slot;
+        // find the end of the collision chain - or overwrite at matching key within the chain
+        while (slot0->next && slot0->key) {
 
-    if (kv_slot->key == 0 || kv_slot->key == key) {
-        if (kv_slot->key == key) {
-            map->noccupants--;
-            map->nresets++;
+            if (slot0->key == key) {
+                // overwrite
+                slot0->val = val;
+
+                return slot - map->slots.arr;
+            }
+
+            slot0 = slot0 + slot0->next;
         }
-        // new slot or reset value
-        HashMapKeyVal kv;
-        kv.key = key;
-        kv.val = val;
-        kv.chain = kv_slot->chain;
-        map->slots.lst[slot] = kv;
+        slot = slot0;
+
+        // fint an empty slot
+        while (slot->key != 0) {
+            slot++;
+
+            // wrap-around
+            if (slot == map->slots.arr + len) {
+                slot = map->slots.arr;
+            }
+        }
+
+        // add to the collision chain
+        if (slot0 != slot) {
+            slot0->next = slot - slot0;
+        }
+
+        // sanity check pointer are in range
+        assert(slot >= map->slots.arr);
+        assert(slot < map->slots.arr + len);
+        assert(slot0 >= map->slots.arr);
+        assert(slot0 < map->slots.arr + len);
     }
     else {
-        // collision
-        map->ncollisions++;
-
-        HashMapKeyVal *collider = kv_slot;
-        while (collider->chain != NULL) {
-            collider = collider->chain;
-        }
-        if (map->colls.len == map->slots.len) {
-            // no more space
-            return false;
-        }
-
-        // put a new collider onto the list
-        HashMapKeyVal kv_new = {};
-        kv_new.key = key;
-        kv_new.val = val;
-
-        collider->chain = map->colls.Add(kv_new);
+        slot = slot0;
     }
-    map->noccupants++;
-    return true;
-}
-inline
-bool MapPut(HashMap *map, void *key, void *val) {
-    return MapPut(map, (u64) key, (u64) val);
-}
 
-inline
-bool MapPut(HashMap *map, u64 key, void *val) {
-    return MapPut(map, key, (u64) val);
-}
+    slot->key = key;
+    slot->val = val;
+    map->load++;
 
-inline
-bool MapPut(HashMap *map, Str skey, void *val) {
-    return MapPut(map, HashStringValue(skey), (u64) val);
+    return slot - map->slots.arr;
 }
 
 u64 MapGet(HashMap *map, u64 key) {
+    if (key == 0) {
+        return 0;
+    }
+    u64 len = (u64) map->slots.len;
 
-    HashMapKeyVal kv_slot = {};
-    if (map->slots.len) {
+    // check the base slot
+    KeyVal *slot = map->slots.arr + (key % len);
 
-        u32 slot = Hash(key) % map->slots.len;
-        kv_slot = map->slots.lst[slot];
+    if (slot->key == key) {
+        return slot->val;
     }
 
-    if (kv_slot.key == key) {
-        return kv_slot.val;
-    }
-    else {
-        HashMapKeyVal *kv = &kv_slot;
-        while (kv->chain != NULL) {
-            kv = kv->chain;
-            if (kv->key == key) {
-                return kv->val;
-            }
+    // iterate the collision chain
+    s64 key_stop = slot->key;
+    while (slot->next) {
+        slot = slot + slot->next;
+
+        if (slot->key == key) {
+            return slot->val;
+        }
+        else if (slot->key == key_stop) {
+            break;
         }
     }
 
+    // no takers
     return 0;
+}
+
+s64 MapGetIndex(HashMap *map, u64 key, s64 *prev_idx) {
+    assert(prev_idx);
+    *prev_idx = -1;
+
+    u64 len = (u64) map->slots.len;
+
+    // check the base slot
+    KeyVal *slot = map->slots.arr + (key % len);
+    if (slot->key == key) {
+        return slot - map->slots.arr;
+    }
+
+    // iterate the collision chain
+    s64 key_stop = slot->key;
+    while (slot->next) {
+        *prev_idx = slot - map->slots.arr;
+        slot = slot + slot->next;
+
+        if (slot->key == key) {
+            return slot - map->slots.arr;
+        }
+        else if (slot->key == key_stop) {
+            break;
+        }
+    }
+
+    // no get
+    *prev_idx = -1;
+    return -1;
+}
+
+s64 MapRemove(HashMap *map, u64 key) {
+    u64 len = (u64) map->slots.len;
+    s64 prev_idx;
+    s64 remove_idx = MapGetIndex(map, key, &prev_idx);
+
+    if (remove_idx == -1) {
+        return -1;
+    }
+
+    KeyVal *remove = map->slots.arr + remove_idx;
+    assert(remove->key == key);
+
+    if (prev_idx >= 0) {
+        KeyVal *prev = map->slots.arr + prev_idx;
+        assert(prev->next + prev_idx == remove - map->slots.arr);
+
+        if (prev->key == 0 && prev->val == 0) {
+            assert(prev->next);
+        }
+        if (remove->next) {
+            prev->next += remove->next;
+        }
+        else {
+            prev->next = 0;
+        }
+    }
+
+    remove->key = 0;
+    remove->val = 0;
+    map->load--;
+
+    return remove_idx;
+}
+
+// wrappers
+inline
+s64 MapPut(HashMap *map, void *key, void *val) {
+    return MapPut(map, (u64) key, (u64) val);
+}
+inline
+s64 MapPut(HashMap *map, u64 key, void *val) {
+    return MapPut(map, key, (u64) val);
+}
+inline
+s64 MapPut(HashMap *map, Str skey, void *val) {
+    return MapPut(map, HashStringValue(skey), (u64) val);
 }
 inline
 u64 MapGet(HashMap *map, Str skey) {
     return MapGet(map, HashStringValue(skey));
 }
-
-bool MapRemove(HashMap *map, u64 key, void *val) {
-    u32 slot = Hash(key) % map->slots.len;
-    HashMapKeyVal kv_slot = map->slots.lst[slot];
-
-    if (kv_slot.key == key) {
-        map->slots.lst[slot] = {};
-        return true;
-    }
-    else {
-        HashMapKeyVal *kv_prev = map->slots.lst + slot;
-        HashMapKeyVal *kv = kv_slot.chain;
-        while (kv != NULL) {
-            if (kv->key == key) {
-                kv_prev->chain = kv->chain;
-                *kv = {};
-                return true;
-            }
-            else {
-                kv_prev = kv;
-                kv = kv->chain;
-            }
-        }
-    }
-
-    return false;
+inline
+s64 MapRemove(HashMap *map, Str skey) {
+    return MapRemove(map, HashStringValue(skey));
 }
 
 
@@ -2209,7 +2253,7 @@ u64 Kiss_Random(u64 state[7]) {
     return state[0] + state[1] + state[3];
 }
 u64 g_kiss_randstate[7];
-#define McRandom() Kiss_Random(g_kiss_randstate)
+
 u32 RandInit(u32 seed = 0) {
     if (seed == 0) {
         seed = (u32) Hash(ReadSystemTimerMySec());
@@ -2220,44 +2264,51 @@ u32 RandInit(u32 seed = 0) {
     return seed;
 }
 
+u64 RandMinMax64(u64 min, u64 max) {
+    assert(max > min);
+
+    return Kiss_Random(g_kiss_randstate) % (max - min + 1) + min;
+}
+
+
 f64 Rand01() {
-    f64 randnum = (f64) McRandom();
+    f64 randnum = (f64) Kiss_Random(g_kiss_randstate);
     randnum /= (f64) ULONG_MAX + 1;
     return randnum;
 }
 f32 Rand01_f32() {
-    f32 randnum = (f32) McRandom();
+    f32 randnum = (f32) Kiss_Random(g_kiss_randstate);
     randnum /= (f32) ULONG_MAX + 1;
     return randnum;
 }
 f32 RandPM1_f32() {
-    f32 randnum = (f32) McRandom();
+    f32 randnum = (f32) Kiss_Random(g_kiss_randstate);
     randnum /= ((f32) ULONG_MAX + 1) / 2;
     randnum -= 1;
     return randnum;
 }
 int RandMinMaxI(int min, int max) {
     assert(max > min);
-    return McRandom() % (max - min + 1) + min;
+    return Kiss_Random(g_kiss_randstate) % (max - min + 1) + min;
 }
 u32 RandMinMaxU(u32 min, u32 max) {
     assert(max > min);
-    return McRandom() % (max - min + 1) + min;
+    return Kiss_Random(g_kiss_randstate) % (max - min + 1) + min;
 }
 u32 RandMinU16(u32 min) {
     return RandMinMaxU(min, (u16) -1);
 }
 f32 RandMinMaxI_f32(int min, int max) {
     assert(max > min);
-    return (f32) (McRandom() % (max - min + 1) + min);
+    return (f32) (Kiss_Random(g_kiss_randstate) % (max - min + 1) + min);
 }
 int RandDice(u32 max) {
     assert(max > 0);
-    return McRandom() % max + 1;
+    return Kiss_Random(g_kiss_randstate) % max + 1;
 }
 int RandIntMax(u32 max) {
     assert(max > 0);
-    return McRandom() % max + 1;
+    return Kiss_Random(g_kiss_randstate) % max + 1;
 }
 
 void PrintHex(u8* data, u32 len) {
@@ -2990,7 +3041,7 @@ MContext *InitBaselayer() {
 
 #define BASELAYER_VERSION_MAJOR 0
 #define BASELAYER_VERSION_MINOR 2
-#define BASELAYER_VERSION_PATCH 5
+#define BASELAYER_VERSION_PATCH 6
 
 
 void BaselayerAssertVersion(u32 major, u32 minor, u32 patch) {

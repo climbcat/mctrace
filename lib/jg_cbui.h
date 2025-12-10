@@ -4565,10 +4565,11 @@ void UI_FrameEnd(MArena *a_tmp, s32 width, s32 height, f32 mouse_x, f32 mouse_y,
 
         // prune
         if (w->frame_touched < *g_frameno_imui) {
-            MapRemove(g_m_widgets, w->hash_key, w); 
+            s64 rm = MapRemove(g_m_widgets, w->hash_key);
+            assert(rm >= 0);
             g_p_widgets->Free(w);
         }
-        // clean
+        // save
         else {
             if (w->hash_key != 0) {
                 MapPut(g_m_widgets, w->hash_key, w);

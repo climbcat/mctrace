@@ -216,7 +216,7 @@ void RunProgram(bool do_fullscreen) {
 int main (int argc, char **argv) {
     TimeProgram;
 
-    BaselayerAssertVersion(0, 2, 5);
+    BaselayerAssertVersion(0, 2, 6);
     CbuiAssertVersion(0, 2, 5);
 
     bool force_test = false;
