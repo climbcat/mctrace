@@ -5226,7 +5226,7 @@ void MouseButtonCallBack(GLFWwindow* window, int button, int action, int mods) {
     }
 
     // set event
-    if (action == GLFW_PRESS) {
+    if (btn && action == GLFW_PRESS) {
         btn->pushed = true;
         btn->ended_down = true;
 
@@ -5248,7 +5248,7 @@ void MouseButtonCallBack(GLFWwindow* window, int button, int action, int mods) {
             btn->t_pushed_prev = 0;
         }
     }
-    else if (action == GLFW_RELEASE) {
+    else if (btn && action == GLFW_RELEASE) {
         btn->released = true;
         btn->pushes++;
 
