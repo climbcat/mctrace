@@ -26,6 +26,15 @@ Thus, mctrace demonstrates the improved flexibility and speed that becomes possi
 The visualization is writte from-scratch, only relying on a thin platform layer (glew/glfw/OpenGL). 
 This makes it nearly as portable as the core particle propagaion / Monte-Carlo simulation code itself.
 
+### Linux
+
+Run the <code>getdeps.sh</code> and <code>build.sh</code> scripts to install dependencies (glew/glfw) and build.
+
+### Windows
+
+Build from source with w64devkit (https://github.com/skeeto/w64devkit/releases): Run <code>build_win.sh</code>.
+Run included binaries: The binary is found in the release folder. The executable is not signed, so Windows Defender will pop up a blue window. Click "Run Anyway" to start the app.
+
 ### Disclaimer
 
 The current project mcparse is a tech demo written independently. For the official McCode simulation
