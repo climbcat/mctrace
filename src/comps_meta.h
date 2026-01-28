@@ -132,7 +132,7 @@ Component *CreateComponent(MArena *a_dest, CompType type, s32 index, const char 
             comp->type_name = StrLS(comp_spec.type);
             comp->name = StrLS(comp_spec.name);
             comp->cat = CCAT_monitors;
-            comp->interactable = false;
+            comp->interactable = true; // we need to view this component in TRACE mode to see the rays spread out
 
             comp->parameters = InitArray<Param>(a_dest, GetParameterCount_Cyl_monitor());
             GetParameters_Cyl_monitor(&comp->parameters, (Cyl_monitor*) comp->comp);
