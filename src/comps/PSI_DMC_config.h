@@ -39,7 +39,11 @@ struct PSI_DMC {
     double R0_curve = 0.995;
     double Mvalue_curve = 2.1;
     double W_curve = 1.0/250.0;
-    //double ldiff = 0.05;
+    // NOTE:
+    //      ldiff 1,5 upped from 0.05.
+    //      Less efficient in terms of statistics, but far more illustrative, capturing all the rays
+    //      they will be filtered by the monochromator, and even allowing more variety into the
+    //      sample environment.
     double ldiff = 1.5;
     double angleGuideCurved;
 };
@@ -60,7 +64,6 @@ void GetParameters_PSI_DMC(Array<Param> *pars, PSI_DMC *instr) {
     pars->Add( Param { CPT_INT, "BARNS", &instr->BARNS } );
     pars->Add( Param { CPT_INT, "SPLITS", &instr->SPLITS } );
 }
-
 
 Array<Component*> InitAndConfig_PSI_DMC(MArena *a_dest, Instrument *instr, SceneGraphHandle *sg, u32 ncount) {
     PSI_DMC _spec = {};
@@ -157,6 +160,7 @@ Array<Component*> InitAndConfig_PSI_DMC(MArena *a_dest, Instrument *instr, Scene
 
 
     // configuration pre-amble
+
 
     Array<Component*> comps = InitArray<Component*>(a_dest, 32);
     f32 at_x, at_y, at_z;
@@ -773,17 +777,16 @@ Array<Component*> InitAndConfig_PSI_DMC(MArena *a_dest, Instrument *instr, Scene
     STOP->transform = SceneGraphAlloc(sg, sa_arm->transform);
     STOP->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
 
-    Component *Detector = CreateComponent(a_dest, CT_Monitor_nD, index++, "Detector");
+    Component *Detector = CreateComponent(a_dest, CT_Cyl_monitor, index++, "Detector");
     comps.Add(Detector);
-    Monitor_nD *Detector_comp = (Monitor_nD*) Detector->comp;
-    Detector_comp->xwidth = 3.0;
-    Detector_comp->yheight = 0.09;
+    Cyl_monitor *Detector_comp = (Cyl_monitor*) Detector->comp;
+    Detector_comp->nr = 400;
     Detector_comp->filename = (char*) "detector.dat";
-    Detector_comp->min = 19.9+spec->SHIFT;
-    Detector_comp->max = 99.9+spec->SHIFT;
-    Detector_comp->bins = 400;
-    Detector_comp->options = (char*) "banana, theta";
-    Init_Monitor_nD(Detector_comp, instr);
+    Detector_comp->yheight = 0.09;
+    Detector_comp->radius = 1.5;
+    Detector_comp->thmin = 9.9 + spec->SHIFT;
+    Detector_comp->thmax = 99.9 + spec->SHIFT;
+    Init_Cyl_monitor(Detector_comp, instr);
     // case #2:      AT and ROT are defined RELATIVE to the same parent (defined through SceneGraphAlloc)
     // AT:  (0, 0, 0) RELATIVE sa_arm
     // ROT: (0, 0, 180) RELATIVE sa_arm
@@ -795,6 +798,7 @@ Array<Component*> InitAndConfig_PSI_DMC(MArena *a_dest, Instrument *instr, Scene
     phi_z = 180;
     Detector->transform = SceneGraphAlloc(sg, sa_arm->transform);
     Detector->transform->t_loc = TransformBuildTranslation( { at_x, at_y, at_z } ) * TransformBuildRotateZ( phi_z * deg2rad ) * TransformBuildRotateY( phi_y * deg2rad ) * TransformBuildRotateX( phi_x * deg2rad );
+
 
     instr->parameters = InitArray<Param>(a_dest, GetParameterCount_PSI_DMC());
     GetParameters_PSI_DMC(&instr->parameters, spec);
