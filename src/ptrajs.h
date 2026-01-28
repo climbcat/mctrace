@@ -2,6 +2,9 @@
 #define __PTRAJS_H__
 
 
+#include <atomic>
+
+
 struct Traj {
     Traj *next;
     List<Event> events;
@@ -116,9 +119,16 @@ bool PushTrajectory(TrajBundle *bundle, Traj traj) {
 
     if (ArenaHasEnoughSpace(&bundle->mem, traj_size)) {
         Traj *tpushed = (Traj *) ArenaPush(&bundle->mem, &traj, sizeof(Traj));
-
-        // NOTE: the len should not be set until the copy is done; how can we ensure this?
         tpushed->events.lst = (Event*) ArenaPush(&bundle->mem, traj.events.lst, sizeof(Event) * traj.events.len);
+
+        //  Strong write barrier:
+        //  - writes below may not be re-ordered before
+        //  - writes below may not be re-ordered above
+        //
+        //  This means; Data pushed above is always committed to memory by the cpu before the list
+        //  len is set. Thus no partial reads of data occur by the reader, ensuring safety.
+        std::atomic_thread_fence(std::memory_order_acq_rel);
+
         tpushed->events.len = traj.events.len;
 
         if (bundle->head == NULL) {
