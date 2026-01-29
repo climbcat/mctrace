@@ -7,10 +7,9 @@
 
 #include "lib/jg_baselayer.h"
 
-
-//extern char *c_strcasestr (const char *haystack, const char *needle) {
-//    return 0;
-//}
+#define MCTRACE_VERSION_MAJOR 0
+#define MCTRACE_VERSION_MINOR 1
+#define MCTRACE_VERSION_PATCH 2
 
 
 // ***************** include in jg_baselayer 0.2.5: ***********************************
@@ -223,6 +222,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, 
 }
 #else
 
+
 int main (int argc, char **argv) {
     TimeProgram;
 
@@ -235,21 +235,19 @@ int main (int argc, char **argv) {
     if (CLAContainsArg("--fullscreen", argc, argv) || CLAContainsArg("-f", argc, argv)) {
         do_fullscreen = true;
     }
+    
 
-    /*
     if (CLAContainsArg("--help", argc, argv) || CLAContainsArg("-h", argc, argv)) {
-        printf("--help / -h         display help (this text)\n");
-        printf("--fullscreen / -f   display help (this text)\n");
-        printf("--test              run test functions\n");
-        exit(0);
+        printf("--help              display help (this text)\n");
+        printf("--fullscreen        run in fullscreen mode\n");
+        printf("--version           print app version\n");
     }
-    else if (CLAContainsArg("--test", argc, argv) || force_test) {
-        Test();
+    else if (CLAContainsArg("--version", argc, argv) || force_test) {
+        printf("%d.%d.%d\n", MCTRACE_VERSION_MAJOR, MCTRACE_VERSION_MINOR, MCTRACE_VERSION_PATCH);
     }
     else {
+        RunProgram(do_fullscreen);
     }
-    */
-    RunProgram(do_fullscreen);
 }
 
 #endif
