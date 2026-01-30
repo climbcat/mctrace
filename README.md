@@ -10,7 +10,7 @@ It utilizes the mcstas components and simulation core without relying on current
 The project's main purposes are:
 
 - Provide a first-order validation of the parsing and code generatation provided by [mcparse](https://github.com/jakob-garde/mcparse)
-- Wrap the physics components in a generic and visualization-friendly header, enabling modularity and inclusion into any C++ project
+- Wrap the physics components in a generic and visualization-friendly header
 - Provides component initialization using 4x4 affine transformation matrices
 - Wrap the entire McStas static simulation library into easily-inlcuded header-only files; simcore.h and simlib.h
 - Enabling a tight development loop with a very low turn-around time for core- or component development, including direct component code debuggin
